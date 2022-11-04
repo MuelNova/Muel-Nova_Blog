@@ -3,18 +3,15 @@
  * and scoped locally.
  */
 
-.heroBanner {
-  padding: 4rem 0;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-}
-
-@media screen and (max-width: 996px) {
-  .heroBanner {
-    padding: 2rem;
+ @media screen and (max-width: 996px) {
+  .hero {
+    display: flex;
+    justify-content: left;
+    align-items: center;
+    flex-direction: row;
   }
 }
+
 
 .buttons {
   display: flex;
@@ -31,16 +28,8 @@
   padding: 2.5rem 6rem;
 }
 
-@media screen and (max-width: 966px) {
-  .hero {
-    display: flex;
-    justify-content: left;
-    align-items: center;
-    flex-direction: row;
-  }
-}
-
 .leftComponent {
+  flex-flow: nowrap;
   flex: 2;
 }
 
@@ -50,9 +39,26 @@
 
 .heroTitle {
   font-size: 3rem;
+  font-family: 'Lota Grotesque', sans-serif;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-align: left;
+  transition: all var(--ifm-transition-fast);
+  display: inline;
+}
+
+.heroTitle span {
+  background: linear-gradient(225deg, #FFB200 0.1%, #FFB100 8.15%, #FFAF02 15.6%, #FEAB04 22.55%, #FDA606 29.08%, #FCA00A 35.28%, #FB980E 41.26%, #FA9013 47.1%, #F98618 52.89%, #F77B1E 58.73%, #F56F24 64.71%, #F3632B 70.91%, #F25532 77.44%, #EF473A 84.39%, #ED3842 91.84%, #EB284B 99.9%),
+  linear-gradient(0deg, #41465D, #41465D);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent !important;
 }
 
 .heroSubtitle {
+  display: block;
+  min-width: 100%;
   margin: 0 6.4rem;
   font-size: 1.5rem;
 }
@@ -64,6 +70,7 @@
 
 .buttonContainer {
   margin: 0;
+  display: block;
 }
 
 .svgContainer {
@@ -84,6 +91,28 @@
 }
 
 .button {
-  min-width: 10rem;
+  display: inline-block;
+  min-width: 11rem;
   margin: 1rem 2rem;
+  padding: 1rem 4rem;
+  background: #ed3545;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  text-align: center;
+  color: white;
+}
+
+.button:hover {
+  color: white;
+  background: #ad1934;
+  text-decoration: none;
+}
+
+[data-theme='dark'] .button {
+  background: #1fa588;
+  border-color: #1b1b1d;
+}
+
+[data-theme='dark'] .button:hover {
+  background: #1a8870;
 }

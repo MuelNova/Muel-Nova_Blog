@@ -6,11 +6,11 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'Nova メモ帳',
+  title: 'NovaNo1r メモ帳',
   tagline: 'PWN THIS ワールド',
   url: 'https://novanoir.moe',
   baseUrl: '/',
-  onBrokenLinks: 'throw',
+  onBrokenLinks: 'warn',
   onBrokenMarkdownLinks: 'warn',
   favicon: 'img/favicon.ico',
 
@@ -50,7 +50,7 @@ const config = {
           editUrl:
             'https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/',
           feedOptions: {
-            type: 'rss',
+            type: 'all',
             copyright: `Copyright © ${new Date().getFullYear()} NovaNo1r with ❤`,
           },
         },

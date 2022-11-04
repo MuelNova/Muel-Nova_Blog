@@ -45,7 +45,7 @@ function HomepageHeader() {
   return (
     <div className={styles.hero}>
       <div className={styles.leftComponent}>
-        <h1 className={styles.heroTitle}>{siteConfig.title}</h1>
+        <h1 className={styles.heroTitle}>NovaNo1r <span>メモ帳</span></h1>
         <h1 className={styles.heroSubtitle}>――{siteConfig.tagline}</h1>
         <p className={styles.heroContent}>
           巨型二次元高手 💨
@@ -54,12 +54,12 @@ function HomepageHeader() {
         </p>
         <div className={styles.svgContainer}>
           {svgList.map((item, _) => {
-            return <Svg {...item}/>
+            return <Svg {...item} key={item.title}/>
           })}
         </div>
         <div className={styles.buttonContainer}>
           {buttonList.map((item, _) => {
-            return <Link className={"button button--secondary button--lg " + styles.button} to={item.to}>{item.title}</Link>
+            return <Link className={styles.button} to={item.to} key={item.title}>{item.title}</Link>
           })}
         </div>
       </div>
@@ -74,7 +74,6 @@ export default function Home(): JSX.Element {
   const {siteConfig} = useDocusaurusContext();
   return (
     <Layout
-      title={`Hello from ${siteConfig.title}`}
       description="blog,novanoir,novano1r,nova,ctf,pwn,博客,">
       <main>
         <HomepageHeader />
