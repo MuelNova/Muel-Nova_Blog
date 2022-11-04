@@ -40,15 +40,14 @@ const config = {
             'https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/',
         },
         blog: {
-          blogTitle: 'NovaNo1r のメモ帳',
-          blogDescription: 'Written with 😢tears and loves❤',
-          blogSidebarTitle: '所有博客',
+          blogTitle: 'Blog',
+          blogSidebarTitle: 'Written with 😢tears and loves❤',
           blogSidebarCount: 'ALL',
           showReadingTime: true,
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
-            'https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/',
+            'https://github.com/Nova-Noir/NovaNo1r-Blog/tree/main/',
           feedOptions: {
             type: 'all',
             copyright: `Copyright © ${new Date().getFullYear()} NovaNo1r with ❤`,
@@ -74,10 +73,12 @@ const config = {
           {
             type: 'doc',
             docId: 'intro',
-            position: 'left',
+            position: 'right',
             label: 'Tutorial',
           },
           {to: '/blog', label: '📝Blog', position: 'left'},
+          {to: '/blog/archive', label: '🔖Archive', position: 'left'},
+          {to: '/blog/tags', label: '🗃️Tags', position: 'left'},
           {
             href: 'https://github.com/Nova-Noir',
             label: 'GitHub',
@@ -91,14 +92,9 @@ const config = {
           {
             title: 'Here',
             items: [
-              {
-                label: 'Tutorial',
-                to: '/docs/intro',
-              },
-              {
-                label: '📝Blog',
-                to: '/blog',
-              },
+              {to: '/blog', label: '📝Blog'},
+              {to: '/blog/archive', label: '🔖Archive'},
+              {to: '/blog/tags', label: '🗃️Tags'},
             ],
           },
           {
@@ -137,6 +133,7 @@ const config = {
       prism: {
         theme: lightCodeTheme,
         darkTheme: darkCodeTheme,
+        additionalLanguages: ['powershell', 'bash']
       },
     }),
 };
