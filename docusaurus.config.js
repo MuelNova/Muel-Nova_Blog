@@ -135,6 +135,10 @@ const config = {
         darkTheme: darkCodeTheme,
         additionalLanguages: ['powershell', 'bash']
       },
+      tableOfContents: {
+        minHeadingLevel: 2,
+        maxHeadingLevel: 5,
+      }
     }),
 };
 
