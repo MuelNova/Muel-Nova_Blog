@@ -1,0 +1,82 @@
+.gt-container a {
+  color: var(--ifm-link-color);
+}
+
+.gt-container a:hover {
+  color: var(--ifm-link-hover-color);
+}
+
+.gt-container .gt-link:hover {
+  border-bottom: 1px dotted var(--ifm-link-color);
+}
+
+.gt-container .gt-link {
+  border-bottom: none;
+}
+
+.gt-container .gt-svg svg {
+  width: 100%;
+  height: 100%;
+  fill: var(--ifm-link-color);
+}
+
+.gt-container .gt-ico-text {
+  color: var(--ifm-link-color);
+}
+
+.gt-container .gt-btn-preview {
+  background-color: var(--ifm-background-color);
+  color: var(--ifm-color-primary);
+}
+
+.gt-container .gt-btn {
+  border: 1px solid var(--ifm-color-primary);
+  background-color: var(--ifm-color-primary);
+  color: #fff;
+}
+
+.gt-container .gt-btn-preview:hover, .gt-container .gt-btn-public:hover {
+  background-color: var(--ifm-color-primary-darker);
+  border-color: var(--ifm-color-primary-darker);
+}
+
+.gt-container a.is--active {
+  color: var(--ifm-font-color-base);
+}
+
+.gt-container a.is--active:hover {
+  color: var(--ifm-font-color-base);
+}
+
+.gt-container .gt-popup {
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: var(--ifm-pagination-nav-border-radius);
+}
+
+.gt-container .gt-popup {
+  background: #fff;
+}
+[data-theme='dark'] .gt-container .gt-popup {
+  background: var(--ifm-background-color);
+}
+
+.gt-container .gt-user .gt-ico svg {
+  fill: var(--ifm-font-color-base);
+}
+
+.gt-container .gt-user .is--poping .gt-ico svg {
+  fill: var(--ifm-color-primary);
+}
+
+.gt-container .gt-popup .gt-action.is--active:before {
+  background: var(--ifm-color-primary);
+}
+
+.gt-container .gt-header-textarea {
+  border: 1px solid var(--ifm-color-emphasis-300);
+  background-color: var(--prism-background-color);
+}
+
+.gt-container .gt-header-textarea:hover {
+  background-color: var(--ifm-background-surface-color);
+}
