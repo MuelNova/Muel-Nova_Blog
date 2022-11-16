@@ -99,3 +99,20 @@
 .markdown-body {
   color: var(--ifm-font-color-base)
 }
+
+[data-theme='dark'] .gt-container .gt-comment-content {
+  background-color: var(--ifm-background-surface-color);
+}
+
+[data-theme='dark'] .gt-container .gt-comment-content:hover {
+  -webkit-box-shadow: 0 0.625em 3.75em 0 var(--ifm-color-emphasis-200);
+          box-shadow: 0 0.625em 3.75em 0 var(--ifm-color-emphasis-200);
+}
+
+.gt-container .gt-comment-username {
+  color: var(--ifm-color-primary)
+}
+
+.gt-container .gt-comment-body p{
+  color: var(--ifm-font-color-base)
+}
