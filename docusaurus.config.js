@@ -39,6 +39,12 @@ const config = {
           editUrl:
             'https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/',
         },
+        sitemap: {
+          changefreq: 'weekly',
+          priority: 0.5,
+          ignorePatterns: ['/tags/**'],
+          filename: 'sitemap.xml',
+        },
         blog: {
           blogTitle: 'Blog',
           blogSidebarTitle: 'Written with 😢tears and loves❤',
