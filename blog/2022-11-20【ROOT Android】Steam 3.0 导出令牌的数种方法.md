@@ -1,9 +1,9 @@
 ---
 title: 【ROOT Android】Steam 3.0 导出令牌的数种方法
 
-tags: ['CTF', 'Pwn', ]
+tags: ['Reverse', ]
 
-categories: ['CTF']
+categories: ['Gadget']
 
 authors: [nova]
 ---
