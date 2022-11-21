@@ -1,0 +1,62 @@
+{
+  "link.title.Here": {
+    "message": "Here",
+    "description": "The title of the footer links column with title=Here in the footer"
+  },
+  "link.title.There": {
+    "message": "There",
+    "description": "The title of the footer links column with title=There in the footer"
+  },
+  "link.title.Community": {
+    "message": "Community",
+    "description": "The title of the footer links column with title=Community in the footer"
+  },
+  "link.title.More": {
+    "message": "More",
+    "description": "The title of the footer links column with title=More in the footer"
+  },
+  "link.item.label.📝Blog": {
+    "message": "📝Blog",
+    "description": "The label of footer link with label=📝Blog linking to /blog"
+  },
+  "link.item.label.📈Blockchain": {
+    "message": "📈Blockchain",
+    "description": "The label of footer link with label=📈Blockchain linking to /blockchain"
+  },
+  "link.item.label.♿️Pwn": {
+    "message": "♿️Pwn",
+    "description": "The label of footer link with label=♿️Pwn linking to /pwn"
+  },
+  "link.item.label.♻️复现": {
+    "message": "♻️复现",
+    "description": "The label of footer link with label=♻️复现 linking to /reproducing"
+  },
+  "link.item.label.🤡文章": {
+    "message": "🤡文章",
+    "description": "The label of footer link with label=🤡文章 linking to /posts"
+  },
+  "link.item.label.Teamspeak": {
+    "message": "Teamspeak",
+    "description": "The label of footer link with label=Teamspeak linking to #"
+  },
+  "link.item.label.Discord": {
+    "message": "Discord",
+    "description": "The label of footer link with label=Discord linking to #"
+  },
+  "link.item.label.Twitter": {
+    "message": "Twitter",
+    "description": "The label of footer link with label=Twitter linking to #"
+  },
+  "link.item.label.DEV": {
+    "message": "DEV",
+    "description": "The label of footer link with label=DEV linking to https://novanoir.dev"
+  },
+  "link.item.label.GitHub": {
+    "message": "GitHub",
+    "description": "The label of footer link with label=GitHub linking to https://github.com/Nova-Noir"
+  },
+  "copyright": {
+    "message": "Copyright © 2022 <a href=\"/about\">Nova-Noir</a>. Built with <a href=\"https://docusaurus.io/\">Docusaurus</a> filling with ❤ and 🥛",
+    "description": "The footer copyright"
+  }
+}

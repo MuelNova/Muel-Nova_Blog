@@ -24,7 +24,7 @@ const config = {
   // to replace "en" with "zh-Hans".
   i18n: {
     defaultLocale: 'zh-Hans',
-    locales: ['zh-Hans'],
+    locales: ['zh-Hans', 'en'],
   },
 
   presets: [
@@ -33,11 +33,15 @@ const config = {
       /** @type {import('@docusaurus/preset-classic').Options} */
       ({
         docs: {
+          // id: "posts",
+          path: 'posts',
+          routeBasePath: 'posts',
           sidebarPath: require.resolve('./sidebars.js'),
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
             'https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/',
+          
         },
         sitemap: {
           changefreq: 'weekly',
@@ -46,7 +50,7 @@ const config = {
           filename: 'sitemap.xml',
         },
         blog: {
-          blogTitle: 'Blog',
+          blogTitle: 'BLOG',
           blogSidebarTitle: 'Written with 😢tears and loves❤',
           blogSidebarCount: 'ALL',
           showReadingTime: true,
@@ -55,7 +59,7 @@ const config = {
           editUrl:
             'https://github.com/Nova-Noir/NovaNo1r-Blog/tree/main/',
           feedOptions: {
-            type: 'all',
+            type: 'rss',
             copyright: `Copyright © ${new Date().getFullYear()} NovaNo1r with ❤`,
           },
         },
@@ -63,6 +67,39 @@ const config = {
           customCss: require.resolve('./src/css/custom.css'),
         },
       }),
+    ],
+  ],
+
+  plugins: [
+    [
+      '@docusaurus/plugin-content-docs',
+      {
+        id: 'blockchain',
+        path: 'blockchain',
+        routeBasePath: 'blockchain',
+      }
+    ],
+    [
+      '@docusaurus/plugin-content-docs',
+      {
+        id: 'pwn',
+        path: 'pwn',
+        routeBasePath: 'pwn',
+      }
+    ],
+
+    [
+      '@docusaurus/plugin-content-blog',
+      {
+        id: 'reproducing',
+        routeBasePath: 'reproducing',
+        path: 'reproducing',
+        feedOptions: {
+          type: 'rss',
+          copyright: `Copyright © ${new Date().getFullYear()} NovaNo1r with ❤`,
+        },
+        authorsMapPath: "../blog/authors.yml"
+      },
     ],
   ],
 
@@ -76,15 +113,21 @@ const config = {
           src: 'img/logo.png',
         },
         items: [
+          // {
+          //   type: 'doc',
+          //   docId: '',
+          //   position: 'right',
+          //   label: '🤡文章',
+          // },
+          {to: '/posts', label: '🤡文章', position: 'right'},
+          {to: '/reproducing', label: '♻️复现', position: 'right'},
           {
-            type: 'doc',
-            docId: 'intro',
+            type: 'localeDropdown',
             position: 'right',
-            label: 'Tutorial',
           },
           {to: '/blog', label: '📝Blog', position: 'left'},
-          {to: '/blog/archive', label: '🔖Archive', position: 'left'},
-          {to: '/blog/tags', label: '🗃️Tags', position: 'left'},
+          {to: '/blockchain', label: '📈Blockchain', position: 'left'},
+          {to: '/pwn', label: '♿️Pwn', position: 'left'},
           {
             href: 'https://github.com/Nova-Noir',
             label: 'GitHub',
@@ -99,8 +142,15 @@ const config = {
             title: 'Here',
             items: [
               {to: '/blog', label: '📝Blog'},
-              {to: '/blog/archive', label: '🔖Archive'},
-              {to: '/blog/tags', label: '🗃️Tags'},
+              {to: '/blockchain', label: '📈Blockchain'},
+              {to: '/pwn', label: '♿️Pwn'},
+            ],
+          },
+          {
+            title: 'There',
+            items: [
+              {to: '/reproducing', label: '♻️复现'},
+              {to: '/posts', label: '🤡文章'},
             ],
           },
           {
@@ -134,7 +184,7 @@ const config = {
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} <a href="/about">Nova-Noir</a>. Built with <a href="https://docusaurus.io/">Docusaurus</a> filled with ❤`,
+        copyright: `Copyright © ${new Date().getFullYear()} <a href="/about">Nova-Noir</a>. Built with <a href="https://docusaurus.io/">Docusaurus</a> filling with ❤ and 🥛`,
       },
       prism: {
         theme: lightCodeTheme,

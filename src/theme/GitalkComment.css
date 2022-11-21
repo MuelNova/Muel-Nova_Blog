@@ -109,7 +109,7 @@
           box-shadow: 0 0.625em 3.75em 0 var(--ifm-color-emphasis-200);
 }
 
-.gt-container .gt-comment-username {
+.gt-comment-username {
   color: var(--ifm-color-primary)
 }
 

@@ -1,0 +1,27 @@
+.hero {
+    display: flex;
+    margin: 0;
+    flex-direction: row;
+    width: 100%;
+    overflow: hidden;
+    padding: 2.5rem 6rem;
+}
+
+.hero__text {
+    flex: 1;
+}
+
+.hero__text p{
+    line-height: 1rem;
+}
+
+.hero__img {
+    flex: 7;
+    margin-left: 4rem;
+    max-width: 10rem;
+    max-height: 10rem;
+}
+
+.hero__img img {
+    border-radius: 3rem;
+}
