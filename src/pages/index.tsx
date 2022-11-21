@@ -62,6 +62,7 @@ function HomepageHeader() {
           })}
         </div>
       </div>
+      <Link to={'/404'}></Link>
       <div className={styles.rightComponent}>
         <img src={HeroBanner} alt='HeroImg' />
       </div>
