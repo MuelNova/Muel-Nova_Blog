@@ -6,11 +6,6 @@ import './NotFound.css'
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 
 export default function NotFound() {
-  const img_count = 20;
-  const IMG = require("@site/static/img/404/" + Math.floor(Math.random()*img_count) + ".jpg").default
-  const imgStyle = {
-    width: ""
-  }
   return (
     <>
       <PageMetadata
@@ -54,7 +49,7 @@ export default function NotFound() {
               </a>
             </div>
             <div className='hero__img'>
-              <img src={IMG} style={imgStyle}/>
+              <img src={require("@site/static/img/404/" + Math.floor(Math.random()*20) + ".jpg").default}/>
             </div>
           </div>
         </main>
