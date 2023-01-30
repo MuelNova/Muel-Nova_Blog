@@ -77,6 +77,8 @@ const config = {
         id: 'blockchain',
         path: 'blockchain',
         routeBasePath: 'blockchain',
+        editUrl:
+        'https://github.com/Nova-Noir/NovaNo1r-Blog/tree/main/',
       }
     ],
     [
@@ -85,6 +87,8 @@ const config = {
         id: 'pwn',
         path: 'pwn',
         routeBasePath: 'pwn',
+        editUrl:
+        'https://github.com/Nova-Noir/NovaNo1r-Blog/tree/main/',
       }
     ],
 
