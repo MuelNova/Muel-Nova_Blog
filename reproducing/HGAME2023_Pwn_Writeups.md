@@ -193,4 +193,4 @@ call qword ptr [rdx + 0x20];
 
 测试之后确实如此，那就直接继续打 IO 就好。
 
-[exp]()
+[exp](https://github.com/Nova-Noir/NovaNo1r-pwn-challenges/blob/main/HGame2023/week4/pwn/4nswer's%20gift/exp.py)
