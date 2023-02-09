@@ -10,6 +10,8 @@ authors: [nova]
 
 官方 exp: [HGAME2023_Writeup](https://github.com/vidar-team/HGAME2023_Writeup)
 
+<!--truncate-->
+
 ## Week1
 
 基础赛，misc blockchain ioT 啥的也做了一下，但是懒得发了。
@@ -173,4 +175,22 @@ call qword ptr [rdx + 0x20];
 
 ## Week4
 
-因为比赛还没打完，等打完再发吧，已经写完了还没上传 git
+### without_hook
+
+2.36 版本，larginbin 打 IO 结构体。用了 [house_of_cat](https://bbs.kanxue.com/thread-273895.htm) 这个链子，当然用 apple 啥的也行。
+
+[exp](https://github.com/Nova-Noir/NovaNo1r-pwn-challenges/blob/main/HGame2023/week4/pwn/without_hook/exp.py)
+
+### 4nswer's gift
+
+2.36 版本
+
+直接在 `_IO_list_all` 这里写了堆地址，并且打印出了 libc 地址。然后 `exit` 触发 `_IO_flush_all_lockp` 可以进行 FSOP，但是因为没有堆地址所以链子都用不上。
+
+一开始注意到 size 为 0 可以堆溢出，思考利用 IO 泄露堆地址，但是又不能控制程序流，卡了很久。
+
+后来 ayoung 说 malloc 一个很大的值就可以了，思考一下想起来应该是 `sysmalloc` 重新开了一个内存，会落在 libc 附近，这个偏移应该是不会变的。
+
+测试之后确实如此，那就直接继续打 IO 就好。
+
+[exp]()
