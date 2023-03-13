@@ -6,9 +6,9 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'NovaNo1r メモ帳',
-  tagline: 'PWN THIS ワールド',
-  url: 'https://novanoir.moe',
+  title: 'まじょ Nova',
+  tagline: 'Meow~',
+  url: 'https://n.ova.moe',
   baseUrl: '/',
   onBrokenLinks: 'warn',
   onBrokenMarkdownLinks: 'warn',
@@ -64,7 +64,10 @@ const config = {
           },
         },
         theme: {
-          customCss: require.resolve('./src/css/custom.css'),
+          customCss: [
+            require.resolve('./src/css/custom.css'),
+            require.resolve('./src/css/custom.scss')
+          ],
         },
       }),
     ],
@@ -105,6 +108,7 @@ const config = {
         authorsMapPath: "../blog/authors.yml"
       },
     ],
+    'docusaurus-plugin-sass'
   ],
 
   themes: [
