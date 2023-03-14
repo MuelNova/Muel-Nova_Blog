@@ -88,7 +88,7 @@ const DropMenu = ({dropMenu, setDropMenu}) => (
       <div className={styles["bg"]} />
       <TitleImg className={styles["menu-title"]} />
       <nav className={styles["nav"]}>
-        <Link to="/index">
+        <Link to="#">
           <div className={styles["inner"]}>
             <div className={styles["icon"]}>
               <StarIcon />
@@ -104,7 +104,7 @@ const DropMenu = ({dropMenu, setDropMenu}) => (
             <SiteImg className={styles["title"]} />
           </div>
         </Link>
-        <Link to="/repruducting">
+        <Link to="/reproducing">
           <div className={styles["inner"]}>
             <div className={styles["icon"]}>
               <DogIcon />
