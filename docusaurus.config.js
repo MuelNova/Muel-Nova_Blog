@@ -100,8 +100,8 @@ const config = {
       '@docusaurus/plugin-content-blog',
       {
         id: 'reproducing',
-        routeBasePath: 'src/reproducing',
-        path: 'reproducing',
+        routeBasePath: 'reproducing',
+        path: 'src/reproducing',
         feedOptions: {
           type: 'rss',
           copyright: `Copyright © ${new Date().getFullYear()} NovaNo1r with ❤`,
