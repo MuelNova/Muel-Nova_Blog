@@ -6,7 +6,7 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'まじょ Nova',
+  title: 'ネコのメモ帳',
   tagline: 'Meow~',
   url: 'https://n.ova.moe',
   baseUrl: '/',
@@ -34,7 +34,7 @@ const config = {
       ({
         docs: {
           // id: "posts",
-          path: 'posts',
+          path: 'src/posts',
           routeBasePath: 'posts',
           sidebarPath: require.resolve('./sidebars.js'),
           // Please change this to your repo.
@@ -50,6 +50,7 @@ const config = {
           filename: 'sitemap.xml',
         },
         blog: {
+          path: 'src/blog',
           blogTitle: 'BLOG',
           blogSidebarTitle: 'Written with 😢tears and loves❤',
           blogSidebarCount: 'ALL',
@@ -65,8 +66,8 @@ const config = {
         },
         theme: {
           customCss: [
-            require.resolve('./src/css/custom.css'),
-            require.resolve('./src/css/custom.scss')
+            require.resolve('./src/theme/css/custom.css'),
+            require.resolve('./src/theme/css/custom.scss')
           ],
         },
       }),
@@ -78,7 +79,7 @@ const config = {
       '@docusaurus/plugin-content-docs',
       {
         id: 'blockchain',
-        path: 'blockchain',
+        path: 'src/blockchain',
         routeBasePath: 'blockchain',
         editUrl:
         'https://github.com/Nova-Noir/NovaNo1r-Blog/tree/main/',
@@ -88,7 +89,7 @@ const config = {
       '@docusaurus/plugin-content-docs',
       {
         id: 'pwn',
-        path: 'pwn',
+        path: 'src/pwn',
         routeBasePath: 'pwn',
         editUrl:
         'https://github.com/Nova-Noir/NovaNo1r-Blog/tree/main/',
@@ -99,7 +100,7 @@ const config = {
       '@docusaurus/plugin-content-blog',
       {
         id: 'reproducing',
-        routeBasePath: 'reproducing',
+        routeBasePath: 'src/reproducing',
         path: 'reproducing',
         feedOptions: {
           type: 'rss',
@@ -133,9 +134,9 @@ const config = {
 
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
-    ({
+    {
       navbar: {
-        title: 'Nova-Noir',
+        title: 'Miyu-Nova',
         logo: {
           alt: 'SiteLogo',
           src: 'img/logo.png',
@@ -222,8 +223,16 @@ const config = {
       tableOfContents: {
         minHeadingLevel: 2,
         maxHeadingLevel: 5,
-      }
-    }),
+      },
+      announcementBar: {
+        id: 'Warning',
+        content:
+          '网站正在重写前端，你可能会遇到一些问题阻止你的正常访问！',
+        backgroundColor: '#fafbfc',
+        textColor: '#091E42',
+        isCloseable: true,
+      },
+    },
 };
 
 module.exports = config;

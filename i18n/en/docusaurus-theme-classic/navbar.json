@@ -1,14 +1,14 @@
 {
   "title": {
-    "message": "Nova-Noir",
+    "message": "Miyu - Nova",
     "description": "The title in the navbar"
   },
   "item.label.🤡文章": {
-    "message": "🤡文章",
+    "message": "🤡Posts",
     "description": "Navbar item with label 🤡文章"
   },
   "item.label.♻️复现": {
-    "message": "♻️复现",
+    "message": "♻️Reproducing",
     "description": "Navbar item with label ♻️复现"
   },
   "item.label.📝Blog": {
