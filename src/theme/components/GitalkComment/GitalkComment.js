@@ -4,6 +4,8 @@ import GitalkComponent from "gitalk/dist/gitalk-component";
 import './GitalkComment.css'
 import {Md5} from 'ts-md5'
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
+import BrowserOnly from '@docusaurus/BrowserOnly';
+
 
 export default () => {
   const {
@@ -16,13 +18,17 @@ export default () => {
   }
   catch(e) {}
 
-  return (<GitalkComponent options={{
-    clientID: customFields.gitalkClientID,
-    clientSecret: customFields.gitalkSecret,
-    repo: customFields.gitalkREPO,      // The repository of store comments,
-    owner: customFields.gitalkOwner,
-    admin: admin,
-    id: Md5.hashStr(location.href),      // Ensure uniqueness and length less than 50
-    distractionFreeMode: true  // Facebook-like distraction free mode
-  }} />)
+  return (
+    <BrowserOnly>
+      {() => <GitalkComponent options={{
+        clientID: customFields.gitalkClientID,
+        clientSecret: customFields.gitalkSecret,
+        repo: customFields.gitalkREPO,      // The repository of store comments,
+        owner: customFields.gitalkOwner,
+        admin: admin,
+        id: Md5.hashStr(location.href),      // Ensure uniqueness and length less than 50
+        distractionFreeMode: true  // Facebook-like distraction free mode
+      }} />}
+    </BrowserOnly>
+  )
 };
