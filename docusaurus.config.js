@@ -1,3 +1,6 @@
+// dotenv
+require('dotenv').config()
+
 // @ts-check
 // Note: type annotations allow type checking and IDEs autocompletion
 
@@ -27,14 +30,27 @@ const config = {
     locales: ['zh-Hans', 'en'],
   },
 
+  customFields: {
+    // Gitalk
+    gitalkClientID: process.env.GITALK_CLIENT_ID,
+    gitalkSecret: process.env.GITALK_CLIENT_SECRET,
+    gitalkREPO: process.env.GITALK_REPO,
+    gitalkOwner: process.env.GITALK_OWNER,
+    gitalkAdmin: process.env.GITALK_ADMIN
+
+  },
+
   presets: [
     [
       'classic',
       /** @type {import('@docusaurus/preset-classic').Options} */
       ({
+        pages: {
+          path: 'src/contents/pages'
+        },
         docs: {
           // id: "posts",
-          path: 'src/posts',
+          path: 'src/contents/posts',
           routeBasePath: 'posts',
           sidebarPath: require.resolve('./sidebars.js'),
           // Please change this to your repo.
@@ -50,7 +66,7 @@ const config = {
           filename: 'sitemap.xml',
         },
         blog: {
-          path: 'src/blog',
+          path: 'src/contents/blog',
           blogTitle: 'BLOG',
           blogSidebarTitle: 'Written with 😢tears and loves❤',
           blogSidebarCount: 'ALL',
@@ -79,7 +95,7 @@ const config = {
       '@docusaurus/plugin-content-docs',
       {
         id: 'blockchain',
-        path: 'src/blockchain',
+        path: 'src/contents/blockchain',
         routeBasePath: 'blockchain',
         editUrl:
         'https://github.com/Nova-Noir/NovaNo1r-Blog/tree/main/',
@@ -89,7 +105,7 @@ const config = {
       '@docusaurus/plugin-content-docs',
       {
         id: 'pwn',
-        path: 'src/pwn',
+        path: 'src/contents/pwn',
         routeBasePath: 'pwn',
         editUrl:
         'https://github.com/Nova-Noir/NovaNo1r-Blog/tree/main/',
@@ -101,7 +117,7 @@ const config = {
       {
         id: 'reproducing',
         routeBasePath: 'reproducing',
-        path: 'src/reproducing',
+        path: 'src/contents/reproducing',
         feedOptions: {
           type: 'rss',
           copyright: `Copyright © ${new Date().getFullYear()} NovaNo1r with ❤`,
