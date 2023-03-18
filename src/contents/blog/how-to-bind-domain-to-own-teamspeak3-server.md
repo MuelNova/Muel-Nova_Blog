@@ -1,6 +1,6 @@
 ---
 title: 如何使用自己的域名替换TS自建服务器的IP
-tags: ['teamspeak', '']
+tags: ['teamspeak']
 categories: ['investigate']
 banner_img: https://www.teamspeak.com/user/themes/teamspeak/images/logo_inverse.svg
 index_img: https://www.teamspeak.com/user/themes/teamspeak/images/logo_inverse.svg
