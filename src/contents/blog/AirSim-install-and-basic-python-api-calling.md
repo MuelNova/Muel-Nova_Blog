@@ -1,11 +1,8 @@
 ---
 title: AirSim的初步配置与Python API调用
-date: 2021-09-29 22:30:30
-tags: ['雏雁', 'AirSim', '学习']
-categories: ['Record']
+tags: [AirSim]
+categories: ['investigate']
 authors: [nova]
-index_img: https://media.st.dl.pinyuncloud.com/steam/apps/1662840/header.jpg
-banner_img: https://static.hikarifield.co.jp/images/shop/parquet/banner2.jpg
 ---
 （因为找不到相关logo所以偷了个banner_img()）
 # Build AirSim on Windows

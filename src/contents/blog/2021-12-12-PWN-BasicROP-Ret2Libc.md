@@ -1,11 +1,8 @@
 ---
 title: 「PWN」BasicROP　-　Ret2Libc
-date: 2021-12-12 10:23:56
 tags: ['CTF', 'Pwn', ]
 categories: ['CTF']
 authors: [nova]
-index_img: https://novanoir.moe/img/ctf_logo_1.png
-banner_img: https://novanoir.moe/img/ctf_banner_1.png
 
 ---
 

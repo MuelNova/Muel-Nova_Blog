@@ -1,6 +1,5 @@
 ---
-title: PWN_House_of_Spirit
-date: 2022-07-19 22:03:43
+title: 「PWN」House_of_Spirit
 tags: ['CTF', 'Pwn', ]
 authors: [nova]
 categories: ['CTF']

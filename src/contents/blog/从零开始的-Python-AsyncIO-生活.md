@@ -2,6 +2,7 @@
 title: 从零开始的 Python AsyncIO 生活
 description: 从迭代器开始，一步一步进阶到 AsyncIO
 tags: [Python, Learning]
+categories: ['investigate']
 authors: [nova]
 
 ---

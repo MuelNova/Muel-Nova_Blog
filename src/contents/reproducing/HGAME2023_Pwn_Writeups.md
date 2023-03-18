@@ -1,8 +1,7 @@
 ---
 
-title: 「PWN」【HGAME2023】 Pwn WP
-tags: ['CTF', 'Pwn', ]
-categories: ['CTF']
+title: 「PWN」【HGAME2023】Writeup WP 复现
+tags: ['CTF', 'Pwn', 'writeup', 'wp']
 authors: [nova]
 ---
 

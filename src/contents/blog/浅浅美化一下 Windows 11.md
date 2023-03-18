@@ -2,6 +2,7 @@
 title: 浅浅~~美化~~一下 Windows 11
 description: 二次元确实屁事多
 tags: [Windows, beautifier]
+categories: [cheatsheet]
 authors: [nova]
 
 

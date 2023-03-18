@@ -1,11 +1,8 @@
 ---
-title: 2022-01-16-PWN-canary的绕过和泄露思路
-date: 2022-01-16 18:49:37
+title: 「PWN」canary的绕过和泄露思路
 tags: ['CTF', 'Pwn', ]
 categories: ['CTF']
 authors: [nova]
-index_img: https://novanoir.moe/img/ctf_logo_1.png
-banner_img: https://novanoir.moe/img/ctf_banner_1.png
 
 
 ---

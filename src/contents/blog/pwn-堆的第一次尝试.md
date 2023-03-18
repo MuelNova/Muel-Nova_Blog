@@ -1,6 +1,5 @@
 ---
 title: 「PWN」堆的第一次尝试 - UseAfterFree
-date: 2022-03-14 21:25:51
 tags: ['CTF', 'Pwn', ]
 authors: [nova]
 categories: ['CTF']

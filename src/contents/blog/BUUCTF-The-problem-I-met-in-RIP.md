@@ -1,11 +1,8 @@
 ---
-title: 「BUUCTF」Pwn - Rip Ubuntu18中64位ELF在调用system时候可能出现的问题
-date: 2021-11-29 0:00:00
+title: 「Pwn」Ubuntu18 中 64位 ELF 在调用 system 时候可能出现的问题
 tags: ['BUUCTF', 'Pwn', 'Problems']
-categories: ['CTF']
+categories: ['CTF', 'cheatsheet']
 authors: [nova]
-index_img: https://novanoir.moe/img/ctf_logo_1.png
-banner_img: https://novanoir.moe/img/ctf_banner_1.png
 
 ---
 

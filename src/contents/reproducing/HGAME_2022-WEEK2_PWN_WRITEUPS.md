@@ -1,11 +1,7 @@
 ---
-title: HGAME 2022 - WEEK2 _ Pwn _ Writeups
-date: 2022-02-17 12:57:36
-tags: ['CTF', 'Pwn', ]
-categories: ['CTF']
+title: 「PWN」【HGAME 2022 Week2】 Pwn Writeup WP 复现
+tags: ['CTF', 'Pwn', 'writeup', 'wp']
 authors: [nova]
-index_img: https://novanoir.moe/img/banner_categories.jpg
-banner_img: https://novanoir.moe/img/banner_categories.jpg
 
 ---
 

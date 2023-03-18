@@ -1,11 +1,8 @@
 ---
 title: 无人机集群的第一次尝试
-date: 2021-09-30 15:30:30
-tags: ['雏雁', 'AirSim', '学习']
-catagories: ['Record']
+tags: [AirSim]
+categories: ['investigate']
 authors: [nova]
-index_img: https://cdn.novanoir.moe/img/20210930153706.png
-banner_img: https://cdn.novanoir.moe/img/20210930153706.png
 ---
 
 # 配置 settings.json 文件

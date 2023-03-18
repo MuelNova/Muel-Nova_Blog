@@ -1,7 +1,7 @@
 ---
 title: 搭建一个全自动STEAM挂刀前后端
-date: 2022-03-06 23:17:48
-catagories: ['Record']
+catagories: ['gadget']
+tags: [steam,]
 math: true
 authors: [nova]
 

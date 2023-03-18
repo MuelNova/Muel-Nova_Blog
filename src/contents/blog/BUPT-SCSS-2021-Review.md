@@ -1,9 +1,8 @@
 ---
 title: BUPT-SCSS-2021-Review
-date: 2021-12-27 22:25:50
-tags: ['Study']
+tags: ['SCSS', 'Study']
 authors: [nova]
-categories: ['Note']
+categories: ['cheatsheet']
 ---
 
 

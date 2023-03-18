@@ -1,7 +1,7 @@
 ---
-title: 「PWN」【ACSC 2023】 Pwn Writeup WP
+title: 「PWN」【ACSC 2023】Writeup WP 复现
 authors: [nova]
-tags: ['CTF', 'Pwn', ]
+tags: ['CTF', 'Pwn', 'writeup', 'wp']
 categories: ['CTF']
 ---
 

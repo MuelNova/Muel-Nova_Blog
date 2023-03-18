@@ -1,8 +1,8 @@
 ---
-title: 【Blockchain】浅浅入门一哈
+title: 「Blockchain」浅浅入门一哈 Blockchain
 authors: [nova]
-tags: ['CTF', 'Blockchain']
-categories: ['CTF', 'Blockchain']
+tags: ['Blockchain']
+categories: ['Blockchain']
 ---
 
 题目平台 [点这里](https://ethernaut.openzeppelin.com/)

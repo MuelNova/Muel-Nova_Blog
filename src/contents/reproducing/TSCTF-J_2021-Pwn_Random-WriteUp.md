@@ -1,11 +1,7 @@
 ---
 title: 「TSCTF-J_2021」Pwn - Random WriteUp
-date: 2021-10-25 0:00:00
-tags: ['TSCTF-J_2021', 'Pwn', 'WriteUp']
-categories: ['CTF']
+tags: ['TSCTF-J_2021', 'Pwn', 'writeup', 'wp']
 authors: [nova]
-index_img: https://novanoir.moe/img/ctf_logo_1.png
-banner_img: https://novanoir.moe/img/ctf_logo_1.png
 ---
 
 ## 分析

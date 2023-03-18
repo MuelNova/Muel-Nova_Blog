@@ -1,11 +1,7 @@
 ---
-title: 「xCTF」Pwn - cgpwn2|level3|CGfsb WriteUps
-date: 2021-11-12 14:44:51
-tags: ['xCtf', 'Pwn', 'WriteUp']
-categories: ['CTF']
+title: 「攻防世界」Pwn - cgpwn2|level3|CGfsb WriteUps
+tags: ['CTF', 'Pwn', 'writeup', 'wp']
 authors: [nova]
-index_img: https://novanoir.moe/img/ctf_logo_2.png
-banner_img: https://novanoir.moe/img/ctf_logo_2.png
 ---
 ## cgpwn2 | level3 | CGfsb
 

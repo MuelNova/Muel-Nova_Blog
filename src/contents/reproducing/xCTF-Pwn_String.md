@@ -1,11 +1,7 @@
 ---
-title: 「xCTF」Pwn - String WriteUp
-date: 2021-11-02 0:00:00
-tags: ['xCtf', 'Pwn', 'WriteUp']
-categories: ['CTF']
+title: 「攻防世界」Pwn - String WriteUp
+tags: ['CTF', 'Pwn', 'writeup', 'wp']
 authors: [nova]
-index_img: https://novanoir.moe/img/ctf_logo_1.png
-banner_img: https://novanoir.moe/img/ctf_logo_1.png
 ---
 
 ## 写在开头的碎碎念
