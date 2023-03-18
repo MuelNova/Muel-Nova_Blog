@@ -1,5 +1,6 @@
 ---
 title: Hexo-Fluid下的live2d 3.x看板娘实现
+date: 2021-11-30
 tags: ['Hexo', 'live2d']
 authors: [nova]
 categories: ['investigate']

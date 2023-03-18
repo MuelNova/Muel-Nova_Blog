@@ -1,5 +1,6 @@
 ---
 title: Malloc的源码审计
+date: 2022-06-30
 tags: ['CTF', 'Pwn', 'glibc']
 authors: [nova]
 categories: ['CTF']

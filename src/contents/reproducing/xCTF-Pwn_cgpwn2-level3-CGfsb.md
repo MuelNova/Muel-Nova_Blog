@@ -1,5 +1,6 @@
 ---
 title: 「攻防世界」Pwn - cgpwn2|level3|CGfsb WriteUps
+date: 2021-12-30
 tags: ['CTF', 'Pwn', 'writeup', 'wp']
 authors: [nova]
 ---

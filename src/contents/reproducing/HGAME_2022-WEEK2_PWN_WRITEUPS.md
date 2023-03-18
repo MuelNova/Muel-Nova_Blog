@@ -1,6 +1,7 @@
 ---
 title: 「PWN」【HGAME 2022 Week2】 Pwn Writeup WP 复现
 tags: ['CTF', 'Pwn', 'writeup', 'wp']
+date: 2022-10-30
 authors: [nova]
 
 ---

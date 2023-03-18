@@ -1,6 +1,7 @@
 ---
 title: 「Pwn」Ubuntu18 中 64位 ELF 在调用 system 时候可能出现的问题
-tags: ['BUUCTF', 'Pwn', 'Problems']
+date: 2022-03-31
+tags: ['Pwn']
 categories: ['CTF', 'cheatsheet']
 authors: [nova]
 

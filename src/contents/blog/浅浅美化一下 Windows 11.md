@@ -1,7 +1,8 @@
 ---
 title: 浅浅~~美化~~一下 Windows 11
+date: 2023-02-01
 description: 二次元确实屁事多
-tags: [Windows, beautifier]
+tags: [Windows]
 categories: [cheatsheet]
 authors: [nova]
 

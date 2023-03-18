@@ -1,5 +1,6 @@
 ---
 title: 无人机集群的第一次尝试
+date: 2021-12-31
 tags: [AirSim]
 categories: ['investigate']
 authors: [nova]

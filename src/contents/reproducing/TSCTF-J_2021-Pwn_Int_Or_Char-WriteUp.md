@@ -1,5 +1,6 @@
 ---
 title: 「TSCTF-J_2021」Pwn - Int_Or_Char WriteUp
+date: 2021-10-30
 tags: ['TSCTF-J_2021', 'Pwn', 'writeup', 'wp']
 authors: [nova]
 ---
