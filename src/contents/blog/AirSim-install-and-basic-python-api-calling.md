@@ -1,8 +1,7 @@
 ---
 title: AirSim的初步配置与Python API调用
 date: 2021-12-31
-tags: [AirSim]
-categories: ['investigate']
+tags: [AirSim, investigate]
 authors: [nova]
 ---
 （因为找不到相关logo所以偷了个banner_img()）

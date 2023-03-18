@@ -3,7 +3,6 @@ title: 「PWN」堆的第一次尝试 - UseAfterFree
 date: 2022-06-30
 tags: ['CTF', 'Pwn', ]
 authors: [nova]
-categories: ['CTF']
 ---
 
 磨磨蹭蹭这么久也总算是入HEAP的坑了

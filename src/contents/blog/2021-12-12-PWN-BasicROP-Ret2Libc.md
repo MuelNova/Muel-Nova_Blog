@@ -1,7 +1,6 @@
 ---
 title: 「PWN」BasicROP　-　Ret2Libc
 tags: ['CTF', 'Pwn', ]
-categories: ['CTF']
 authors: [nova]
 
 ---

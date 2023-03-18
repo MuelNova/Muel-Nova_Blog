@@ -2,7 +2,6 @@
 title: 「PWN」【ACSC 2023】Writeup WP 复现
 authors: [nova]
 tags: ['CTF', 'Pwn', 'writeup', 'wp']
-categories: ['CTF']
 ---
 
 This is an individual competition, but I have already forgot things for Web or Rev, let along Crypto. Meanwhile, we can not solve the hard challenges, so uh-hum, let's just say I'm not participate for the sake of the ranks LOL

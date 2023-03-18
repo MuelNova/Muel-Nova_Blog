@@ -2,7 +2,6 @@
 title: 「PWN」House_of_Spirit
 tags: ['CTF', 'Pwn', ]
 authors: [nova]
-categories: ['CTF']
 
 ---
 

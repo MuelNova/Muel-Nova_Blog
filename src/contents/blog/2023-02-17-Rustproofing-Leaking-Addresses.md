@@ -1,7 +1,6 @@
 ---
 title: Rustproofing - Leaking Addresses
 tag: [pwn, kernel]
-categories: [kernel,]
 authors: [nova]
 ---
 

@@ -1,9 +1,8 @@
 ---
 title: 【ROOT Android】Steam 3.0 导出令牌的数种方法
 
-tags: ['Reverse', ]
+tags: ['Reverse', 'investigate']
 
-categories: ['investigate']
 
 authors: [nova]
 ---

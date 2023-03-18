@@ -1,7 +1,6 @@
 ---
 title: 「PWN」canary的绕过和泄露思路
 tags: ['CTF', 'Pwn', ]
-categories: ['CTF']
 authors: [nova]
 
 

@@ -2,7 +2,6 @@
 title: 「PWN」HEAP - Fastbin - Double Free
 date: 2022-03-21 11:40:08
 tags: ['CTF', 'Pwn', ]
-categories: ['CTF']
 authors: [nova]
 ---
 
