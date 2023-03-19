@@ -161,7 +161,7 @@ which disable **automatic stack variable initialisation**
 
 :::
 
-![image-20230217154242780](https://cdn.novanoir.moe/img/image-20230217154242780.png)
+![image-20230217154242780](https://cdn.ova.moe/img/image-20230217154242780.png)
 
 
 
@@ -320,11 +320,11 @@ It is interesting to explain how we interact with driver, but we'll talk it in l
 
 now, let's take a look at how this driver will leak our kernel memory.
 
-![image-20230224132905008](https://cdn.novanoir.moe/img/image-20230224132905008.png)
+![image-20230224132905008](https://cdn.ova.moe/img/image-20230224132905008.png)
 
 our `version` was set to *1*, but because the struct was not filled with `0` at initial, it actually contains some of the kernel info, and it is leaked while we're copying the struct to user space.
 
-![image-20230224133211571](https://cdn.novanoir.moe/img/image-20230224133211571.png)
+![image-20230224133211571](https://cdn.ova.moe/img/image-20230224133211571.png)
 
 
 
@@ -362,7 +362,7 @@ In short, We just simply use `unsafe` `writer.write_raw` to replace `copy_to_use
 
 Let's try our `PoC` again
 
-![image-20230224134458315](https://cdn.novanoir.moe/img/image-20230224134458315.png)
+![image-20230224134458315](https://cdn.ova.moe/img/image-20230224134458315.png)
 
 However, comparing with C version, the Rust Version contains `unsafe` flag to notice our driver programmers to think twice before writing this vulnerable code.
 

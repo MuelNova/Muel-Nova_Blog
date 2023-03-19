@@ -316,7 +316,7 @@ authors: [nova]
 
 解密密钥是**私钥**
 
-![image-20211227135423637](https://cdn.novanoir.moe/img/image-20211227135423637.png)
+![image-20211227135423637](https://cdn.ova.moe/img/image-20211227135423637.png)
 
 #### 优点
 
@@ -407,7 +407,7 @@ d为私钥
 
 看不懂，是不是说Ks(Ks(N1)) = D ?
 
-![image-20211227141202870](https://cdn.novanoir.moe/img/image-20211227141202870.png)
+![image-20211227141202870](https://cdn.ova.moe/img/image-20211227141202870.png)
 
 #### 中间人攻击
 
@@ -454,7 +454,7 @@ C替换了B的公钥为C的公钥，
 
 最后得到Hash值
 
-![image-20211227143712004](https://cdn.novanoir.moe/img/image-20211227143712004.png)
+![image-20211227143712004](https://cdn.ova.moe/img/image-20211227143712004.png)
 
 
 
@@ -469,7 +469,7 @@ C替换了B的公钥为C的公钥，
 
 与单向哈希函数类似，但多了一个密钥作为参数，不同的密钥会产生不同的hash值。即可以在确定消息未被篡改的同时验证发送者
 
-![image-20211227144247481](https://cdn.novanoir.moe/img/image-20211227144247481.png)
+![image-20211227144247481](https://cdn.ova.moe/img/image-20211227144247481.png)
 
 
 
@@ -499,7 +499,7 @@ C替换了B的公钥为C的公钥，
 - **签名生成过程**：利用私钥使用签名算法对消息产生签名
 - **签名验证过程**：利用公钥使用验证算法对消息验证
 
-![image-20211227145439619](https://cdn.novanoir.moe/img/image-20211227145439619.png)
+![image-20211227145439619](https://cdn.ova.moe/img/image-20211227145439619.png)
 
 
 
@@ -626,7 +626,7 @@ C替换了B的公钥为C的公钥，
 
 - **客户端（Client）**
 
-  ![image-20211227160625831](https://cdn.novanoir.moe/img/image-20211227160625831.png)
+  ![image-20211227160625831](https://cdn.ova.moe/img/image-20211227160625831.png)
 
 #### 技术手段
 
@@ -898,14 +898,14 @@ Virtual Private Network，虚拟专用网
 2. 使用数据库中原口令的哈希值解密密文得到新口令的哈希值
 3. 替换哈希值
 
-![image-20211227203543397](https://cdn.novanoir.moe/img/image-20211227203543397.png)
+![image-20211227203543397](https://cdn.ova.moe/img/image-20211227203543397.png)
 
 #### 认证过程
 
 1. 生成一个随机数，作为提问值。以随机数和口令的哈希值作为参数生成新哈希值
 2. 随机数与数据库的哈希以同样的方式生成哈希值，与传输的哈希值进行匹配
 
-![](https://cdn.novanoir.moe/img/image-20211227203407556.png)
+![](https://cdn.ova.moe/img/image-20211227203407556.png)
 
 
 
@@ -920,7 +920,7 @@ Virtual Private Network，虚拟专用网
 3. A使用Kab解密得到明文的Ks，IDB，rA和rB，确认rA=rA，证明消息来源于B，A认证B成功。Ks加密rB发送给B
 4. B使用Ks解密rB，确认rB=rB，B认证A成功
 
-![image-20211227204019932](https://cdn.novanoir.moe/img/image-20211227204019932.png)
+![image-20211227204019932](https://cdn.ova.moe/img/image-20211227204019932.png)
 
 #### ~~基于证书的单向身份认证~~（没看懂）
 
@@ -930,7 +930,7 @@ Virtual Private Network，虚拟专用网
 
 3. B选取rB，使用Ks加密rB发送给
 
-![image-20211227204439162](https://cdn.novanoir.moe/img/image-20211227204439162.png)
+![image-20211227204439162](https://cdn.ova.moe/img/image-20211227204439162.png)
 
 
 

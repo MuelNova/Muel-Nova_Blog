@@ -12,7 +12,7 @@ This is an individual competition, but I have already forgot things for Web or R
 
 The program uses a `scanf` to receive our input, therefore we have no length limit, and we can just modify *s* to be the same as *s2*.
 
-![image-20230227192106762](https://cdn.novanoir.moe/img/image-20230227192106762.png)
+![image-20230227192106762](https://cdn.ova.moe/img/image-20230227192106762.png)
 
 Then, we'll be able to leak the libc_address and ret2libc by simply doing a stack overflow and changing the return address.
 

@@ -112,7 +112,7 @@ export const ModelDir: string[] = ['Haru', 'Hiyori', 'Mark', 'Natori', 'Rice'];
 
 {% endnote %}
 
-![烧啊](https://cdn.novanoir.moe/img/image-20211007214102328.png)
+![烧啊](https://cdn.ova.moe/img/image-20211007214102328.png)
 
 > [皮](https://t.bilibili.com/485722661869867718?tab=2)来自石油佬的奉献
 
@@ -357,7 +357,7 @@ custom_head:
 
 ~~人类存在的意义就是不断制造重复的轮子！~~
 
-![通过各种自定义后的看板娘](https://cdn.novanoir.moe/img/image-20211010114744975.png)
+![通过各种自定义后的看板娘](https://cdn.ova.moe/img/image-20211010114744975.png)
 
 
 

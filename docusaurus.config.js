@@ -65,21 +65,7 @@ const config = {
           ignorePatterns: ['/tags/**'],
           filename: 'sitemap.xml',
         },
-        blog: {
-          path: 'src/contents/blog',
-          blogTitle: 'BLOG',
-          blogSidebarTitle: 'Written with 😢tears and loves❤',
-          blogSidebarCount: 'ALL',
-          showReadingTime: true,
-          // Please change this to your repo.
-          // Remove this to remove the "edit this page" links.
-          editUrl:
-            'https://github.com/Nova-Noir/NovaNo1r-Blog/tree/main/',
-          feedOptions: {
-            type: 'rss',
-            copyright: `Copyright © ${new Date().getFullYear()} NovaNo1r with ❤`,
-          },
-        },
+        blog: false,
         theme: {
           customCss: [
             require.resolve('./src/theme/css/custom.css'),
@@ -124,6 +110,26 @@ const config = {
         },
         authorsMapPath: "../blog/authors.yml"
       },
+    ],
+
+    [
+      '@docusaurus/plugin-content-blog',
+      {
+        id: "default",
+        path: 'src/contents/blog',
+        blogTitle: 'BLOG',
+        blogSidebarTitle: 'Written with 😢tears and loves❤',
+        blogSidebarCount: 'ALL',
+        showReadingTime: true,
+        // Please change this to your repo.
+        // Remove this to remove the "edit this page" links.
+        editUrl:
+          'https://github.com/Nova-Noir/NovaNo1r-Blog/tree/main/',
+        feedOptions: {
+          type: 'rss',
+          copyright: `Copyright © ${new Date().getFullYear()} NovaNo1r with ❤`,
+        },
+      }
     ],
     'docusaurus-plugin-sass'
   ],

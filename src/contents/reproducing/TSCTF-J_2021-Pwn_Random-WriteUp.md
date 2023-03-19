@@ -33,17 +33,17 @@ authors: [nova]
 
 我们可以发现*buf*的长度是*22*, 却可以读入*0x30bytes*的数据
 
-![read函数](https://cdn.novanoir.moe/img/image-20211025093806860.png)
+![read函数](https://cdn.ova.moe/img/image-20211025093806860.png)
 
 观察栈堆，可以发现*buf*与*seed*只相距*0x18*个字节, 则我们可以考虑栈溢出覆盖随机数种子
 
-![栈堆](https://cdn.novanoir.moe/img/image-20211025094037688.png)
+![栈堆](https://cdn.ova.moe/img/image-20211025094037688.png)
 
 #### 第二个随机
 
 这里就略有难度了。搜索的时候我发现了一个通过填充`\x00`使`strlen=0`直接跳过`strncmp`的方法，但这个显然不适合我们的`strcmp`
 
-![第二个随机](https://cdn.novanoir.moe/img/image-20211025095441204.png)
+![第二个随机](https://cdn.ova.moe/img/image-20211025095441204.png)
 
 但`strcmp`工作原理是这样的：
 
@@ -100,17 +100,17 @@ burp()
 
 于是接下来就是漫长的爆破环节了，只能说运气是真的不好，爆破了一个多小时，让我一度以为脚本写的有问题（）
 
-![后半段](https://cdn.novanoir.moe/img/image-20211025104934165.png)
+![后半段](https://cdn.ova.moe/img/image-20211025104934165.png)
 
 经过漫长的等待终于拿到了FLAG`o00O0o00D_LuCk_With_y0ur_Ctf_career!!!}`，但只有后半段？怎么会事呢？
 
 仔细研究IDA才发现，前半段其实在第一次random随机的时候就给出了（但是我由于觉得log等级debug的东西太多了在跑的时候给他注释掉了）
 
-![前半段_IDA](https://cdn.novanoir.moe/img/image-20211025101006065.png)
+![前半段_IDA](https://cdn.ova.moe/img/image-20211025101006065.png)
 
 于是再跑一次前半段，得到前半段flag`TSCTF-J{G0`
 
-![前半段](https://cdn.novanoir.moe/img/image-20211025101032214.png)
+![前半段](https://cdn.ova.moe/img/image-20211025101032214.png)
 
 拼接一下就有完整的FLAG了：
 

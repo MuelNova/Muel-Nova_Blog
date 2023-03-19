@@ -413,7 +413,7 @@ sh.interactive()
 
 题目给出了源码，对于我这种OI什么都不知道的傻逼来说还是挺有用处的。
 
-![vulnable](https://cdn.novanoir.moe/img/image-20220212195118394.png)
+![vulnable](https://cdn.ova.moe/img/image-20220212195118394.png)
 
 防护全开，因此我们不仅需要找到libc_base，还需要找到elf_base
 

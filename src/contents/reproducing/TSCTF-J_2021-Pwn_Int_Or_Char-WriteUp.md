@@ -11,7 +11,7 @@ authors: [nova]
 
 使用`checksec`查看一下文件，发现并没有开启NX和PIE，则初步考虑ret2text和ret2shellcode
 
-![checksec](https://cdn.novanoir.moe/img/image-20211025175327904.png)
+![checksec](https://cdn.ova.moe/img/image-20211025175327904.png)
 
 <!--truncate-->
 
@@ -84,15 +84,15 @@ char *strcpy(char *dest, const char *src);
 
 这是`strcpy`的原型, 也就是说, `src`的内容会拷贝到`dest`所在的地址上，也就是题目中的`passwd_buf`处
 
-![passwd_buf地址](https://cdn.novanoir.moe/img/image-20211025194709773.png)
+![passwd_buf地址](https://cdn.ova.moe/img/image-20211025194709773.png)
 
 我们来看一下栈堆
 
-![stack of check](https://cdn.novanoir.moe/img/image-20211025192814285.png)
+![stack of check](https://cdn.ova.moe/img/image-20211025192814285.png)
 
 这里我贴上Mark大爹的讲解：
 
-![性感Mark在线教学](https://cdn.novanoir.moe/img/image-20211025192651649.png)
+![性感Mark在线教学](https://cdn.ova.moe/img/image-20211025192651649.png)
 
 > 理解较浅，原因什么的按下不表，等我去把Pwn入门了把栈整明白了再说（）
 

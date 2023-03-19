@@ -20,11 +20,11 @@ authors: [nova]
 
 直接拖进checksec/ida
 
-![https://cdn.novanoir.moe/img/image-20211112104246870.png](https://cdn.novanoir.moe/img/image-20211112104246870.png)
+![https://cdn.ova.moe/img/image-20211112104246870.png](https://cdn.ova.moe/img/image-20211112104246870.png)
 
-![https://cdn.novanoir.moe/img/image-20211112105108027.png](https://cdn.novanoir.moe/img/image-20211112105108027.png)
+![https://cdn.ova.moe/img/image-20211112105108027.png](https://cdn.ova.moe/img/image-20211112105108027.png)
 
-![https://cdn.novanoir.moe/img/image-20211112112126099.png](https://cdn.novanoir.moe/img/image-20211112112126099.png)
+![https://cdn.ova.moe/img/image-20211112112126099.png](https://cdn.ova.moe/img/image-20211112112126099.png)
 
 这题意图就很明显了：在第一个gets中输入指令（"/bin/sh"），第二个gets中溢出然后调用system函数
 
@@ -65,9 +65,9 @@ r.interactive()
 
 按照惯例checksec看一下(checksec也不知道为什么软连接搞不上，我要吐力)
 
-![https://cdn.novanoir.moe/img/image-20211112114145579.png](https://cdn.novanoir.moe/img/image-20211112114145579.png)
+![https://cdn.ova.moe/img/image-20211112114145579.png](https://cdn.ova.moe/img/image-20211112114145579.png)
 
-![https://cdn.novanoir.moe/img/image-20211112140131570.png](https://cdn.novanoir.moe/img/image-20211112140131570.png)
+![https://cdn.ova.moe/img/image-20211112140131570.png](https://cdn.ova.moe/img/image-20211112140131570.png)
 
 总之先上EXP:
 
@@ -134,7 +134,7 @@ payload1 = b'a'*0x88 + b'aaaa' + p32(write_plt) + p32(func) + p32(1) + p32(write
 
 ### **CGfsb**
 
-![https://cdn.novanoir.moe/img/image-20211112141233440.png](https://cdn.novanoir.moe/img/image-20211112141233440.png)
+![https://cdn.ova.moe/img/image-20211112141233440.png](https://cdn.ova.moe/img/image-20211112141233440.png)
 
 一眼FormatString
 
@@ -155,7 +155,7 @@ r.recvuntil("is:\\n")
 print(r.recv())
 ```
 
-![https://cdn.novanoir.moe/img/image-20211112142129570.png](https://cdn.novanoir.moe/img/image-20211112142129570.png)
+![https://cdn.ova.moe/img/image-20211112142129570.png](https://cdn.ova.moe/img/image-20211112142129570.png)
 
 可以看到41414141在第十个参数的位置，那么我们只需要把pwnme的地址写入，然后通过%n把8写入它就好了
 

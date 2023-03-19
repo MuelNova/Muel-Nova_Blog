@@ -18,7 +18,7 @@ authors: [nova]
 
 首先先查看一下程序会干什么
 
-![image-20220217140202100](https://cdn.novanoir.moe/img/image-20220217140202100.png)
+![image-20220217140202100](https://cdn.ova.moe/img/image-20220217140202100.png)
 
 可以看到程序首先给出了`write`的地址，但是由于原创我们不知道libc的版本，虽然也可以根据低12位来找到libc版本，但是我们选择`LibcSearcher`会更快一些
 
@@ -36,7 +36,7 @@ success(">>> libc_base: {}".format(hex(libc_base)))
 
 接着它让我们可以打开一个文件
 
-![image-20220217140449422](https://cdn.novanoir.moe/img/image-20220217140449422.png)
+![image-20220217140449422](https://cdn.ova.moe/img/image-20220217140449422.png)
 
 介绍一下`/proc/`的一些相关内容
 

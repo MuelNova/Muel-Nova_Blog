@@ -95,7 +95,7 @@ gcc -L "${glibc_install}/lib" -I "${glibc_install}/include" -Wl,--rpath="${glibc
 
 如果n是0的话，`malloc`返回一个`minimum_sized`的`chunk`——在32bit上一般为16字节，在64bit上一般为32字节（也有可能是24字节）
 
-![32bytes_of_malloc(0)](https://cdn.novanoir.moe/img/image-20220519164757635.png)
+![32bytes_of_malloc(0)](https://cdn.ova.moe/img/image-20220519164757635.png)
 
 因为`size_t`是无符号类型，n是负数通常会导致系统分配一个极大的内存且出现没有足够多的内存分配而失败的情况。
 
@@ -397,17 +397,17 @@ _int_malloc (mstate av, size_t bytes)
 
 未进入`REMOVE_FB`前，我们的结构是这样的
 
-![structure_of_the_first](https://cdn.novanoir.moe/img/image-20220519204208793.png)
+![structure_of_the_first](https://cdn.ova.moe/img/image-20220519204208793.png)
 
 首先第一次循环时，`pp = victim`, `victim = pp->fd`
 
-![first_loop](https://cdn.novanoir.moe/img/image-20220519204410001.png)
+![first_loop](https://cdn.ova.moe/img/image-20220519204410001.png)
 
 之后执行`while`，`catomic_compare_and_exchange_val_acq(mem, newval, oldval)`执行逻辑是这样的：如果 `*mem = oldval`，则返回`oldval`，且`*mem = newval`
 
 我们的`mem`是`fb`，`oldval`是`pp`，`newval`是`victim`。显然成立，则第一次循环完毕后我们有`*fb=victim`, `victim = pp`
 
-![end_of_the_first_loop](https://cdn.novanoir.moe/img/image-20220519205349480.png)
+![end_of_the_first_loop](https://cdn.ova.moe/img/image-20220519205349480.png)
 
 是的，`chunk1`从链表上完全脱离了。
 
@@ -1159,4 +1159,4 @@ static void malloc_consolidate(mstate av)
 
 浅偷一张图，我觉得总结全了。
 
-![img](https://cdn.novanoir.moe/img/20210928234156-9c2ced00-2072-1.png)
+![img](https://cdn.ova.moe/img/20210928234156-9c2ced00-2072-1.png)

@@ -20,9 +20,9 @@ authors: [nova]
 
 这是一题最基础的格式化字符串泄露Canary的题目
 
-![pseudocode](https://cdn.novanoir.moe/img/image-20220116194731361.png)
+![pseudocode](https://cdn.ova.moe/img/image-20220116194731361.png)
 
-![checksec](https://cdn.novanoir.moe/img/image-20220116195013327.png)
+![checksec](https://cdn.ova.moe/img/image-20220116195013327.png)
 
 同时，有直接cat flag的后门函数，所以我们只需要泄露出canary的值，并溢出到后门函数就好。
 

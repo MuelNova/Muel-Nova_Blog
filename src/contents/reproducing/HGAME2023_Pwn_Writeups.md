@@ -55,7 +55,7 @@ shellcode ORW，程序运行了 `mmap((void *)0xCAFE0000LL, 0x1000uLL, 7, 33, -1
 
 挺有意思的格式化字符串题，格式化字符串在 bss 上。在 Say 的时候可以泄露栈的地址。
 
-![image-20230203153007716](https://cdn.novanoir.moe/img/image-20230203153007716.png)
+![image-20230203153007716](https://cdn.ova.moe/img/image-20230203153007716.png)
 
 然后下面格式化字符串用于泄露 canary 和 libc 基址，修改返回地址到 `vuln` 函数，不过没用上 canary 就是了。
 
