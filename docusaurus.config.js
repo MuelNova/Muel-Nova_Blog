@@ -184,6 +184,11 @@ const config = {
             label: 'GitHub',
             position: 'right',
           },
+          // To-Do: About Page Nav
+          // {
+          //   type: 'html',
+          //   value: '<a class="menu__link"></a>'
+          // },
         ],
       },
       footer: {

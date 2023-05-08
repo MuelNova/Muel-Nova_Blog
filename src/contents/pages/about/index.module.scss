@@ -1,0 +1,40 @@
+.avatar {
+    border: 1px solid #444c56;
+    border-radius: 50%;
+}
+
+
+.socialMediaList {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    div {
+        margin-left: 18px;
+        
+        a {
+            position: relative;
+            display: block;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--ifm-link-color);
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+        }
+        a:hover {
+            background-color: var(--ifm-color-secondary);
+            svg {
+                fill: var(--ifm-link-color);
+            }
+        }
+
+        svg {
+            position: absolute;
+            top: 12.5%; left: 12.5%;
+            width: 75%; height: 75%;
+            fill: var(--ifm-color-secondary);
+            display: block;
+            text-align: center;
+        }
+    }
+}
