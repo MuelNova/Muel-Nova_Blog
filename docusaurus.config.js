@@ -48,17 +48,7 @@ const config = {
         pages: {
           path: 'src/contents/pages'
         },
-        docs: {
-          // id: "posts",
-          path: 'src/contents/posts',
-          routeBasePath: 'posts',
-          sidebarPath: require.resolve('./sidebars.js'),
-          // Please change this to your repo.
-          // Remove this to remove the "edit this page" links.
-          editUrl:
-            'https://github.com/Nova-Noir/NovaNo1r-Blog/tree/main/',
-          
-        },
+        docs: false,
         sitemap: {
           changefreq: 'weekly',
           priority: 0.5,
@@ -90,7 +80,7 @@ const config = {
     [
       '@docusaurus/plugin-content-docs',
       {
-        id: 'pwn',
+        id: 'default',
         path: 'src/contents/pwn',
         routeBasePath: 'pwn',
         editUrl:
@@ -125,6 +115,27 @@ const config = {
         // Remove this to remove the "edit this page" links.
         editUrl:
           'https://github.com/Nova-Noir/NovaNo1r-Blog/tree/main/',
+        feedOptions: {
+          type: 'rss',
+          copyright: `Copyright © ${new Date().getFullYear()} NovaNo1r with ❤`,
+        },
+      }
+    ],
+    
+    [
+      '@docusaurus/plugin-content-blog',
+      {
+        id: "posts",
+        path: 'src/contents/posts',
+        routeBasePath: 'posts',
+        // sidebarPath: require.resolve('./sidebars.js'),
+        // Please change this to your repo.
+        // Remove this to remove the "edit this page" links.
+        authorsMapPath: "../blog/authors.yml",
+        editUrl:
+          'https://github.com/Nova-Noir/NovaNo1r-Blog/tree/main/',
+          
+        
         feedOptions: {
           type: 'rss',
           copyright: `Copyright © ${new Date().getFullYear()} NovaNo1r with ❤`,
@@ -251,14 +262,14 @@ const config = {
         minHeadingLevel: 2,
         maxHeadingLevel: 5,
       },
-      announcementBar: {
-        id: 'Warning',
-        content:
-          '网站正在重写前端，你可能会遇到一些问题阻止你的正常访问！',
-        backgroundColor: '#fafbfc',
-        textColor: '#091E42',
-        isCloseable: true,
-      },
+      // announcementBar: {
+        // id: 'Warning',
+        // content:
+        //   '网站正在重写前端，你可能会遇到一些问题阻止你的正常访问！',
+        // backgroundColor: '#fafbfc',
+        // textColor: '#091E42',
+        // isCloseable: true,
+      // },
     },
 };
 
