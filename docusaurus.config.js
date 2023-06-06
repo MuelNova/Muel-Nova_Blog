@@ -19,7 +19,7 @@ const config = {
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
-  organizationName: 'Nova-Noir', // Usually your GitHub org/user name.
+  organizationName: 'MuelNova', // Usually your GitHub org/user name.
   projectName: 'NovaNo1r-Blog', // Usually your repo name.
 
   // Even if you don't use internalization, you can use this field to set useful
@@ -74,7 +74,7 @@ const config = {
         path: 'src/contents/blockchain',
         routeBasePath: 'blockchain',
         editUrl:
-        'https://github.com/Nova-Noir/NovaNo1r-Blog/tree/main/',
+        'https://github.com/MuelNova/NovaNo1r-Blog/tree/main/',
       }
     ],
     [
@@ -84,7 +84,7 @@ const config = {
         path: 'src/contents/pwn',
         routeBasePath: 'pwn',
         editUrl:
-        'https://github.com/Nova-Noir/NovaNo1r-Blog/tree/main/',
+        'https://github.com/MuelNova/NovaNo1r-Blog/tree/main/',
       }
     ],
 
@@ -114,7 +114,7 @@ const config = {
         // Please change this to your repo.
         // Remove this to remove the "edit this page" links.
         editUrl:
-          'https://github.com/Nova-Noir/NovaNo1r-Blog/tree/main/',
+          'https://github.com/MuelNova/NovaNo1r-Blog/tree/main/',
         feedOptions: {
           type: 'rss',
           copyright: `Copyright © ${new Date().getFullYear()} NovaNo1r with ❤`,
@@ -133,7 +133,7 @@ const config = {
         // Remove this to remove the "edit this page" links.
         authorsMapPath: "../blog/authors.yml",
         editUrl:
-          'https://github.com/Nova-Noir/NovaNo1r-Blog/tree/main/',
+          'https://github.com/MuelNova/NovaNo1r-Blog/tree/main/',
           
         
         feedOptions: {
@@ -169,7 +169,7 @@ const config = {
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     {
       navbar: {
-        title: 'Miyu-Nova',
+        title: 'Muel-Nova',
         logo: {
           alt: 'SiteLogo',
           src: 'img/logo.png',
@@ -191,7 +191,7 @@ const config = {
           {to: '/blockchain', label: '📈Blockchain', position: 'left'},
           {to: '/pwn', label: '♿️Pwn', position: 'left'},
           {
-            href: 'https://github.com/Nova-Noir',
+            href: 'https://github.com/MuelNova',
             label: 'GitHub',
             position: 'right',
           },
@@ -246,12 +246,12 @@ const config = {
               },
               {
                 label: 'GitHub',
-                href: 'https://github.com/Nova-Noir',
+                href: 'https://github.com/MuelNova',
               }
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} <a href="/about">Nova-Noir</a>. Built with <a href="https://docusaurus.io/">Docusaurus</a> filling with ❤ and 🥛`,
+        copyright: `Copyright © ${new Date().getFullYear()} <a href="/about">MuelNova</a>. Built with <a href="https://docusaurus.io/">Docusaurus</a> filling with ❤ and 🥛`,
       },
       prism: {
         theme: lightCodeTheme,
