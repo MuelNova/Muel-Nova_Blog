@@ -24,3 +24,5 @@ yarn-error.log*
 # bak
 **/*.bak
 **/*NovaNo1r*
+
+**/*:Zone.Identifier

@@ -53,10 +53,10 @@
   },
   "link.item.label.GitHub": {
     "message": "GitHub",
-    "description": "The label of footer link with label=GitHub linking to https://github.com/Nova-Noir"
+    "description": "The label of footer link with label=GitHub linking to https://github.com/MuelNova"
   },
   "copyright": {
-    "message": "Copyright © 2022 <a href=\"/about\">Nova-Noir</a>. Built with <a href=\"https://docusaurus.io/\">Docusaurus</a> filling with ❤ and 🥛",
+    "message": "Copyright © 2022 <a href=\"/about\">Muel Nova</a>. Built with <a href=\"https://docusaurus.io/\">Docusaurus</a> filling with ❤ and 🥛",
     "description": "The footer copyright"
   }
 }

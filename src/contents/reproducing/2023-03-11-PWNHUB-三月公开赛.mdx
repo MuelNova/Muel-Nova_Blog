@@ -9,7 +9,7 @@ import Link from '@docusaurus/Link';
 题目实现了 shell 的一些功能，不过这些我实在没看懂逻辑，不过是混淆所以也无所谓。
 
 <!--truncate-->
-![image-20230311120537451](https://cdn.novanoir.moe/img/image-20230311120537451.png)
+![image-20230311120537451](https://cdn.n.ova.moe/img/image-20230311120537451.png)
 
 在 `ln src dest` 这个命令中实现了软连接，不同于 `cp` 的是它直接把 `pointer_arr` 复制了过来，而不是 `malloc` 之后再 `strncpy` 拷贝，在 `rm` 原文件的时候也并没有同时删除这个软连接文件，导致可以实现 UAF
 

@@ -1,5 +1,5 @@
 // dotenv
-require('dotenv').config()
+require('dotenv').config();
 
 // @ts-check
 // Note: type annotations allow type checking and IDEs autocompletion
@@ -16,6 +16,7 @@ const config = {
   onBrokenLinks: 'warn',
   onBrokenMarkdownLinks: 'warn',
   favicon: 'img/logo.png',
+  staticDirectories: ['static'],
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
@@ -168,6 +169,14 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     {
+      giscus: {
+        repo: process.env.GISCUS_REPO,
+        repoId: process.env.GISCUS_REPO_ID,
+        category: process.env.GISCUS_CATEGORY,
+        categoryId: process.env.GISCUS_CATEGORY_ID,
+        lightCss: process.env.GISCUS_LIGHT_CSS,
+        darkCss: process.env.GISCUS_DARK_CSS
+      },
       navbar: {
         title: 'Muel-Nova',
         logo: {

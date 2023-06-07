@@ -7,7 +7,7 @@ const svgList = [
     {
       title: 'github',
       Svg: require('@site/static/img/github.svg').default,
-      link: 'https://github.com/Nova-Noir'
+      link: 'https://github.com/MuelNova'
     }
 ]
 

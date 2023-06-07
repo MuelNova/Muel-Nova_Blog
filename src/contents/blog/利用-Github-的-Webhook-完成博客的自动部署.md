@@ -36,7 +36,7 @@ URL 就直接填公网 IP 就行，content type 我选了 json。
 
 用的是 go 的 gin，直接添加就完事了。
 
-代码可以在 [Nova-Noir/go-github-build-hook](https://github.com/Nova-Noir/go-github-build-hook) 这里看。
+代码可以在 [MuelNova/go-github-build-hook](https://github.com/MuelNova/go-github-build-hook) 这里看。
 
 唯一值得注意的大概就是因为 build 时间太长了，所以丢给一个协程自己跑就行，后端直接返回 200。
 

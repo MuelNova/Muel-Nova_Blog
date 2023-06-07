@@ -68,7 +68,7 @@ tags: [随笔]
 
 ## To The Future
 
-这个故事本该到这里结束，`NovaNoir` 已经成为了我一个不可替代的标识。朋友和我打游戏叫我 `nova`，同学队友平常生活叫我 `nova`，游戏、比赛取名我也会叫 `novanoir`，甚至我还拥有了 `novanoir.dev` 和 `novanoir.moe` 两个域名。这个机缘巧合却陪伴良久的昵称到今天为止我也没有厌弃，我或许也会继续一直用这个名字自称下去。
+这个故事本该到这里结束，`NovaNoir` 已经成为了我一个不可替代的标识。朋友和我打游戏叫我 `nova`，同学队友平常生活叫我 `nova`，游戏、比赛取名我也会叫 `novanoir`，甚至我还拥有了 `novanoir.dev` 和 `n.ova.moe` 两个域名。这个机缘巧合却陪伴良久的昵称到今天为止我也没有厌弃，我或许也会继续一直用这个名字自称下去。
 
 
 
@@ -92,7 +92,7 @@ tags: [随笔]
 
 
 
-我或许会把 `novanoir` 当作我的 `username / identity`，将 `Miu` 或者其他类似的同音词当作 `Display name / Character`。例如，更换一个 `miu@novanoir.moe` 的邮箱注册账号~~然后去当 VTuber~~；或是注册一个叫做 `Neko Miu` 的推特账号~~然后去当浮力计~~；又或是用一个猫猫头像的 `Nova Miu` 去打比赛？总之，下次看到昵称含有类似读音的二次元，你可要小心了... <3
+我或许会把 `novanoir` 当作我的 `username / identity`，将 `Miu` 或者其他类似的同音词当作 `Display name / Character`。例如，更换一个 `miu@n.ova.moe` 的邮箱注册账号~~然后去当 VTuber~~；或是注册一个叫做 `Neko Miu` 的推特账号~~然后去当浮力计~~；又或是用一个猫猫头像的 `Nova Miu` 去打比赛？总之，下次看到昵称含有类似读音的二次元，你可要小心了... <3
 
 :::
 

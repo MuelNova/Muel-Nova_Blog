@@ -5,7 +5,7 @@ tags: ['CTF', 'Pwn', 'writeup', 'wp']
 authors: [nova]
 ---
 
-附件 及 exp: [HGAME2023](https://github.com/Nova-Noir/NovaNo1r-pwn-challenges/tree/main/HGame2023)
+附件 及 exp: [HGAME2023](https://github.com/MuelNova/NovaNo1r-pwn-challenges/tree/main/HGame2023)
 
 官方 exp: [HGAME2023_Writeup](https://github.com/vidar-team/HGAME2023_Writeup)
 
@@ -25,7 +25,7 @@ authors: [nova]
 
 这里使用 `exec 1>&0 ` 命令将输出重定向到 stdout（see [understanding bash "exec 1>&2" command](https://stackoverflow.com/questions/8888251/understanding-bash-exec-12-command)）
 
-[exp](https://github.com/Nova-Noir/NovaNo1r-pwn-challenges/blob/main/HGame2023/week1/pwn/easy_overflow/exp.py)
+[exp](https://github.com/MuelNova/NovaNo1r-pwn-challenges/blob/main/HGame2023/week1/pwn/easy_overflow/exp.py)
 
 ### choose_the_seat
 
@@ -33,19 +33,19 @@ authors: [nova]
 
 改写 `exit` GOT 表为`vuln` 函数地址，第一遍泄露 `printf` 地址算 libc，第二遍改写 `puts` GOT 表拿 shell
 
-[exp](https://github.com/Nova-Noir/NovaNo1r-pwn-challenges/blob/main/HGame2023/week1/pwn/choose_the_seat/exp.py)
+[exp](https://github.com/MuelNova/NovaNo1r-pwn-challenges/blob/main/HGame2023/week1/pwn/choose_the_seat/exp.py)
 
 ### orw
 
 栈迁移 + ORW 模板题
 
-[exp](https://github.com/Nova-Noir/NovaNo1r-pwn-challenges/blob/main/HGame2023/week1/pwn/orw/exp.py)
+[exp](https://github.com/MuelNova/NovaNo1r-pwn-challenges/blob/main/HGame2023/week1/pwn/orw/exp.py)
 
 ### simple_shellcode
 
 shellcode ORW，程序运行了 `mmap((void *)0xCAFE0000LL, 0x1000uLL, 7, 33, -1, 0LL)` 改写了权限，直接在这里写就好。
 
-[exp](https://github.com/Nova-Noir/NovaNo1r-pwn-challenges/blob/main/HGame2023/week1/pwn/simple_shellcode/exp.py)
+[exp](https://github.com/MuelNova/NovaNo1r-pwn-challenges/blob/main/HGame2023/week1/pwn/simple_shellcode/exp.py)
 
 
 
@@ -63,7 +63,7 @@ shellcode ORW，程序运行了 `mmap((void *)0xCAFE0000LL, 0x1000uLL, 7, 33, -1
 
 （我看了好久我这个 exp 才看懂，这个写的真抽象，不知道 fmtstr_payload 在这里面怎么用了）
 
-[exp](https://github.com/Nova-Noir/NovaNo1r-pwn-challenges/blob/main/HGame2023/week2/pwn/YukkuriSay/exp.py)
+[exp](https://github.com/MuelNova/NovaNo1r-pwn-challenges/blob/main/HGame2023/week2/pwn/YukkuriSay/exp.py)
 
 ```python
 payload_padding = sorted([('%8$hn', system_addr & 0xffff),	# 修改最后两位 <-> p64(printf_got)
@@ -88,7 +88,7 @@ print(hex(payload))
 
 填满 tcache 顺手造个 unsorted_bin 泄露 libc，然后直接改 fd 连到 __free_hook 上改 system 拿 shell
 
-[exp](https://github.com/Nova-Noir/NovaNo1r-pwn-challenges/blob/main/HGame2023/week2/pwn/editable_note/exp.py)
+[exp](https://github.com/MuelNova/NovaNo1r-pwn-challenges/blob/main/HGame2023/week2/pwn/editable_note/exp.py)
 
 ### fast_note
 
@@ -98,7 +98,7 @@ Fastbin attack Double Free，在 `__malloc_hook-0x23` 的地方布置 fake chunk
 
 测试之后发现不满足 og 的条件，修改 __malloc_hook 为 realloc 调整寄存器，修改 \_\_realloc_hook 为 one_gadget
 
-[exp](https://github.com/Nova-Noir/NovaNo1r-pwn-challenges/blob/main/HGame2023/week2/pwn/fast_note/exp.py)
+[exp](https://github.com/MuelNova/NovaNo1r-pwn-challenges/blob/main/HGame2023/week2/pwn/fast_note/exp.py)
 
 ### new_fast_note
 
@@ -128,7 +128,7 @@ libc 2.31
 
 当然，这里其实是我想复杂了（我以为还是像前面一样在 add 的时候会检查 `notes[i]` 存不存在，一算发现不够）。直接在 fastbin 里造个 double_free 然后清空 tcache 即可将 fastbin 放入 tcache，直接拿就好了。
 
-[exp](https://github.com/Nova-Noir/NovaNo1r-pwn-challenges/blob/main/HGame2023/week2/pwn/new_fast_note/exp.py)
+[exp](https://github.com/MuelNova/NovaNo1r-pwn-challenges/blob/main/HGame2023/week2/pwn/new_fast_note/exp.py)
 
 
 
@@ -146,7 +146,7 @@ libc 2.31
 
 之后的就是 tcache poisoning 模板题
 
-[exp](https://github.com/Nova-Noir/NovaNo1r-pwn-challenges/blob/main/HGame2023/week3/pwn/safe_note/exp.py)
+[exp](https://github.com/MuelNova/NovaNo1r-pwn-challenges/blob/main/HGame2023/week3/pwn/safe_note/exp.py)
 
 ### large_note
 
@@ -154,7 +154,7 @@ libc 2.31
 
 功效类似于 `global_max_fast`，改了之后打和 safe_note 一样打就好。
 
-[exp](https://github.com/Nova-Noir/NovaNo1r-pwn-challenges/blob/main/HGame2023/week3/pwn/large_note/exp.py)
+[exp](https://github.com/MuelNova/NovaNo1r-pwn-challenges/blob/main/HGame2023/week3/pwn/large_note/exp.py)
 
 ### note_context
 
@@ -168,7 +168,7 @@ mov qword ptr [rsp], rax
 call qword ptr [rdx + 0x20];
 ```
 
-[exp](https://github.com/Nova-Noir/NovaNo1r-pwn-challenges/blob/main/HGame2023/week3/pwn/note_context/exp.py)
+[exp](https://github.com/MuelNova/NovaNo1r-pwn-challenges/blob/main/HGame2023/week3/pwn/note_context/exp.py)
 
 
 
@@ -178,7 +178,7 @@ call qword ptr [rdx + 0x20];
 
 2.36 版本，larginbin 打 IO 结构体。用了 [house_of_cat](https://bbs.kanxue.com/thread-273895.htm) 这个链子，当然用 apple 啥的也行。
 
-[exp](https://github.com/Nova-Noir/NovaNo1r-pwn-challenges/blob/main/HGame2023/week4/pwn/without_hook/exp.py)
+[exp](https://github.com/MuelNova/NovaNo1r-pwn-challenges/blob/main/HGame2023/week4/pwn/without_hook/exp.py)
 
 ### 4nswer's gift
 
@@ -192,4 +192,4 @@ call qword ptr [rdx + 0x20];
 
 测试之后确实如此，那就直接继续打 IO 就好。
 
-[exp](https://github.com/Nova-Noir/NovaNo1r-pwn-challenges/blob/main/HGame2023/week4/pwn/4nswer's%20gift/exp.py)
+[exp](https://github.com/MuelNova/NovaNo1r-pwn-challenges/blob/main/HGame2023/week4/pwn/4nswer's%20gift/exp.py)

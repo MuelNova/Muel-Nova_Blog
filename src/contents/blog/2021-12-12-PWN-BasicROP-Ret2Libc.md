@@ -429,7 +429,7 @@ sh.interactive()
 
 - 因为是64位，所以前面6个参数传参时候需要使用寄存器`rdi,rsi,rdx,rcx,r8,r9`，需要找ROPgadgets
 
-- payload2当中的p64(ret)是为了堆栈平衡防止虚拟机崩溃（崩了八万次了），详情可看[「BUUCTF」Pwn - Rip Ubuntu18中64位ELF在调用system时候可能出现的问题](https://novanoir.moe/2021/11/29/BUUCTF-The-problem-I-met-in-RIP/)
+- payload2当中的p64(ret)是为了堆栈平衡防止虚拟机崩溃（崩了八万次了），详情可看[「BUUCTF」Pwn - Rip Ubuntu18中64位ELF在调用system时候可能出现的问题](https://n.ova.moe/2021/11/29/BUUCTF-The-problem-I-met-in-RIP/)
 
   
 

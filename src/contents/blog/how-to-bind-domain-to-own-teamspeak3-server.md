@@ -15,7 +15,7 @@ tags: ['teamspeak', investigate]
 ## 操作步骤(以[GoDaddy](https://www.godaddy.com/)的DNS控制为例)
 
 ### 1.添加A记录 
-- 在`名称`处填写主机头(例如，对于我的域名[novanoir.moe](https://novanoir.moe)我想使用`ts.novanoir.moe`登录Teamspeak，则填写`ts`)
+- 在`名称`处填写主机头(例如，对于我的域名[n.ova.moe](https://n.ova.moe)我想使用`ts.n.ova.moe`登录Teamspeak，则填写`ts`)
 - 在`值`处填写对应服务器IP(即原来登录Teamspeak所使用的IP)
 
 ### 2.添加SRV记录
@@ -32,7 +32,7 @@ tags: ['teamspeak', investigate]
 | 类型 | 名称 | 值 | TTL |
 | ---- | ---- | ---- | ---- |
 | A | ts | 127.0.0.1 | 3600秒 | 
-| SRV | _ts3._udp.ts | 0 5 9987 ts.novanoir.moe | 1800秒 |
+| SRV | _ts3._udp.ts | 0 5 9987 ts.n.ova.moe | 1800秒 |
 
 ## 大功告成
 现在，你可以尝试使用所设置的域名连接至Teamspeak了！
