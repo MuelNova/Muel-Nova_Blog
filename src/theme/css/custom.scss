@@ -42,7 +42,10 @@
     --ifm-col-width: calc(8 / 12 * 100%);
 }
 
-.medium-zoom-overlay,
+.medium-zoom-overlay {
+    z-index: 999;
+}
+
 .medium-zoom-image--opened {
     z-index: 1000;
 }
