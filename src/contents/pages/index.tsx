@@ -88,14 +88,6 @@ const DropMenu = ({dropMenu, setDropMenu}) => (
       <div className={styles["bg"]} />
       <TitleImg className={styles["menu-title"]} />
       <nav className={styles["nav"]}>
-        <Link to="/about">
-          <div className={styles["inner"]}>
-            <div className={styles["icon"]}>
-              <StarIcon />
-            </div>
-            <ProfileImg className={styles["title"]} />
-          </div>
-        </Link>
         <Link to="/blog">
           <div className={styles["inner"]}>
             <div className={styles["icon"]}>
@@ -104,20 +96,28 @@ const DropMenu = ({dropMenu, setDropMenu}) => (
             <SiteImg className={styles["title"]} />
           </div>
         </Link>
-        <Link to="/reproducing">
-          <div className={styles["inner"]}>
-            <div className={styles["icon"]}>
-              <DogIcon />
-            </div>
-            <ProductImg className={styles["title"]} />
-          </div>
-        </Link>
         <Link to="/posts">
           <div className={styles["inner"]}>
             <div className={styles["icon"]}>
               <MountainIcon />
             </div>
             <MemoriesImg className={styles["title"]} />
+          </div>
+        </Link>
+        <Link to="/about">
+          <div className={styles["inner"]}>
+            <div className={styles["icon"]}>
+              <StarIcon />
+            </div>
+            <ProfileImg className={styles["title"]} />
+          </div>
+        </Link>
+        <Link to="/reproducing">
+          <div className={styles["inner"]}>
+            <div className={styles["icon"]}>
+              <DogIcon />
+            </div>
+            <ProductImg className={styles["title"]} />
           </div>
         </Link>
       </nav>

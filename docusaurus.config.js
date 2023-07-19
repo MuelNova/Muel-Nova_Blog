@@ -70,24 +70,13 @@ const config = {
     [
       '@docusaurus/plugin-content-docs',
       {
-        id: 'blockchain',
-        path: 'src/contents/blockchain',
-        routeBasePath: 'blockchain',
-        editUrl:
-        'https://github.com/MuelNova/NovaNo1r-Blog/tree/main/',
-      }
-    ],
-    [
-      '@docusaurus/plugin-content-docs',
-      {
         id: 'default',
-        path: 'src/contents/pwn',
-        routeBasePath: 'pwn',
+        path: 'src/contents/library',
+        routeBasePath: 'library',
         editUrl:
-        'https://github.com/MuelNova/NovaNo1r-Blog/tree/main/',
+        'https://github.com/MuelNova/Muel-Nova-Blog/tree/main/',
       }
     ],
-
     [
       '@docusaurus/plugin-content-blog',
       {
@@ -204,8 +193,7 @@ const config = {
             position: 'right',
           },
           {to: '/blog', label: '📝Blog', position: 'left'},
-          {to: '/blockchain', label: '📈Blockchain', position: 'left'},
-          {to: '/pwn', label: '♿️Pwn', position: 'left'},
+          {to: '/library', label: '♿️Library', position: 'left'},
           {
             href: 'https://github.com/MuelNova',
             label: 'GitHub',
@@ -225,8 +213,7 @@ const config = {
             title: 'Here',
             items: [
               {to: '/blog', label: '📝Blog'},
-              {to: '/blockchain', label: '📈Blockchain'},
-              {to: '/pwn', label: '♿️Pwn'},
+              {to: '/library', label: '♿️Library'},
             ],
           },
           {
