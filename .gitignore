@@ -26,3 +26,7 @@ yarn-error.log*
 **/*NovaNo1r*
 
 **/*:Zone.Identifier
+
+# obsidian
+src/contents/obsidian
+src/contents/.obsidian
