@@ -244,8 +244,8 @@ const config = {
             title: 'More',
             items: [
               {
-                label: 'DEV',
-                href: 'https://novanoir.dev'
+                label: 'Memo',
+                href: 'https://mem.ova.moe'
               },
               {
                 label: 'GitHub',
