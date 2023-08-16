@@ -117,7 +117,7 @@ const config = {
         id: "posts",
         path: 'src/contents/posts',
         routeBasePath: 'posts',
-        // sidebarPath: require.resolve('./sidebars.js'),
+        blogSidebarCount: 'ALL',
         // Please change this to your repo.
         // Remove this to remove the "edit this page" links.
         authorsMapPath: "../blog/authors.yml",
