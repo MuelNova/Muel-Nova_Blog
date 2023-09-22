@@ -199,6 +199,11 @@ const config = {
             label: 'GitHub',
             position: 'right',
           },
+          {
+            href: '/about',
+            label: 'About',
+            position: 'right',
+          }
           // To-Do: About Page Nav
           // {
           //   type: 'html',
@@ -224,32 +229,32 @@ const config = {
             ],
           },
           {
-            title: 'Community',
+            title: 'Who',
             items: [
               {
-                label: 'Teamspeak',
-                href: '#',
+                label: 'About',
+                href: '/about',
               },
               {
-                label: 'Discord',
-                href: '#',
+                label: 'Steam',
+                href: 'https://steamcommunity.com/id/nova_noir',
               },
               {
-                label: 'Twitter',
-                href: '#',
+                label: 'Github',
+                href: 'https://github.com/MuelNova',
               },
             ],
           },
           {
-            title: 'More',
+            title: 'Contact',
             items: [
               {
-                label: 'Memo',
-                href: 'https://mem.ova.moe'
+                label: 'Tencent QQ',
+                href: 'https://qm.qq.com/q/2liGTvjIM'
               },
               {
-                label: 'GitHub',
-                href: 'https://github.com/MuelNova',
+                label: 'Mail',
+                href: 'mailto:n@ova.moe',
               }
             ],
           },

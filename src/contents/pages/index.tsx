@@ -93,23 +93,17 @@ const DropMenu = ({dropMenu, setDropMenu}) => (
             <div className={styles["icon"]}>
               <MountainIcon />
             </div>
-            <SiteImg className={styles["title"]} />
+            <p className={styles["text"]}>博客</p>
+            {/* <SiteImg className={styles["title"]} /> */}
           </div>
         </Link>
         <Link to="/posts">
           <div className={styles["inner"]}>
             <div className={styles["icon"]}>
-              <MountainIcon />
+              <MoonIcon />
             </div>
-            <MemoriesImg className={styles["title"]} />
-          </div>
-        </Link>
-        <Link to="/about">
-          <div className={styles["inner"]}>
-            <div className={styles["icon"]}>
-              <StarIcon />
-            </div>
-            <ProfileImg className={styles["title"]} />
+            <p className={styles["text"]}>文章</p>
+            {/* <MemoriesImg className={styles["title"]} /> */}
           </div>
         </Link>
         <Link to="/reproducing">
@@ -117,7 +111,17 @@ const DropMenu = ({dropMenu, setDropMenu}) => (
             <div className={styles["icon"]}>
               <DogIcon />
             </div>
-            <ProductImg className={styles["title"]} />
+            <p className={styles["text"]}>复现</p>
+            {/* <ProductImg className={styles["title"]} /> */}
+          </div>
+        </Link>
+        <Link to="/about">
+          <div className={styles["inner"]}>
+            <div className={styles["icon"]}>
+              <StarIcon />
+            </div>
+            <p className={styles["text"]}>关于</p>
+            {/* <ProfileImg className={styles["title"]} /> */}
           </div>
         </Link>
       </nav>
