@@ -5,6 +5,8 @@
  */
 
 /* You can override the default Infima variables here. */
+
+@use './common/mixin';
 :root {
     --ifm-color-primary: #ed3545;
     --ifm-color-primary-dark: #eb1a2c;
@@ -39,7 +41,8 @@
 }
   
 .col--7 {
-    --ifm-col-width: calc(8 / 12 * 100%);
+    @include mixin.pc-layout { --ifm-col-width: calc(8 / 12 * 100%); }
+    
 }
 
 .medium-zoom-overlay {
