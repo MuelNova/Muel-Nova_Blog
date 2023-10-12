@@ -1,0 +1,31 @@
+{
+        acme_dns cloudflare {$CLOUDFLARE_TOKEN}
+        servers *.ova.moe {
+          protocols h3
+        }
+}
+
+*.ova.moe {
+        # Set this path to your site's directory.
+        @blog host n.ova.moe
+        handle @blog {
+          root * /home/website//Muel-Nova_Blog/build
+
+          # Enable the static file server.
+          file_server
+        }
+
+
+        handle {
+          abort
+        }
+        # Another common task is to set up a reverse proxy:
+        # reverse_proxy localhost:8080
+
+        # Or serve a PHP site through php-fpm:
+        # php_fastcgi localhost:9000
+}
+
+ova.moe {
+        redir https://n.ova.moe{uri}
+}
