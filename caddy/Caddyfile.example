@@ -14,7 +14,11 @@
           # Enable the static file server.
           file_server
         }
-
+	
+	@github-hook host github-push.ova.moe
+	handle @github-hook {
+	  reverse_proxy localhost:13191
+	}
 
         handle {
           abort
