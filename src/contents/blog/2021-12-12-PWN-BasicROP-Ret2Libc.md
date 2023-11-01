@@ -252,7 +252,7 @@ sh.interactive()
 
 ## ret2libc3
 
-对于pwn来说，整明白了这个应该才算刚刚入门:<
+对于pwn来说，整明白了这个应该才算刚刚入门:(
 
 没有system，没有binsh，靠延迟绑定泄露已经执行过函数的真实地址算出偏移与基地址搞到system和binsh的地址
 

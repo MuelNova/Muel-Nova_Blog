@@ -485,7 +485,7 @@ C替换了B的公钥为C的公钥，
 
 #### 签名方案的组成
 
-五元空间{P, S, K, Sig, Ver}
+五元空间\{P, S, K, Sig, Ver\}
 
 - P：明文空间
 - S：签名空间
@@ -693,7 +693,7 @@ Domain Name System，IP和域名相互映射的分布式数据库
 **正常TCP三次握手**：
 
 - ->SYN请求
-- <-SYN/ACK响应
+- &lt;-SYN/ACK响应
 - ->ACK数据包
 
 **DoS攻击**：

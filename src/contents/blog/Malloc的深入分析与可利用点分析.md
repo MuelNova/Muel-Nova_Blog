@@ -21,7 +21,7 @@ authors: [nova]
 
 感觉工程量还是很大的，挖一个坑。
 
-<details>
+{<details>
     <summary>更新日志</summary>
     <h3>2022/05/19</h3> 
     <li>首次部署文档（脑阔转不过来了）</li>
@@ -29,7 +29,7 @@ authors: [nova]
     <h3>2022/05/22</h3> 
     <li>完成 _int_malloc () 中的 smallbin, after_smallbin, iteration 部分</li>
     <li>因为太多了，所以决定分开写</li>
-</details>
+</details>}
 
 
 

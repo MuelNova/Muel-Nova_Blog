@@ -34,19 +34,17 @@ npm install
 npm run build
 ```
 
-{% note info %}
 
 官方推荐使用VS进行，此时命令有所区别，详情请去[Github](https://github.com/Live2D/CubismWebSamples/blob/develop/Samples/TypeScript/README.md)查看。
 
-{% endnote %}
 
 此时会在`\dist\`下编译生成一个`bundle.js`, 在`index.html`中用于加载live2d模型。
 
-{% note primary %}
+
 
 接下来的地址若无特殊说明默认均在`\CubismSdkForWeb-x\Samples\TypeScript\Demo`文件夹下。
 
-{% endnote %}
+
 
 ### 导入自己的模型
 
@@ -106,11 +104,9 @@ export const ModelDir: string[] = ['Haru', 'Hiyori', 'Mark', 'Natori', 'Rice'];
 
 再次编译并运行本地服务器, 你现在应该能看到刚才导入的模型了。
 
-{% note info %}
 
-你可以使用第三方工具如`Visual Studio`或`WebStorm`打开本地服务器，或者在命令行输入`npm run start`后打开所示的网址, 进入`Demo`文件夹预览。
+> 你可以使用第三方工具如`Visual Studio`或`WebStorm`打开本地服务器，或者在命令行输入`npm run start`后打开所示的网址, 进入`Demo`文件夹预览。
 
-{% endnote %}
 
 ![烧啊](https://cdn.ova.moe/img/image-20211007214102328.png)
 
