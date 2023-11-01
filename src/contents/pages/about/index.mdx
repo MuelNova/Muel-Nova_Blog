@@ -2,7 +2,6 @@ import style from './index.module.scss';
 import Svg from './_Svg'
 import svgList from './_SocialMediaList'
 
-
 <div style={{ display: 'flex', alignItems: 'center', flexDirection: 'column'}}>
     <div style={{height: '160px', width: '160px', textAlign: 'center'}}>
         <img src="https://avatars.githubusercontent.com/u/68760718?v=4" className={style['avatar']} alt="Avatar"/>
@@ -11,15 +10,16 @@ import svgList from './_SocialMediaList'
         <a href='mailto:n@ova.moe'><span>Nova  Muel</span><span style={{fontSize: '16px'}}>📧</span></a>
     </div>
     <div className={style['socialMediaList']}>
-    { svgList.map((item, _) => {
+    { svgList.map((item) => {
           return (
-            <div>
-            <Svg {...item} key={item.title}/>
+            <div key={item.title}>
+              <Svg {...item}/>
             </div>
           )
         })}
     </div>
 </div>
+
 
 # 关于
 > People dies. 

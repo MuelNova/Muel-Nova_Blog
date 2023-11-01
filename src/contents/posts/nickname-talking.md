@@ -92,7 +92,7 @@ tags: [随笔]
 
 
 
-我或许会把 `novanoir` 当作我的 `username / identity`，将 `Miu` 或者其他类似的同音词当作 `Display name / Character`。例如，更换一个 `miu@n.ova.moe` 的邮箱注册账号~~然后去当 VTuber~~；或是注册一个叫做 `Neko Miu` 的推特账号~~然后去当浮力计~~；又或是用一个猫猫头像的 `Nova Miu` 去打比赛？总之，下次看到昵称含有类似读音的二次元，你可要小心了... <3
+我或许会把 `novanoir` 当作我的 `username / identity`，将 `Miu` 或者其他类似的同音词当作 `Display name / Character`。例如，更换一个 `miu@n.ova.moe` 的邮箱注册账号~~然后去当 VTuber~~；或是注册一个叫做 `Neko Miu` 的推特账号~~然后去当浮力计~~；又或是用一个猫猫头像的 `Nova Miu` 去打比赛？总之，下次看到昵称含有类似读音的二次元，你可要小心了... &lt;3
 
 :::
 
