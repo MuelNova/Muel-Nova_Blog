@@ -1,6 +1,3 @@
-[submodule "go-github-build-hook"]
-	path = go-github-build-hook
-	url = https://github.com/MuelNova/go-git-push-hook
 [submodule "go-github-webhooks"]
 	path = go-github-webhooks
-	url = https://github.com/MuelNova/go-git-push-hoo
+	url = https://github.com/MuelNova/go-github-webhooks

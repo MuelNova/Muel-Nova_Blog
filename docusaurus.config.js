@@ -131,7 +131,15 @@ const config = {
         },
       }
     ],
-    'docusaurus-plugin-sass'
+    'docusaurus-plugin-sass',
+    // 'plugin-image-zoom',
+    // [
+    //   '@docusaurus/plugin-google-gtag',
+    //   {
+    //     trackingID: process.env.GTAG,
+    //     anonymizeIP: true,
+    //   },
+    // ],
   ],
 
   themes: [
@@ -261,6 +269,19 @@ const config = {
       tableOfContents: {
         minHeadingLevel: 2,
         maxHeadingLevel: 5,
+      },
+      imageZoom: {
+        // CSS selector to apply the plugin to, defaults to '.markdown img'
+        selector: '.markdown img',
+        // Optional medium-zoom options
+        // see: https://www.npmjs.com/package/medium-zoom#options
+        options: {
+          margin: 24,
+          background: '#222222',
+          // scrollOffset: 40,
+          // container: '#zoom-container',
+          // template: '#zoom-template',
+        },
       },
       // announcementBar: {
         // id: 'Warning',
