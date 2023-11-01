@@ -2,7 +2,6 @@
 title: 「PWN」exit_hook 的利用与原理
 authors: [nova]
 tags: [CTF, Pwn, CVE]
-draft: true
 unlisted: true
 ---
 
