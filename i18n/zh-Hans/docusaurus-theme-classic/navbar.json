@@ -26,5 +26,17 @@
   "item.label.GitHub": {
     "message": "GitHub",
     "description": "Navbar item with label GitHub"
+  },
+  "logo.alt": {
+    "message": "SiteLogo",
+    "description": "The alt text of navbar logo"
+  },
+  "item.label.♿️Library": {
+    "message": "♿️Library",
+    "description": "Navbar item with label ♿️Library"
+  },
+  "item.label.About": {
+    "message": "About",
+    "description": "Navbar item with label About"
   }
 }

@@ -4,7 +4,7 @@
     "description": "The label for version current"
   },
   "sidebar.defaultSidebar.category.堆": {
-    "message": "堆",
+    "message": "heap",
     "description": "The label for category 堆 in sidebar defaultSidebar"
   },
   "sidebar.defaultSidebar.category.ptmalloc2": {
