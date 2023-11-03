@@ -3,9 +3,9 @@ require('dotenv').config();
 
 // @ts-check
 // Note: type annotations allow type checking and IDEs autocompletion
-
-const lightCodeTheme = require('prism-react-renderer/themes/github');
-const darkCodeTheme = require('prism-react-renderer/themes/dracula');
+const {themes} = require('prism-react-renderer');
+const lightCodeTheme = themes.github;
+const darkCodeTheme = themes.dracula;
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
@@ -16,12 +16,13 @@ const config = {
   onBrokenLinks: 'warn',
   onBrokenMarkdownLinks: 'warn',
   favicon: 'img/logo.png',
+  titleDelimiter: '🐱',
   staticDirectories: ['static'],
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
   organizationName: 'MuelNova', // Usually your GitHub org/user name.
-  projectName: 'NovaNo1r-Blog', // Usually your repo name.
+  projectName: 'Muel-Nova_Blog', // Usually your repo name.
 
   // Even if you don't use internalization, you can use this field to set useful
   // metadata like html lang. For example, if your site is Chinese, you may want
@@ -32,13 +33,12 @@ const config = {
   },
 
   customFields: {
-    // Gitalk
-    gitalkClientID: process.env.GITALK_CLIENT_ID,
-    gitalkSecret: process.env.GITALK_CLIENT_SECRET,
-    gitalkREPO: process.env.GITALK_REPO,
-    gitalkOwner: process.env.GITALK_OWNER,
-    gitalkAdmin: process.env.GITALK_ADMIN
+  },
 
+  markdown: {
+    mdx1Compat: {
+      admonitions: true,
+    }
   },
 
   presets: [
@@ -51,7 +51,7 @@ const config = {
         },
         docs: false,
         sitemap: {
-          changefreq: 'weekly',
+          changefreq: 'daily',
           priority: 0.5,
           ignorePatterns: ['/tags/**'],
           filename: 'sitemap.xml',
@@ -264,7 +264,7 @@ const config = {
       prism: {
         theme: lightCodeTheme,
         darkTheme: darkCodeTheme,
-        additionalLanguages: ['powershell', 'bash']
+        additionalLanguages: ['powershell', 'bash', 'python', 'diff', 'json']
       },
       tableOfContents: {
         minHeadingLevel: 2,
