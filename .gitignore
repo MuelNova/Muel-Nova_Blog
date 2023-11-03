@@ -31,3 +31,7 @@ yarn-error.log*
 src/contents/obsidian
 src/contents/.obsidian
 src/contents/posts/Reading
+
+# hide markdown
+
+__*.md

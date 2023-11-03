@@ -17,7 +17,7 @@ const config = {
   onBrokenMarkdownLinks: 'warn',
   favicon: 'img/logo.png',
   titleDelimiter: '🐱',
-  staticDirectories: ['static'],
+  staticDirectories: ['src/static'],
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
@@ -30,6 +30,7 @@ const config = {
   i18n: {
     defaultLocale: 'zh-Hans',
     locales: ['zh-Hans', 'en'],
+    path: 'src/i18n'
   },
 
   customFields: {

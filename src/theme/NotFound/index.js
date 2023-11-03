@@ -49,7 +49,7 @@ export default function NotFound() {
               </a>
             </div>
             <div className='hero__img'>
-              <img src={require("@site/static/img/404/" + Math.floor(Math.random()*20) + ".jpg").default}/>
+              <img src={require("@site/src/static/img/404/" + Math.floor(Math.random()*20) + ".jpg").default}/>
             </div>
           </div>
         </main>

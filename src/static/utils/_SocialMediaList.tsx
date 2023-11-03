@@ -1,17 +1,17 @@
 const svgList = [
     {
       title: 'bilibili',
-      Svg: require('@site/static/img/bilibili.svg').default,
+      Svg: require('@site/src/static/img/bilibili.svg').default,
       link: 'https://space.bilibili.com/11966801'
     },
     {
       title: 'github',
-      Svg: require('@site/static/img/github.svg').default,
+      Svg: require('@site/src/static/img/github.svg').default,
       link: 'https://github.com/MuelNova'
     },
     {
       title: 'steam',
-      Svg: require('@site/static/img/steam.svg').default,
+      Svg: require('@site/src/static/img/steam.svg').default,
       link: 'https://steamcommunity.com/id/nova_noir'
     }
 ]

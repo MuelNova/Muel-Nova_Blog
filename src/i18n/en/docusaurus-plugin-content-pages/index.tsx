@@ -12,7 +12,7 @@ import ProfileImg from '@site/src/static/img/index/menu/menu-1.svg';
 import SiteImg from '@site/src/static/img/index/menu/menu-2.svg';
 import ProductImg from '@site/src/static/img/index/menu/menu-3.svg';
 import MemoriesImg from '@site/src/static/img/index/menu/menu-4.svg';
-import svgList from '@site/src/static/utils/_SocialMediaList'
+import svgList from '@site/src/static/utils/_SocialMediaList';
 
 const Svg = ({ Svg, link }) => {
   return (
@@ -21,6 +21,8 @@ const Svg = ({ Svg, link }) => {
     </a>
   )
 }
+
+
 
 
 function AboutComponent() {
@@ -81,7 +83,7 @@ const DropMenu = ({dropMenu, setDropMenu}) => (
             <div className={styles["icon"]}>
               <MountainIcon />
             </div>
-            <p className={styles["text"]}>博客</p>
+            <p className={styles["text"]}>Blog</p>
             {/* <SiteImg className={styles["title"]} /> */}
           </div>
         </Link>
@@ -90,7 +92,7 @@ const DropMenu = ({dropMenu, setDropMenu}) => (
             <div className={styles["icon"]}>
               <MoonIcon />
             </div>
-            <p className={styles["text"]}>文章</p>
+            <p className={styles["text"]}>Posts</p>
             {/* <MemoriesImg className={styles["title"]} /> */}
           </div>
         </Link>
@@ -99,7 +101,7 @@ const DropMenu = ({dropMenu, setDropMenu}) => (
             <div className={styles["icon"]}>
               <DogIcon />
             </div>
-            <p className={styles["text"]}>复现</p>
+            <p className={styles["text"]}>Reproducing</p>
             {/* <ProductImg className={styles["title"]} /> */}
           </div>
         </Link>
@@ -108,7 +110,7 @@ const DropMenu = ({dropMenu, setDropMenu}) => (
             <div className={styles["icon"]}>
               <StarIcon />
             </div>
-            <p className={styles["text"]}>关于</p>
+            <p className={styles["text"]}>About</p>
             {/* <ProfileImg className={styles["title"]} /> */}
           </div>
         </Link>
