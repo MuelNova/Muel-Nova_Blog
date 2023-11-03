@@ -1,0 +1,58 @@
+{
+  "link.title.Here": {
+    "message": "Here",
+    "description": "The title of the footer links column with title=Here in the footer"
+  },
+  "link.title.There": {
+    "message": "There",
+    "description": "The title of the footer links column with title=There in the footer"
+  },
+  "link.title.Who": {
+    "message": "Who",
+    "description": "The title of the footer links column with title=Who in the footer"
+  },
+  "link.title.Contact": {
+    "message": "Contact",
+    "description": "The title of the footer links column with title=Contact in the footer"
+  },
+  "link.item.label.📝Blog": {
+    "message": "📝Blog",
+    "description": "The label of footer link with label=📝Blog linking to /blog"
+  },
+  "link.item.label.♿️Library": {
+    "message": "♿️Library",
+    "description": "The label of footer link with label=♿️Library linking to /library"
+  },
+  "link.item.label.♻️复现": {
+    "message": "♻️复现",
+    "description": "The label of footer link with label=♻️复现 linking to /reproducing"
+  },
+  "link.item.label.🤡文章": {
+    "message": "🤡文章",
+    "description": "The label of footer link with label=🤡文章 linking to /posts"
+  },
+  "link.item.label.About": {
+    "message": "About",
+    "description": "The label of footer link with label=About linking to /about"
+  },
+  "link.item.label.Steam": {
+    "message": "Steam",
+    "description": "The label of footer link with label=Steam linking to https://steamcommunity.com/id/nova_noir"
+  },
+  "link.item.label.Github": {
+    "message": "Github",
+    "description": "The label of footer link with label=Github linking to https://github.com/MuelNova"
+  },
+  "link.item.label.Tencent QQ": {
+    "message": "Tencent QQ",
+    "description": "The label of footer link with label=Tencent QQ linking to https://qm.qq.com/q/2liGTvjIM"
+  },
+  "link.item.label.Mail": {
+    "message": "Mail",
+    "description": "The label of footer link with label=Mail linking to mailto:n@ova.moe"
+  },
+  "copyright": {
+    "message": "Copyright © 2023 <a href=\"/about\">MuelNova</a>. Built with <a href=\"https://docusaurus.io/\">Docusaurus</a> filling with ❤ and 🥛",
+    "description": "The footer copyright"
+  }
+}
