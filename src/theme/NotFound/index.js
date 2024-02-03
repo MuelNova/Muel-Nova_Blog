@@ -44,7 +44,7 @@ export default function NotFound() {
               <Translate
                   id="theme.NotFound.a"
                   description="The addr of the 404 page">
-                  Back to the index page.
+                  再回去找找
                 </Translate>
               </a>
             </div>

@@ -293,6 +293,17 @@ const config = {
         // isCloseable: true,
       // },
     },
+    webpack: {
+      jsLoader: (isServer) => {
+        return {
+          resolve: {
+            alias: {
+              '@src': '@site/src'
+            }
+          }
+        }
+      }
+    }
 };
 
 module.exports = config;

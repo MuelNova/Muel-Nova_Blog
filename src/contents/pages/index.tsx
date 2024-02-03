@@ -1,6 +1,6 @@
 import React from 'react';
 import { useState } from 'react';
-import styles from './index.module.scss';
+import styles from '@src/contents/pages/index.module.scss';
 import Link from '@docusaurus/Link';
 
 import TitleImg from '@site/src/static/img/index/menu/title.svg';
@@ -12,7 +12,7 @@ import ProfileImg from '@site/src/static/img/index/menu/menu-1.svg';
 import SiteImg from '@site/src/static/img/index/menu/menu-2.svg';
 import ProductImg from '@site/src/static/img/index/menu/menu-3.svg';
 import MemoriesImg from '@site/src/static/img/index/menu/menu-4.svg';
-import svgList from '@site/src/static/utils/_SocialMediaList'
+import svgList from '@site/src/theme/utils/_SocialMediaList'
 
 const Svg = ({ Svg, link }) => {
   return (
