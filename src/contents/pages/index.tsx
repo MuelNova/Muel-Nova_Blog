@@ -1,6 +1,6 @@
 import React from 'react';
 import { useState } from 'react';
-import styles from '@src/contents/pages/index.module.scss';
+import styles from '@site/src/contents/pages/index.module.scss';
 import Link from '@docusaurus/Link';
 
 import TitleImg from '@site/src/static/img/index/menu/title.svg';

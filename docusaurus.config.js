@@ -292,17 +292,6 @@ const config = {
         // textColor: '#091E42',
         // isCloseable: true,
       // },
-    },
-    webpack: {
-      jsLoader: (isServer) => {
-        return {
-          resolve: {
-            alias: {
-              '@src': '@site/src'
-            }
-          }
-        }
-      }
     }
 };
 
