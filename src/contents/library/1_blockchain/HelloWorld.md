@@ -1,7 +1,7 @@
 ---
 
 title: 初识区块链
-slug: /
+slug: /blockchain
 
 ---
 

@@ -1,0 +1,140 @@
+---
+title: 环境准备
+---
+
+在这个章节中，我们将进行 Linux 内核环境的搭建，以及作为一个在内核利用过程中可以使用的 Cheatsheet
+
+## Setup
+
+在下文中，如非特殊声明，我们默认每个命令行代码块的工作目录都在 `CWD` 目录下。
+
+### 安装 Prerequirements
+
+```sh
+sudo apt update
+sudo apt install -y bison flex libelf-dev cpio build-essential libssl-dev qemu-system-x86 libncurses-dev
+```
+
+:::info
+
+我们在这里使用了 qemu-system-x86。这只是为了节省时间，出于个人考虑，我更建议读者直接在 [QEMU](https://www.qemu.org/download/) 官方下载最新版本的源码包进行自己编译。
+
+:::
+
+### 编译安装 DEBUG 内核
+
+```sh
+git clone https://github.com/torvalds/linux
+cd linux && make defconfig && make menuconfig
+# 在打开的编译选项中，勾选 kernel hacking --> Compile-time checks and compiler options --> Compile the kernel with debug symbols
+make -j$(nproc)
+```
+
+:::info
+
+我更喜欢在 [内核镜像](https://mirrors.edge.kernel.org/pub/linux/kernel/) 处下载内核。例如：
+
+```sh
+curl -L https://mirrors.edge.kernel.org/pub/linux/kernel/v5.x/linux-5.15.148.tar.xz | tar xvJf -
+```
+
+:::
+
+直到输出 `Kernel: arch/x86/boot/bzImage is ready  (#1)` 后，便可以在 `arch/x86/boot/bzImage` 处找到你的内核。
+
+### 静态编译安装 BusyBox
+
+最新版本可以在 [BusyBox](https://busybox.net/) 官网找到。
+
+```sh
+curl -L https://busybox.net/downloads/busybox-1.36.1.tar.bz2 | tar xvjf -
+cd busybox-1.36.1
+make defconfig
+make menuconfig
+# 在打开的编译选项中，勾选 Settings --> Build static binary (no shared libs)
+make -j$(nproc)
+make CONFIG_PREFIX=./../busybox_rootfs install
+```
+
+之后，你便可以在 `CWD` 目录下找到 `busybox_rootfs` 文件夹，包含了你的 BusyBox
+
+### 编译 initramfs
+
+接下来，我们创建初始化文件系统。
+
+```sh
+mkdir -p initramfs/{bin,dev,etc,home,mnt,proc,sys,usr,tmp}
+cd initramfs/dev
+sudo mknod sda b 8 0  # 我们创建了一个块(b)设备，其主设备号为 8，次设备号为 0
+sudo mknod console c 5 1  # 我们创建了一个字符(c)设备
+```
+
+之后，拷贝所有 `busybox_rootfs` 的文件到 `initramfs/` 目录下
+
+```sh
+cp -r busybox_rootfs/* initramfs/
+```
+
+现在，让我们来创建我们的初始化脚本
+
+```sh title="initramfs/init"
+#!/bin/sh
+
+mount -t proc none /proc  # 我们将 proc 挂载到 /proc 目录下，dev_name 在 type 为 proc 时完全不被使用，因此随意填就好。这里这么写不容易产生歧义。
+mount -t sysfs none /sys
+
+/bin/mount -t devtmpfs devtmpfs /dev
+chown 1337:1337 /tmp
+
+setsid cttyhack setuidgid 1337 sh
+
+exec /bin/sh
+```
+
+大功告成，接下来我们将它改为可执行。
+
+```sh
+chmod +x initramfs/init
+```
+
+最后，我们将它使用 cpio 压缩。我们的文件系统 `initramfs.cpio.gz`便做好了。
+
+```sh
+find initramfs/ -print0 | cpio --null -ov --format=newc > initramfs.cpio 
+gzip ./initramfs.cpio
+```
+
+
+
+## Cheatsheet
+
+### 使用 Qemu 运行
+
+```sh
+qemu-system-x86_64 \
+    -m 512M \  # 分配内存
+    -nographic \  # 无图形化界面
+    -kernel bzImage \  # 内核
+    -append "console=ttyS0 loglevel=3 oops=panic panic=-1 nopti nokaslr" \  # 内核启动选项，panic=-1 代表 panic 后不重启
+    -no-reboot \  # 退出时不重启
+    -cpu qemu64 \  # CPU 类型为 qemu64
+    -smp 1 \  # 单核处理器
+    -monitor /dev/null \  # 关闭 qemu 监控器
+    -initrd initramfs.cpio.gz \  # 初始化 RAM 磁盘
+    -net nic,model=virtio \  # 创建 NetworkInterfaceCard，类型为 virtio
+    -net user \  # 用户模式网络堆栈，即运行虚拟机通过宿主机网络访问外部网络
+    -gdb tcp::1234 \  # gdb 服务器监听
+    -S  # 启动时等待 GDB 连接
+```
+
+### debug 连接
+
+```sh
+(gdb) target remote :1234
+```
+
+### shellcode by kernel module
+
+```sh
+objdump -M intel -d test.ko
+```
