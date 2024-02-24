@@ -37,3 +37,29 @@ title: Linux 内核的简述
 - **提权（Privilege Escalation）/ 权限维持（Privilege Persistence）**：可能的 Payload：`commit_creds(prepare_kernel_cred(0))`
 - **SECCOMP 沙箱逃逸**：可能的 Payload：`current->thread_info.flags &= ~(1 « TIF_SECCOMP)`
 
+
+
+## 内核保护机制
+
+### KASLR
+
+内核基址的偏移
+
+### FG-KASLR
+
+对于每一个函数的基址，都进行偏移
+
+### Kernel Stack Canary
+
+与 Userspace Canary 相同，每一个 TASK 仅包含一个 Canary
+
+### SMEP(Supervisor Mode Execution Prevention)
+
+禁止内核执行用户态代码
+
+### SMAP(Supervisor Mode Access Prevention)
+
+禁止内核访问用户态内存
+
+
+
