@@ -84,6 +84,8 @@ const config = {
         id: 'reproducing',
         routeBasePath: 'reproducing',
         path: 'src/contents/reproducing',
+        blogSidebarCount: "ALL",
+        blogSidebarTitle: '♻️复现',
         feedOptions: {
           type: 'rss',
           copyright: `Copyright © ${new Date().getFullYear()} NovaNo1r with ❤`,
