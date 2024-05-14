@@ -30,6 +30,7 @@ yarn-error.log*
 # obsidian
 src/contents/obsidian
 src/contents/.obsidian
+src/contents/Excalidraw
 src/contents/posts/Reading
 
 # hide markdown
