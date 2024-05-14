@@ -37,6 +37,7 @@ const config = {
   },
 
   markdown: {
+    format: "detect",
     mdx1Compat: {
       admonitions: true,
     }
@@ -267,7 +268,7 @@ const config = {
       prism: {
         theme: lightCodeTheme,
         darkTheme: darkCodeTheme,
-        additionalLanguages: ['powershell', 'bash', 'python', 'diff', 'json']
+        additionalLanguages: ['powershell', 'bash', 'python', 'diff', 'json', 'cpp']
       },
       tableOfContents: {
         minHeadingLevel: 2,
