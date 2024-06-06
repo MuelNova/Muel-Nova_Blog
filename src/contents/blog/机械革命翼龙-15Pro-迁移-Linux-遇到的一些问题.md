@@ -3,7 +3,7 @@ title: 机械革命翼龙 15Pro 迁移 Linux 遇到的一些问题
 authors: [nova]
 ---
 
-买了高性价比非大众电脑带来的后果，就是完全没有对 linux 等做过硬件上的适配（也不准备支持）。用了一周解决了大概三个问题：内置键盘失灵、蓝牙模块无效、显卡驱动装不上的问题，简单记录一下。
+买了高性价比非大众电脑带来的后果，就是完全没有对 linux 等做过硬件上的适配（也不准备支持）。用了一周解决了大概三个问题：内置键盘失灵、蓝牙模块无效、显卡驱动装不上、休眠立马唤醒的问题，简单记录一下。
 
 <!--truncate-->
 
@@ -128,7 +128,42 @@ BUILT_MODULE_LOCATION[4]="kernel-open"
 DEST_MODULE_LOCATION[4]="/kernel/drivers/video"
 ```
 
+## 无法休眠
 
+具体症状是休眠之后立马被唤醒的现象。
+
+[这个群里的老哥](https://bugzilla.kernel.org/show_bug.cgi?id=218829) 和我有非常相似的经历。
+
+[这个 commit](https://lore.kernel.org/all/20221012221028.4817-1-mario.limonciello@amd.com/T/) 解决了我的问题
+
+
+
+首先查看被唤醒的时候是因为哪个中断
+
+```bash
+cat /sys/power/pm_wakeup_irq
+cat /proc/interrupts 
+```
+
+如果中断是 `pinctrl_amd`，那么你很大概率遭遇到了同样的问题。在 root 下执行以下命令开启 DEBUG，然后再次休眠
+
+```bash
+alias ddcmd='echo $* > /proc/dynamic_debug/control'
+ddcmd file "drivers/pinctrl/*" +p
+echo 1 > /sys/power/pm_debug_messages
+```
+
+查看 dmesg，观察是否有 `GPIO $N$ is active: 0xSOMEADDR` 的情况
+
+如果有， 那么在内核参数里添加如下参数屏蔽 gpio 接口
+
+```bash
+gpiolib_acpi.ignore_interrupt=AMDI0030:00@$N$  # 替换 $N$ 为你的 GPIO 接口号
+```
+
+
+
+重启，问题应该得到解决
 
 ## 总结
 
