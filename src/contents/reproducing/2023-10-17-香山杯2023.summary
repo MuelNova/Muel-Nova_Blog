@@ -1,0 +1,7 @@
+文章概述了香山杯2023比赛中两道PWN题的解题思路和过程，分为“move”和“Pwnthon”两部分。
+
+在“move”题中，作者nova通过栈迁移泄露libc地址，以便调用system函数。作者强调第二次read前，RSP正好对齐到bss段，无需再次迁移，简化了操作步骤。
+
+“Pwnthon”题的难点在于用CPython写的.so文件的动态调试。由于无法通过`gdb.debug`直接设置断点，nova采用了将断点设置在`PyImport_ImportModule+4`以此推断.so加载位置的方法。通过IDA工具和gdb结合，找到开debug信息及符号表，精确定位进行了调试。最后，通过格式化字符串漏洞和栈溢出，规划了完整的攻击计划，包括泄露栈上的canary值和system函数地址。
+
+总结来说，nova详细分享了如何在CTF挑战中有效利用调试技巧和内存管理漏洞完成PWN攻击。这篇writeup为CTF爱好者提供了实用的经验和关键点解析。

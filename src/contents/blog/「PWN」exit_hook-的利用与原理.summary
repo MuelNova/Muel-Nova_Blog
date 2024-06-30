@@ -1,0 +1,6 @@
+这篇由 nova 撰写的博客文章探讨了如何利用 *exit_hook* 来实现任意代码执行。主要方法包括两种：一次任意写和两次任意写。核心论点如下：
+
+1. **一次任意写**：通过修改 *\_rtld_lock_lock_recursive* 或 *\_rtld_lock_unlock_recursive* 来触发 OneGadget。
+2. **两次任意写**：先将 *\_rtld_lock_lock_recursive* 或 *\_rtld_lock_unlock_recursive* 修改为某个函数，然后把 *\_rtld_global.\_dl_load_lock.mutex* 修改为该函数的参数。
+
+这些方法利用了系统在 *exit* 调用 *_dl_fini* 函数时执行的操作，特别是上锁和解锁机制的漏洞，从而实现对 *_rtld_global* 结构体的伪造和利用。这样的技术在 CTF 和漏洞利用（Pwn, CVE）领域有着重要的应用。

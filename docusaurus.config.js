@@ -34,6 +34,7 @@ const config = {
   },
 
   customFields: {
+    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
   },
 
   markdown: {
@@ -144,6 +145,10 @@ const config = {
     //     anonymizeIP: true,
     //   },
     // ],
+    [
+      require.resolve('./src/plugins/ai-summary'),
+      {}
+    ],
   ],
 
   themes: [
