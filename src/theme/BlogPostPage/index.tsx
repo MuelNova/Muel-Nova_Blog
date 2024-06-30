@@ -55,12 +55,10 @@ function BlogPostPageContent({
 }
 
 function BlogSummary(props: Props): JSX.Element {
-  console.log(props)
   try {
     const Data = require('@site/.docusaurus/ai-summary/default/aisummary.json');
     const link = props.content.metadata.source.split('/');
     const blog = link[link.length-2], post = link[link.length-1].replace(/\.(md|mdx)$/, '');
-    console.log(blog, post)
     const summary = Data[blog][post];
     
     return (
