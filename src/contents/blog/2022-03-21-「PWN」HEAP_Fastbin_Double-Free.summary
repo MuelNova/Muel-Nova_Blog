@@ -1,0 +1,23 @@
+这篇博客文章由nova撰写，主要讨论了在PWN攻防中如何利用Fastbin的Double Free漏洞进行攻击。
+
+# 原理
+文章首先解释了Double Free漏洞的原理。Fastbin在释放内存时不清除`prev_in_use`，仅检查链表头部，从而容易产生双重释放漏洞。通过CTF-Wiki的链接提供了更详细的技术背景。
+
+# 测试
+nova选用了how2heap提供的两个程序`fastbin_dup.c`和`fastbin_dup_into_stack.c`进行演示并关闭了ASLR以方便调试。
+
+- 在`fastbin_dup.c`中，通过多次动态分配和释放内存，展示如何控制不同chunk，最后达到多个指针指向同一个chunk的结果。
+- 在`fastbin_dup_into_stack.c`中，继续探讨如何利用双重释放将chunk劫持到栈上，通过修改chunk指针，实现对栈上任意地址的写入。
+
+# 实战
+文章最后提供了两个CTF题目实战的解题思路和过程。
+
+1. **Samsara**
+   - 分析了程序功能，指出delete函数未置零指针。
+   - 利用双重释放与修改chunk指针，最终成功劫持内存并利用执行shell命令拿到shell。
+
+2. **ACTF-2019_Message**
+   - 在完全开启保护的情形下，先分析漏洞，利用双重释放制造出fake chunk从而控制任意地址读写。
+   - 通过泄露libc地址并利用`__free_hook()`，成功获取执行权限，从而实现了远程控制执行shell。
+
+总结，文章从基础概念到实际操作，系统介绍了利用Fastbin的Double Free漏洞来控制内存和执行攻击的全过程。

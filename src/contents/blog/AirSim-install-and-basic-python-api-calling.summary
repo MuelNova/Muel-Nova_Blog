@@ -1,0 +1,7 @@
+nova在这篇文章中详细介绍了如何在Windows系统上配置和使用AirSim，以帮助读者实现模拟无人机控制。
+
+首先，作者描述了如何安装Unreal Engine 4，要点包括下载Epic Games Launcher并选择合适的引擎版本。接着，作者说明了编译AirSim所需的准备工作，包括安装Visual Studio 2019以及必要的组件和SDK。
+
+在创建Unreal项目部分，nova提供了详细的步骤，告诉读者如何通过Epic Games Launcher创建一个自定义的Unreal环境，并配置相应的项目文件以支持AirSim插件。
+
+最后，作者简要介绍了如何使用Python API来控制无人机，强调了使用Conda和Python 3.8的环境配置，并提供了一个基本的例子展示了如何通过代码实现无人机的简单控制。

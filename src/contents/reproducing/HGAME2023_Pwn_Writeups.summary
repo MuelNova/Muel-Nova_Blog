@@ -1,0 +1,16 @@
+这篇文章是HGAME2023 CTF挑战赛的复现总结，由nova撰写。文章主要分解了三个星期内的PWN题目，其中每个题目都有详细的解题过程和相关的exploit脚本。
+
+在第一个星期，nova复现了基础赛的几个题目，其中包括：
+1. **test_nc**：利用nc直接拿到shell。
+2. **easy_overflow**：通过栈溢出和重定向stdout来取得shell。
+3. **choose_the_seat**：利用signed int漏洞执行任意地址读写，成功绕过检查并拿到shell。
+4. **orw**和**simple_shellcode**：分别解决栈迁移和shellcode相关的题目。
+
+第二个星期的题目较为复杂，包括堆利用和格式化字符串漏洞：
+1. **YukkuriSay**：通过格式化字符串漏洞泄露各类地址，布置返回地址，并最终执行system('/bin/sh')拿到shell。
+2. **editable_note**和**fast_note**：这两个题目涉及堆利用，分别使用UAF和Double Free攻击，通过操纵指针来修改__free_hook或__malloc_hook，最终取得shell。
+3. **new_fast_note**：进一步复杂的堆重叠和双重释放攻击，详细描述了针对不同libc版本的利用方法。
+
+在第三个星期，nova提到了**safe_note**的Safe-unlinking机制的漏洞利用，但细节尚未完全描述。
+
+每个题目的解题过程都附带了exp脚本链接，供读者参考。这些总结有助于理解相关漏洞的利用方式与修补方法，是学习PWN技术的宝贵资料。

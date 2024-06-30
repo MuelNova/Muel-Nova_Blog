@@ -1,0 +1,7 @@
+nova 在这篇文章中详细描述了她在"HGAME 2022 Week 2"比赛中解决一道 PWN 题目的全过程，这道题主要考察了BROP（Blind Return Oriented Programming）和利用/proc文件系统来进行漏洞利用的技巧。
+
+一开始，nova 通过题目简介和没有附件的信息，确认了题目与BROP相关，她引用了[CTF-WIKI上的BROP](https://ctf-wiki.org/pwn/linux/user-mode/stackoverflow/x86/medium-rop/#brop)作为参考。在分析程序功能时，她解释了通过`write`地址找出libc版本的相关内容，并选择了使用`LibcSearcher`来快速找到libc的基址。
+
+接下来，nova 介绍了/proc目录特别是/proc/self/和它的重要文件`maps`和`mem`。她详细解释了如何通过`/proc/self/maps`获取内存映射信息，并使用`/proc/self/mem`修改内存，实现对程序内存的直接读写操作，并根据信息进行相应的利用。
+
+最后，nova 提出了通过Shellcode喷发（Spray）技术解决实际问题的策略。她计划将目标地址范围内的代码段大量填充为`nop`操作，并在最后添加实际的`shellcode`，这样无论程序执行到任何`nop`位置，都将最终执行到`shellcode`。她计划覆盖`__libc_start_main`开始的一大段地址为`nop`，确保程序一定能被`shellcode`控制。

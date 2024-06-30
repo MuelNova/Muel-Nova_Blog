@@ -1,0 +1,5 @@
+博主 nova 厌倦了每次通过 SSH 手动执行 `git pull && npm run build` 来部署博客，因此决定利用 GitHub 的 Webhook 实现自动部署。文章详细介绍了如何配置 GitHub 的 Webhook，并且提供了链接供读者参考。Webhook 的 URL 配置为公用 IP，content type 选择 json，并设置一个随机的 Secret 生成 HMAC 密钥。
+
+后端使用 Go 的 gin 框架进行开发，主要任务是监听指定 URL，接收到 POST 请求后进行验证，再执行相应的命令。代码可在 nova 的 GitHub 仓库 [MuelNova/go-github-build-hook](https://github.com/MuelNova/go-github-build-hook) 找到。由于构建时间较长，nova 将其放入一个协程中执行，后端快速返回状态码 200。
+
+未来可能会在此基础上进行更多的自定义，甚至添加编译完成后的通知功能，例如通过 QQ 机器人通知编译状态。虽然这篇文章写得很轻松，但却是为了测试其效果而写的。

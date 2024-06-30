@@ -1,0 +1,27 @@
+博客作者 nova 为 HGAME 2022 第一周的 PWN 题目撰写了详细的解决方案。以下是主要内容的总结：
+
+1. **test_your_nc**：
+   - 基本的任务是通过 `nc` 获取 flag，提供了使用 `pwnlib` 的 `mbruteforce` 进行破解。
+
+2. **test_your_gdb**：
+   - 使用 gdb 查看 `encrypted_secret`，发现不变后绕过 `memcpy`。
+   - 提供了 exploit 代码。
+
+3. **enter_the_pwn_land**：
+   - 主要讲解了如何进行 ret2rop，并通过手动调整循环变量 `i` 来使漏洞利用成功。
+
+4. **enter_the_evil_pwn_land**：
+   - 解决绕过 Canary 的过程。
+   - 解释了在溢出时如何利用线程本地存储（TLS）修改 canary，同时避免程序崩溃。
+   - 提供了通过计算 libc_base 后进行溢出的经验和方法。
+
+5. **oldfashion_orw**：
+   - 使用 ORW 三件套获取 flag，具体包括读取文件名并绕过 seccomp 的限制。
+   - 分享了一个在本地调试有效但远程无效的 exp。
+
+6. **ser_per_fa**：
+   - 高难度的题目，需要通过源码分析找出漏洞。
+   - 详细解释了如何通过控制下标泄露 libc_base 和 elf_base，并通过 `_environ` 计算偏移以确定栈位置。
+   - 提供了多种利用方法，包括改写 got 表进入后门。
+
+博客中的每个部分都有详细的 exp（exploit 代码）和指南，显示了 nova 在解决这些 PWN 题目时的思路和技巧。

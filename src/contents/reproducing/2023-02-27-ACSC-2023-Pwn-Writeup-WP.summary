@@ -1,0 +1,17 @@
+博客作者nova详细分享了他在ACSC 2023比赛期间的PWD挑战复现过程，并具体记录了他在两个题目中的思路和经验：
+
+1. **Vaccine**：
+   - 利用程序的`scanf`输入没有长度限制，尝试通过篡改内容使得`s`和`s2`相等。
+   - 通过栈溢出方法泄露libc地址并进行ret2libc攻击。
+   - 最初使用了错误版本的libc，未能使用one_gadgets，因此采用了`mprotect`和shellcode来获取shell，但这种方法增加了复杂性。
+
+2. **Evalbox**：
+   - 这个题目允许用户输入的内容被`eval`执行，但禁止调用所有标识为`close`的函数。
+   - 通过`Dockerfile`确认需要先获取flag文件名。
+   - 初始尝试通过比较seccomp.so和seccomp.pyx文件，但未成功。
+
+## 两种解决方法
+   - **方法1**：使用纯Python方式，通过`os.scandir(os.open(".", 0))`获取当前目录下所有文件名，并通过`print(os.open(filename, 'r').read())`读取文件内容。
+   - **方法2**：通过打开`/proc/self/mem`并在`.text`段写入shellcode来绕过限制。
+
+总的来说，nova通过具体示例和详细步骤解释了他在比赛中遇到的挑战以及解决方法，展示了他在漏洞利用和安全研究方面的技巧和思考过程。

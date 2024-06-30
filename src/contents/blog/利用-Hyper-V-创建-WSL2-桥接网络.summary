@@ -1,0 +1,5 @@
+Nova最近发现无法通过 `localhost:port` 访问WSL2中的服务，借此机会设置了一个虚拟网卡以创建WSL2的桥接网络，这样不仅支持IPv6，还能让局域网直接访问WSL2的服务，无需端口转发。在他的WSL环境中，尽管更新了内核版本，但它显示的仍然是旧版本。
+
+首先，Nova通过 `virtmgmt.msc` 打开了Hyper-V Manager，创建了一个外部虚拟交换机。然后，他修改了位于 `%USERPROFILE%` 下的WSL配置文件 `.wslconfig`，在 `[wsl2]` 部分添加了相关配置项。完成设置后，Nova重启了WSL，如果一切顺利，便可拥有桥接网络的WSL2。
+
+不过，他也指出此方法存在一些问题，主机无法再通过 `localhost:port` 与WSL2通信。此外，如果WSL2通过DHCP获取IP地址的话，IP可能会变动，这也是一个潜在麻烦。

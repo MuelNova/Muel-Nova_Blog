@@ -1,0 +1,7 @@
+nova 在本文中记录了自己参与 2022 蓝帽杯 CTF 比赛中的 PWN 题复现过程和解题思路。
+
+在“Escape Shellcode”这一题中，nova 详细描述了通过简单的 Shellcode 成功获取 flag 的过程，并提到官方 writeup 提供的另一种解题思路，即通过读取 bss 的 flag。详细分析包括如何获取 prctl@got.plt 存到 R8 上，通过找到某指针并加上偏移量得到@got.plt，最终获取 libc_base 并读到 bss 的 flag。
+
+在“Bank”题目中，nova 通过 IDA 的浅析功能指出了一些代码漏洞，特别是 deposit 和 reduce_money 函数的不同处理。接着，解析了 transfer 函数中各个角色（如 admin、hacker、ghost 等）的作用，并提供了利用这些漏洞刷钱的方法。通过多次 realloc 函数操作，成功凿出 tcache 并获取 heap_addr，进而构造 large_bin 伪 chunk，获取 libc_base，最终通过 Double Free 打 free_hook，实现任意堆 free 的能力。
+
+本文在详细记录过程中提供了部分代码、伪代码和思考过程，使得复现过程更加完整，展示了 PWN 题目的漏洞利用和攻破过程。
