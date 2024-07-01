@@ -29,11 +29,11 @@
   },
   "link.item.label.♻️复现": {
     "message": "♻️Reproducing",
-    "description": "The label of footer link with label=♻️复现 linking to /reproducing"
+    "description": "The label of footer link with label=♻️Reproducing linking to /reproducing"
   },
   "link.item.label.🤡文章": {
     "message": "🤡Posts",
-    "description": "The label of footer link with label=🤡文章 linking to /posts"
+    "description": "The label of footer link with label=🤡Posts linking to /posts"
   },
   "link.item.label.Teamspeak": {
     "message": "Teamspeak",

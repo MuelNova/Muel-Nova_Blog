@@ -5,11 +5,11 @@
   },
   "item.label.🤡文章": {
     "message": "🤡Posts",
-    "description": "Navbar item with label 🤡文章"
+    "description": "Navbar item with label 🤡Posts"
   },
   "item.label.♻️复现": {
     "message": "♻️Reproducing",
-    "description": "Navbar item with label ♻️复现"
+    "description": "Navbar item with label ♻️Reproducing"
   },
   "item.label.📝Blog": {
     "message": "📝Blog",

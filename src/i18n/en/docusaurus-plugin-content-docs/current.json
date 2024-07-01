@@ -22,5 +22,13 @@
   "sidebar.defaultSidebar.category.fastbin": {
     "message": "fastbin",
     "description": "The label for category fastbin in sidebar defaultSidebar"
+  },
+  "sidebar.defaultSidebar.category.Pwn": {
+    "message": "Pwn",
+    "description": "The label for category Pwn in sidebar defaultSidebar"
+  },
+  "sidebar.defaultSidebar.category.Linux 内核": {
+    "message": "Linux Kernel",
+    "description": "The label for category Linux Kernel in sidebar defaultSidebar"
   }
 }
