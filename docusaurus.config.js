@@ -166,6 +166,10 @@ const config = {
       require.resolve('./src/plugins/ai-summary'),
       {}
     ],
+    [
+      require.resolve('./src/plugins/ai-translate'),
+      {}
+    ],
   ],
 
   themes: [

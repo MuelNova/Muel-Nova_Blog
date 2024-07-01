@@ -31,8 +31,8 @@ export default async function AISummary(context: LoadContext, options: {}) {
 
         
         const openaiClient = new openai(customFields.OPENAI_API_KEY);
-        const model = customFields.OPENAI_MODEL as string || 'gpt-4o';
-        const systemPrompt = customFields.OPENAI_SYSTEM_PROMPT as string || 
+        const model = customFields.OPENAI_SUMMARY_MODEL as string || 'gpt-4o';
+        const systemPrompt = customFields.OPENAI_SUMMARY_SYSTEM_PROMPT as string || 
         `你是一位专业的内容总结助手，你的任务是根据用户提供的文本生成简洁的总结。
                 请确保总结清晰、简明，抓住文章的主要内容和作者的主要经历。
                 注意，你需要使用和文章主要语言相同的语种，更推荐你不使用 markdown。

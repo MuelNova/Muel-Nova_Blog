@@ -57,8 +57,12 @@ function BlogPostPageContent({
 function BlogSummary(props: Props): JSX.Element {
   try {
     const Data = require('@site/.docusaurus/ai-summary/default/aisummary.json');
-    const link = props.content.metadata.source.split('/');
+    const link = props.content.metadata.editUrl.split('/');
     const blog = link[link.length-2], post = link[link.length-1].replace(/\.(md|mdx)$/, '');
+    if (!Data[blog] || !Data[blog][post]) {
+      console.warn('No ai-summary content found, skipping AI summary generation');
+      return <></>
+    }
     const summary = Data[blog][post];
     
     return (
