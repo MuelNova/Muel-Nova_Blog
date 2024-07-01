@@ -1,0 +1,121 @@
+import { Plugin, LoadContext, PluginOptions } from '@docusaurus/types';
+import openai from 'openai';
+
+import path from 'path';
+import fs from 'fs';
+
+interface BlogPluginOptions extends PluginOptions {
+    id?: string;
+    path: string;
+    routeBasePath?: string;
+    [key: string]: any;
+};
+
+export default async function AITranslate(context: LoadContext, options: PluginOptions) {
+    return {
+        name: 'ai-translate',
+        async loadContent() {
+            // 获取 docusaurus 配置
+            const { siteConfig } = context;
+            const blogPlugins = siteConfig.plugins.filter(
+                (plugin) => Array.isArray(plugin) && plugin[0] === '@docusaurus/plugin-content-blog'
+            );
+
+            const customFields = context.siteConfig.customFields;
+            if (!customFields || !customFields.OPENAI_API_KEY) {
+                console.warn('OPENAI_API key is not set in siteConfig.customFields, skipping AI Translate generation');
+                return;
+            }
+
+            const openaiClient = new openai(customFields.OPENAI_API_KEY);
+            const model = customFields.OPENAI_TRANSLATE_MODEL as string || 'gpt-4o';
+            const systemPrompt = customFields.OPENAI_TRANSLATE_SYSTEM_PROMPT as string ||
+                `你是一位专业的内容翻译助手，你的任务是根据用户文本提供翻译。
+                你将把文章翻译为英文，同时对于代码块的注释也要进行翻译。
+                注意你不应该修改任何文章的结构，仅进行翻译工作，不要对标题的括号进行修改`;
+            const generateTranslate = async (content: string) => {
+                const response = await openaiClient.chat.completions.create({
+                    model: model,
+                    messages: [
+                        {
+                            role: 'system',
+                            content: systemPrompt,
+                        },
+                        {
+                            role: 'user',
+                            content,
+                        },
+                    ],
+                });
+                console.debug(response)
+                return response.choices[0]?.message?.content;
+            }
+
+            const translatedPath = siteConfig.i18n.path;
+            if (!translatedPath) {
+                console.warn('i18n.path is not set in siteConfig, skipping AI Translate generation');
+                return;
+            }
+
+
+            for (const blogPlugin of blogPlugins) {
+                if (!blogPlugin) {
+                  console.warn('No blog plugin found, skipping AI Translate generation');
+                  return;
+                }
+                const pluginOptions = blogPlugin[1] as BlogPluginOptions;
+                const blogPath = pluginOptions.path;
+                const blogDir = path.join(context.siteDir, blogPath);
+                const translatedBlogPath = path.join(context.siteDir, translatedPath, 'en', 'docusaurus-plugin-content-blog' + (pluginOptions.id == 'default' ? '' : '-' + pluginOptions.id)); 
+                const files = fs.readdirSync(blogDir);
+      
+                for (const file of files) {
+                  // 判断是否是 md 或者 mdx 文件
+                  if (!file.endsWith('.md') && !file.endsWith('.mdx') || file.startsWith('__')) {
+                    continue;
+                  }
+                  const filePath = path.join(blogDir, file);
+                  // 判断是不是文件夹
+                  if (fs.statSync(filePath).isDirectory()) {
+                    continue;
+                  }
+
+                  const translatedFilePath = path.join(translatedBlogPath, file);
+
+                  if (fs.existsSync(translatedFilePath)) {
+                    const translateStats = fs.statSync(translatedFilePath);
+                    const blogStats = fs.statSync(filePath);
+                    if (translateStats.mtime >= blogStats.mtime) {
+                        continue;
+                    }
+                    
+                    const content = fs.readFileSync(translatedFilePath, 'utf-8');
+                    if (!content.includes('<!-- AI -->')) {
+                        console.info(`Skipping ${translatedFilePath} as it has been translated by yourself at ${translateStats.mtime}`);
+                        continue;
+                    }
+                  }
+
+
+                  const content = fs.readFileSync(filePath, 'utf-8');
+                  console.info('Translating', file)
+                  let translatedContent = '';
+                  // split content, translate each part, and join them back
+                  let currentIdx = 0;
+                  const TRANS_SIZE = 16384;
+                  while (currentIdx < content.length) {
+                    const chunk = content.slice(currentIdx, currentIdx + TRANS_SIZE);
+                    const translatedChunk = await generateTranslate(chunk);
+                    translatedContent += translatedChunk;
+                    currentIdx += TRANS_SIZE;
+                  }
+
+                  translatedContent += '\n\n:::info\nThis Content is generated by ChatGPT and might be wrong / incomplete, refer to Chinese version if you find something wrong.\n:::\n\n<!-- AI -->\n'
+
+                  // write translated content to file
+                  fs.writeFileSync(translatedFilePath, translatedContent);
+              }
+        }
+    },
+    }
+}
