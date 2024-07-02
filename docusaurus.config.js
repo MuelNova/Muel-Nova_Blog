@@ -267,7 +267,7 @@ const config = {
               },
               {
                 label: 'Steam',
-                href: 'https://steamcommunity.com/id/nova_noir',
+                href: 'https://steamcommunity.com/id/muelnova',
               },
               {
                 label: 'Github',

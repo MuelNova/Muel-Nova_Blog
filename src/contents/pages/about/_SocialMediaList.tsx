@@ -12,7 +12,7 @@ const svgList = [
     {
       title: 'steam',
       Svg: require('@site/static/img/steam.svg').default,
-      link: 'https://steamcommunity.com/id/nova_noir'
+      link: 'https://steamcommunity.com/id/muelnova'
     }
 ]
 
