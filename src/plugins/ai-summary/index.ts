@@ -22,15 +22,16 @@ export default async function AISummary(context: LoadContext, options: {}) {
         );
 
         const summaries: { [key: string]: {[key: string] : string} } = {};
+        let skipFlag = false;
 
         const customFields = context.siteConfig.customFields;
         if (!customFields || !customFields.OPENAI_API_KEY) {
           console.warn('OPENAI_API key is not set in siteConfig.customFields, skipping AI summary generation');
-          return;
+          skipFlag = true;
         }
 
         
-        const openaiClient = new openai(customFields.OPENAI_API_KEY);
+        const openaiClient = skipFlag ? new openai({apiKey: "dummy_api"}) : new openai(customFields.OPENAI_API_KEY);
         const model = customFields.OPENAI_SUMMARY_MODEL as string || 'gpt-4o';
         const systemPrompt = customFields.OPENAI_SUMMARY_SYSTEM_PROMPT as string || 
         `你是一位专业的内容总结助手，你的任务是根据用户提供的文本生成简洁的总结。
@@ -57,7 +58,7 @@ export default async function AISummary(context: LoadContext, options: {}) {
         for (const blogPlugin of blogPlugins) {
           if (!blogPlugin) {
             console.warn('No blog plugin found, skipping AI summary generation');
-            return;
+            skipFlag = true;
           }
           const pluginOptions = blogPlugin[1] as BlogPluginOptions;
           const blogPath = pluginOptions.path;
@@ -101,6 +102,7 @@ export default async function AISummary(context: LoadContext, options: {}) {
             }
 
             // 生成摘要
+            if (skipFlag) continue;
             console.log("Generating summary for", file)
             const response = await generateSummary(content);
             if (!response) {
