@@ -5,7 +5,7 @@ tags: [kernel]
 date: 2024-07-14
 last_update:
   author: nova
-  date: 2024-07-15
+  date: 2024-07-16
 ---
 
 ## 在此之前
@@ -713,4 +713,159 @@ module_exit(my_proc_exit);
 ```
 
 很有精神！
+
+
+
+### Ex1. KDB
+
+```bash
+echo hvc0 > /sys/module/kgdboc/parameters/kgdboc
+echo g > /proc/sysrq-trigger
+# 或者用 Ctrl+O g
+```
+
+![image-20240715233154679](https://cdn.ova.moe/img/image-20240715233154679.png)
+
+我这里有 BUG，显示不全，就这样吧。
+
+利用 echo 写入就会直接进入 KDB 里
+
+![image-20240715233319670](https://cdn.ova.moe/img/image-20240715233319670.png)
+
+看堆栈 bt 就可以知道是 dummy_func1+0x8 的地方出了问题。还可以看到 current=0xc42b2b40，我们用 lsmod 可以看到基地址 0xd0880000。但是我们 bt 的时候看不到回溯栈，所以就搁置了。
+
+
+
+接下来就是 gdb add-symbol-file 把它导入，然后设置基地址，看看指令是什么了，也是比较简单就不看了
+
+
+
+### Ex2. PS 模块
+
+前面 7. proc-info 写完了
+
+
+
+### Ex3. 内存信息
+
+> 创建一个内核模块，显示当前进程的虚拟内存区域；对于每个内存区域，它将显示起始地址和结束地址。
+
+内存区域由类型为 struct vm_area_struct 的结构表示，那么我们就可以开始写内核模块了。
+
+```c title="skels/kernel_modules/10-proc/proc.c"
+#include <linux/module.h>
+#include <linux/init.h>
+#include <linux/kernel.h>
+
+MODULE_AUTHOR("Muel Nova");
+MODULE_DESCRIPTION("SHOW MEM");
+MODULE_LICENSE("GPL");
+
+static int mem_init(void) {
+        return 0;
+}
+
+static void mem_exit(void) {
+}
+
+module_init(mem_init);
+module_exit(mem_exit);
+```
+
+```makefile title="skels/kernel_modules/10-proc/Kbuild"
+ccflags-y = -Wno-unused-function -Wno-unused-label -Wno-unused-variable -DDEBUG
+
+obj-m = proc.o
+```
+
+
+
+框架大概就是这样，接下来，我们查询 vm_area_struct 的用法。它被定义在 `include/linux/mm_types.h` 里，那么我们可以直接利用 vm_start 和 vm_end 来表示大小，它也是一个链表，用 vm_next 就可以找到下一个。
+
+那么我们就需要知道如何找到当前进程的所有 vm_area_struct 结构体了。我们可以想到用 current 去找，翻一下可以看到 task_struct->mm 是一个 mm_struct 的结构体指针，那么我们继续去翻 mm_struct，第一个就是 struct vm_area_struct 的字段 mmap
+
+:::info
+
+内核版本 v5.10.14，在最新的内核里，我们已经看不到这个 mmap 字段了。在 [mm: remove the vma linked list · torvalds/linux@763ecb0 (github.com)](https://github.com/torvalds/linux/commit/763ecb035029f500d7e6dc99acd1ad299b7726a1#diff-dc57f7b72015cf5f95444ec4f8a60f85d773f40b96ac59bf55b281cd63c06142) 中被删除了。
+
+在新版本中，我们应该使用 mapleTree 来拿，也就是从 mm->mm_mt 里拿。
+
+> ```c
+> struct maple_tree *mt = &mm->mm_mt;
+> struct vm_area_struct *vma_mt;
+> 
+> MA_STATE(mas, mt, 0, 0);
+> 
+> mas_for_each(&mas, vma_mt, ULONG_MAX) {
+>     // do sth...
+> }
+> ```
+>
+> 根据 diff 找到的新的用法
+
+:::
+
+
+
+因此最终的代码：
+
+```c
+#include <linux/module.h>
+#include <linux/init.h>
+#include <linux/kernel.h>
+#include <linux/sched.h>
+#include <linux/mm_types.h>
+
+MODULE_AUTHOR("Muel Nova");
+MODULE_DESCRIPTION("SHOW MEM");
+MODULE_LICENSE("GPL");
+
+static int mem_init(void) {
+    struct task_struct* p = current;
+    struct mm_struct* mm = p->mm;
+    struct vm_area_struct* vma = mm->mmap;
+    while (vma) {
+        printk("0x%lx - 0x%lx\n", vma->vm_start, vma->vm_end);
+        vma = vma->vm_next;
+    }
+    return 0;
+}
+```
+
+```bash
+root@qemux86:~/skels/kernel_modules/10-proc# insmod proc.ko
+proc: loading out-of-tree module taints kernel.
+0x8048000 - 0x80c2000
+0x80c2000 - 0x80c3000
+0x80c3000 - 0x80c4000
+0x80c4000 - 0x80c6000
+0x84c9000 - 0x84ea000
+0x4480c000 - 0x4482e000
+0x4482e000 - 0x4482f000
+0x4482f000 - 0x44830000
+0x44832000 - 0x449a9000
+0x449a9000 - 0x449ab000
+0x449ab000 - 0x449ac000
+0x449ac000 - 0x449af000
+0x449b1000 - 0x44a09000
+0x44a09000 - 0x44a0a000
+0x44a0a000 - 0x44a0b000
+0xb7f28000 - 0xb7f4d000
+0xb7f4d000 - 0xb7f51000
+0xb7f51000 - 0xb7f53000
+0xbffcc000 - 0xbffed000
+```
+
+
+
+### Ex4. 动态调试
+
+首先先 mount debugfs
+
+```bash
+mkdir /debug
+mount -t debugfs none /debug
+```
+
+然后没找到 /debug/dynamic_debug，估计是内核没开吧，跑路
 
