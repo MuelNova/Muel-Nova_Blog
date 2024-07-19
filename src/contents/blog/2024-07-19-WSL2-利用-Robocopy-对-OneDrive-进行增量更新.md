@@ -108,10 +108,16 @@ OneDrive 拉下来似乎是 0777 的权限，反正对于其他的也无所谓�
 
 ![image-20240719162224812](https://cdn.ova.moe/img/image-20240719162224812.png)
 
-## Implementation
+## ~~Implementation~~
 
-额，工程问题。不再细说。利用 inotify 监控系统操作，利用 unison 复制
+额，工程问题。不再细说。利用 inotify 监控系统操作，利用 unison 复制。
+
+但是莫名其妙写了一堆自定义的，感觉我完全用不到
 
 见 [2wsync](https://github.com/MuelNova/2wsync)
 
 ![image-20240719234343397](https://cdn.ova.moe/img/image-20240719234343397.png)
+
+## Implementation
+
+欸，我有个好主意，为什么我不直接用 Syncthing 做双端同步呢？🤓👌
