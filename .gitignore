@@ -1,3 +1,7 @@
+# syncthing
+.stfolder
+.stignore
+
 # Dependencies
 /node_modules
 
