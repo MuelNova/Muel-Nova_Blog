@@ -5,7 +5,7 @@ tags: [kernel]
 date: 2024-07-14
 last_update:
   author: nova
-  date: 2024-07-16
+  date: 2024-07-22
 ---
 
 ## 在此之前
@@ -60,7 +60,153 @@ root@MuelNova-Laptop:/linux/tools/labs# ls skels/kernel_modules/
 
 具体说明可以看 https://github.com/linux-kernel-labs-zh/so2-labs
 
+### VS-Code 开发环境
 
+我建立了一个 vsc 的环境。首先 VSC 可以直接用 dev contained 连容器，然后装 clangd
+
+#### Method1
+
+在容器环境里，装 clang 和 bear
+
+```bash
+root@MuelNova-Laptop:/linux# apt install -y bear clang
+```
+
+之后生成 `compile_commands.json`
+
+```bash
+root@MuelNova-Laptop:/linux# bear make CC=clang
+```
+
+然后打开 remote 的 settings.json，加这么一句
+
+```json
+{
+    "clangd.arguments": [
+        // highlight-next-line
+        "--compile-commands-dir=/linux"
+    ]
+}
+```
+
+
+
+注意你需要再重新 make 一下，不然里面环境就炸了。
+
+#### Method2
+
+下起来太麻烦了，直接创一个 compile_commands.json
+
+写入
+
+```json
+[
+    {
+        "arguments": [
+            "clang",
+            "-c",
+            "-Wp,-MMD,scripts/mod/.empty.o.d",
+            "-nostdinc",
+            "-isystem",
+            "/usr/lib/llvm-10/lib/clang/10.0.0/include",
+            "-I./arch/x86/include",
+            "-I./arch/x86/include/generated",
+            "-I./include",
+            "-I./arch/x86/include/uapi",
+            "-I./arch/x86/include/generated/uapi",
+            "-I./include/uapi",
+            "-I./include/generated/uapi",
+            "-include",
+            "./include/linux/kconfig.h",
+            "-include",
+            "./include/linux/compiler_types.h",
+            "-D__KERNEL__",
+            "-Qunused-arguments",
+            "-fmacro-prefix-map=./=",
+            "-Wall",
+            "-Wundef",
+            "-Werror=strict-prototypes",
+            "-Wno-trigraphs",
+            "-fno-strict-aliasing",
+            "-fno-common",
+            "-fshort-wchar",
+            "-fno-PIE",
+            "-Werror=implicit-function-declaration",
+            "-Werror=implicit-int",
+            "-Werror=return-type",
+            "-Wno-format-security",
+            "-std=gnu89",
+            "-no-integrated-as",
+            "-Werror=unknown-warning-option",
+            "-mno-sse",
+            "-mno-mmx",
+            "-mno-sse2",
+            "-mno-3dnow",
+            "-mno-avx",
+            "-m32",
+            "-msoft-float",
+            "-mregparm=3",
+            "-freg-struct-return",
+            "-fno-pic",
+            "-mstack-alignment=4",
+            "-march=i686",
+            "-Wa,-mtune=generic32",
+            "-ffreestanding",
+            "-Wno-sign-compare",
+            "-fno-asynchronous-unwind-tables",
+            "-mretpoline-external-thunk",
+            "-fno-delete-null-pointer-checks",
+            "-Wno-address-of-packed-member",
+            "-O2",
+            "-Wframe-larger-than=1024",
+            "-fstack-protector-strong",
+            "-Wno-format-invalid-specifier",
+            "-Wno-gnu",
+            "-mno-global-merge",
+            "-Wno-unused-const-variable",
+            "-fno-omit-frame-pointer",
+            "-fno-optimize-sibling-calls",
+            "-g",
+            "-gdwarf-4",
+            "-Wdeclaration-after-statement",
+            "-Wvla",
+            "-Wno-pointer-sign",
+            "-Wno-array-bounds",
+            "-fno-strict-overflow",
+            "-fno-stack-check",
+            "-Werror=date-time",
+            "-Werror=incompatible-pointer-types",
+            "-fcf-protection=none",
+            "-Wno-initializer-overrides",
+            "-Wno-format",
+            "-Wno-sign-compare",
+            "-Wno-format-zero-length",
+            "-Wno-tautological-constant-out-of-range-compare",
+            "-DKBUILD_MODFILE=\"scripts/mod/empty\"",
+            "-DKBUILD_BASENAME=\"empty\"",
+            "-DKBUILD_MODNAME=\"empty\"",
+            "-o",
+            "scripts/mod/empty.o",
+            "scripts/mod/empty.c"
+        ],
+        "directory": "/linux",
+        "file": "scripts/mod/empty.c"
+    }
+]
+```
+
+
+
+然后打开 remote 的 settings.json，加这么一句
+
+```json
+{
+    "clangd.arguments": [
+        // highlight-next-line
+        "--compile-commands-dir=/linux/tools/lab"
+    ]
+}
+```
 
 ## Kernel Modules
 
@@ -869,3 +1015,679 @@ mount -t debugfs none /debug
 
 然后没找到 /debug/dynamic_debug，估计是内核没开吧，跑路
 
+
+
+## Kernel API
+
+### 0. 简介
+
+在 Linux 内核中查找以下符号的定义：
+
+- `struct list_head`：感觉大概看上去就是一个双向链表
+
+  ```c
+  struct list_head {
+  	struct list_head *next, *prev;
+  };
+  ```
+
+- INIT_LIST_HEAD()：初始化链表头。
+
+  ```c
+  static inline void INIT_LIST_HEAD(struct list_head *list)
+  {
+  	WRITE_ONCE(list->next, list);
+  	WRITE_ONCE(list->prev, list);
+  }
+  ```
+
+- list_add()：就是把 new 插入到 prev 和 next 中间
+  这里用 WRITE_ONCE 好像是为了进程安全并且保证顺序性
+
+  ```c
+  static inline void __list_add(struct list_head *new,
+  			      struct list_head *prev,
+  			      struct list_head *next)
+  {
+  	if (!__list_add_valid(new, prev, next))
+  		return;
+  
+  	next->prev = new;
+  	new->next = next;
+  	new->prev = prev;
+  	WRITE_ONCE(prev->next, new);
+  }
+  ```
+
+- list_for_each：就是一个循环的包装。
+
+  ```c
+  /**
+   * list_for_each	-	iterate over a list
+   * @pos:	the &struct list_head to use as a loop cursor.
+   * @head:	the head for your list.
+   */
+  #define list_for_each(pos, head) \
+  	for (pos = (head)->next; !list_is_head(pos, (head)); pos = pos->next)
+  ```
+
+- list_entry
+
+- ```c
+  /**
+   * list_entry - get the struct for this entry
+   * @ptr:	the &struct list_head pointer.
+   * @type:	the type of the struct this is embedded in.
+   * @member:	the name of the list_head within the struct.
+   */
+  #define list_entry(ptr, type, member) \
+  	container_of(ptr, type, member)
+  ```
+
+- `container_of`
+
+  比较复杂，但是简单来说就是把一个已知是 member 类型的 ptr，也知道它属于某个 type 结构体，反查 type 结构体的指针。
+
+  ```c
+  /**
+   * container_of - cast a member of a structure out to the containing structure
+   * @ptr:	the pointer to the member.
+   * @type:	the type of the container struct this is embedded in.
+   * @member:	the name of the member within the struct.
+   *
+   * WARNING: any const qualifier of @ptr is lost.
+   */
+  #define container_of(ptr, type, member) ({				\
+  	void *__mptr = (void *)(ptr);					\
+  	static_assert(__same_type(*(ptr), ((type *)0)->member) ||	\
+  		      __same_type(*(ptr), void),			\
+  		      "pointer type mismatch in container_of()");	\
+  	((type *)(__mptr - offsetof(type, member))); })
+  ```
+
+- offsetof
+
+- 字面意思。看这个是一个包装。
+
+  ```C
+  #undef offsetof
+  #define offsetof(TYPE, MEMBER)	__builtin_offsetof(TYPE, MEMBER)
+  ```
+
+### 1. Linux 内核中的内存分配
+
+生成名为 **1-mem** 的任务骨架，并浏览 `mem.c` 文件的内容。观察使用 `kmalloc()` 函数进行内存分配的情况。
+
+> 1. 编译源代码并使用 **insmod** 加载 `mem.ko` 模块。
+> 2. 使用 **dmesg** 命令查看内核消息。
+> 3. 使用 **rmmod mem** 命令卸载内核模块。
+
+```c
+mem = kmalloc(4096 * sizeof(*mem), GFP_KERNEL);
+```
+
+搞了 4K 个字符的 buf。
+
+打印出来都是 Z，就是 90，也就是 0x5a，神秘。
+
+### 2. 在原子上下文中睡眠
+
+生成名为 **2-sched-spin** 的任务骨架，并浏览 `sched-spin.c` 文件的内容。
+
+> 1. 根据上述信息编译源代码并加载模块（使用命令 **make build** 和 **make copy** ）。
+> 2. 注意：插入顺序完成之前需要等待 5 秒时间。
+> 3. 卸载内核模块。
+> 4. 查找标记为：`TODO 0` 的行以创建原子段（atomic section）。重新编译源代码并将模块重新加载到内核。
+
+现在你应该会遇到一个错误。查看堆栈跟踪。错误的原因是什么？
+
+
+
+一开始的显然是可抢占的内核。我们要做的操作就是把 schedule_timeout 改成 atomic 的
+
+```cpp
+	spin_lock(&lock);
+
+	set_current_state(TASK_INTERRUPTIBLE);
+	/* Try to sleep for 5 seconds. */
+	schedule_timeout(5 * HZ);
+
+	spin_unlock(&lock);
+```
+
+毫无疑问的会报错：
+
+```bash
+root@qemux86:~/skels/kernel_api/2-sched-spin# insmod sched-spin.ko
+sched_spin: loading out-of-tree module taints kernel.              
+BUG: scheduling while atomic: insmod/322/0x00000002                1 lock held by insmod/322:
+```
+
+因为我们 schedule 了，这在原子段里肯定是不允许的
+
+
+
+### 3. 使用内核内存
+
+为名为 **3-memory** 的任务生成骨架，并浏览 `memory.c` 文件的内容。请注意带有 `TODO` 标记的注释。你需要分配 4 个类型为 `struct task_info` 的结构体并将其初始化（在 `memory_init()` 中），然后打印并释放它们（在 `memory_exit()` 中）。
+
+1. （TODO 1）为 `struct task_info` 结构体分配内存并初始化其字段：
+
+   - 将 `pid` 字段设置为作为参数传递的 PID 值；
+   - 将 `timestamp` 字段设置为 `jiffies` 变量的值，该变量存储了自系统启动以来发生的滴答数（tick）。
+
+2. （TODO 2）为当前进程、父进程、下一个进程和下一个进程的下一个进程分别分配 `struct task_info`，并获取以下信息：
+
+   - 当前进程的 PID，其可以从 `struct task_struct` 结构体中检索到，该结构体由 `current` 宏返回。
+
+   :::tip
+
+   在 `task_struct` 中搜索 `pid`。
+
+   - 当前进程的父进程的 PID。
+
+   :::
+
+   在 `struct task_struct` 结构体中搜索相关字段。查找“parent”。
+
+   - 相对于当前进程，进程列表中的下一个进程的 PID。
+
+   :::tip
+
+   使用 `next_task` 宏，该宏返回指向下一个进程的指针（即 `struct task_struct` 结构体）。
+
+   - 相对于当前进程，下一个进程的下一个进程的 PID。
+
+   :::
+
+   调用 `next_task` 宏 2 次。
+
+3. （TODO 3）显示这四个结构体。
+
+   - 使用 `printk()` 显示它们的两个字段：`pid` 和 `timestamp`。
+
+4. （TODO 4）释放结构体占用的内存（使用 `kfree()`）。
+
+:::tip
+
+- 你可以使用 `current` 宏访问当前进程。
+- 在 `struct task_struct` 结构体中查找相关字段（`pid`、`parent`）。
+- 使用 `next_task` 宏。该宏返回指向下一个进程的指针（即 `struct task_struct*` 结构体）。
+
+:::
+
+
+
+TODO1
+
+```c
+#include <linux/jiffies.h>
+
+static struct task_info *task_info_alloc(int pid)
+{
+	struct task_info *ti;
+
+	/* TODO 1: allocated and initialize a task_info struct */
+	ti = kmalloc(sizeof(struct task_info), GFP_KERNEL);
+    if (ti == NULL)
+		return NULL;
+	ti->pid = pid;
+	ti->timestamp = jiffies;
+
+	return ti;
+}
+```
+
+TODO2
+
+```c
+static int memory_init(void)
+{	
+	struct task_struct* cur = get_current();
+	ti1 = task_info_alloc(cur->pid);
+	ti2 = task_info_alloc(cur->parent->pid);
+	ti3 = task_info_alloc(next_task(cur)->pid);
+	ti4 = task_info_alloc(next_task(next_task(cur))->pid);
+	
+	/* TODO 2: call task_info_alloc for current pid */
+
+	/* TODO 2: call task_info_alloc for parent PID */
+
+	/* TODO 2: call task_info alloc for next process PID */
+
+	/* TODO 2: call task_info_alloc for next process of the next process */
+
+	return 0;
+}
+```
+
+TODO3、4
+
+```c
+static void memory_exit(void)
+{
+
+	/* TODO 3: print ti* field values */
+	printk("[task_info] Current:\n\tPID:%d\n\ttimestamp:%lu\n\n", ti1->pid, ti1->timestamp);
+	printk("[task_info] Parent:\n\tPID:%d\n\ttimestamp:%lu\n\n", ti2->pid, ti2->timestamp);
+	printk("[task_info] Next:\n\tPID:%d\n\ttimestamp:%lu\n\n", ti3->pid, ti3->timestamp);
+	printk("[task_info] Next(Next):\n\tPID:%d\n\ttimestamp:%lu\n", ti4->pid, ti4->timestamp);
+
+	/* TODO 4: free ti* structures */
+	kfree(ti1);
+	kfree(ti2);
+	kfree(ti3);
+	kfree(ti4);
+}
+```
+
+```bash
+root@qemux86:~/skels/kernel_api/3-memory# rmmod memory.ko
+[task_info] Current:                                                       PID:241                                                            timestamp:4294910496
+                                                                   [task_info] Parent:                                                        PID:213                                                            timestamp:4294910496
+                                                                   [task_info] Next:                                                          PID:0                                                              timestamp:4294910496
+                                                                   [task_info] Next(Next):                                                    PID:1                                                              timestamp:4294910496
+root@qemux86:~/skels/kernel_api/3-memory# insmod memory.ko
+root@qemux86:~/skels/kernel_api/3-memory# rmmod memory.ko
+[task_info] Current:                                                       PID:245                                                            timestamp:4294912218
+                                                                   [task_info] Parent:                                                        PID:213                                                            timestamp:4294912218
+                                                                   [task_info] Next:                                                          PID:0                                                              timestamp:4294912218
+                                                                   [task_info] Next(Next):                                                    PID:1                                                              timestamp:4294912218
+```
+
+对的对的
+
+### 4. 使用内核列表
+
+生成名为 **4-list** 的任务骨架。浏览 `list.c` 文件的内容，并注意标有 `TODO` 的注释。当前的进程将在列表中添加前面练习中的四个结构体。列表将在加载模块时在 `task_info_add_for_current()` 函数中构建。列表将在 `list_exit()` 函数和 `task_info_purge_list()` 函数中打印和删除。
+
+> 1. (TODO 1) 补全 `task_info_add_to_list()` 函数，此函数会分配 `struct task_info` 结构体，并将其添加到列表中。
+> 2. (TODO 2) 补全 `task_info_purge_list()` 函数，此函数会删除列表中的所有元素。
+> 3. 编译内核模块。按照内核显示的消息加载和卸载模块。
+
+就是前面那个变成一个 list，随便写写
+
+TODO1
+
+```c
+static void task_info_add_to_list(int pid)
+{
+	struct task_info *ti;
+
+	/* TODO 1: Allocate task_info and add it to list */
+	ti = task_info_alloc(pid);
+	if (ti == NULL)
+		return;
+	list_add(&ti->list, &head);
+}
+```
+
+TODO2
+
+注意这里是要删除，所以得要一个 nxt 存下一个
+
+```c
+static void task_info_purge_list(void)
+{
+	struct list_head *p, *q;
+	struct task_info *ti;
+
+	/* TODO 2: Iterate over the list and delete all elements */
+	list_for_each_safe(p, q, &head) {
+		ti = list_entry(p, struct task_info, list);
+		list_del(p);
+		kfree(ti);
+	}
+}
+```
+
+没毛病哦
+
+```bash
+root@qemux86:~/skels/kernel_api/4-list# rmmod list.ko
+before exiting: [
+(1, 66185)
+(0, 66185)
+(213, 66185)
+(296, 66185)
+]
+```
+
+
+
+### 5. 使用内核列表进行进程处理
+
+生成名为 **5-list-full** 的任务骨架。浏览 `list-full.c` 文件的内容，并注意标有 `TODO` 的注释。除了 `4-list` 的功能外，我们还添加了以下内容：
+
+- 一个 `count` 字段，显示一个进程被“添加”到列表中的次数。
+
+- 如果一个进程被“添加”了多次，则不会在列表中创建新的条目，而是：
+
+  > - 更新 `timestamp` 字段。
+  > - 增加 `count`。
+
+- 为了实现计数器功能，请添加一个 `task_info_find_pid()` 函数，用于在现有列表中搜索 pid。
+
+- 如果找到，则返回对 `task_info` 结构的引用。如果没有找到，则返回 `NULL`。
+
+- 过期处理功能。如果一个进程从被添加到现在已超过 3 秒，并且它的 `count` 不大于 5，则被视为过期并从列表中删除。
+
+- 过期处理功能已经在 `task_info_remove_expired()` 函数中实现。
+
+1. (TODO 1) 实现 `task_info_find_pid()` 函数。
+
+2. (TODO 2) 更改列表中的一个项目的字段，使其不会过期。它不应满足 `task_info_remove_expired()` 中的任何过期条件。
+
+   :::tip
+
+   要想完成 `TODO 2`，可以从列表中提取第一个元素（由 `head.next` 引用），并将其 `count` 字段设置为足够大的值。使用 `atomic_set()` 函数。
+
+   :::
+
+3. 编译、复制、加载和卸载内核模块，这个过程中请遵从显示的消息来操作。加载内核模块需要一些时间，因为 `schedule_timeout()` 函数会调用 `sleep()`。
+
+
+
+这个遍历也是很简单，扫一遍链表就可以。第二个也是给了提示了，count 设置成 5 就可以。
+
+TODO1
+
+```c
+static struct task_info *task_info_find_pid(int pid)
+{
+	struct list_head *p;
+	struct task_info *ti;
+
+	/* TODO 1: Look for pid and return task_info or NULL if not found */
+	list_for_each(p, &head) {
+		ti = list_entry(p, struct task_info, list);
+		if (ti->pid == pid)
+			return ti;
+	}
+
+	return NULL;
+}
+```
+
+TODO2
+
+```c
+static void list_full_exit(void)
+{
+	struct task_info *ti;
+
+	/* TODO 2: Ensure that at least one task is not deleted */
+
+	ti = list_entry(head.next, struct task_info, list);
+
+	atomic_set(&ti->count, 5);
+	task_info_print_list("after removing expired");
+	task_info_remove_expired();
+	task_info_print_list("after removing expired");
+	task_info_purge_list();
+}
+```
+
+我们保了一个存活，也就是 next next。
+
+```bash
+root@qemux86:~/skels/kernel_api/5-list-full# insmod list-full.ko
+list_full: loading out-of-tree module taints kernel.
+after first add: [
+(1, 4294915575)
+(0, 4294915575)
+(214, 4294915575)
+(243, 4294915575)
+]
+
+root@qemux86:~/skels/kernel_api/5-list-full# rmmod list-full.ko
+after removing expired: [
+(1, 4294915575)
+]
+```
+
+### 6. 同步列表工作
+
+为名为 **6-list-sync** 的任务生成骨架。
+
+> 1. 浏览代码并查找``TODO 1``字符串。
+> 2. 使用自旋锁或读写锁来同步对列表的访问。
+> 3. 编译、加载和卸载内核模块。
+
+:::tip 重要
+
+始终锁定数据，而不是代码！
+
+:::
+
+
+
+又到了我最喜欢的并发编程环节
+
+```c
+/*
+ * Linux API lab
+ *
+ * list-sync.c - Synchronize access to a list
+ */
+
+#include <linux/spinlock.h>
+#include <linux/module.h>
+#include <linux/init.h>
+#include <linux/kernel.h>
+#include <linux/slab.h>
+#include <linux/list.h>
+#include <linux/sched/signal.h>
+
+MODULE_DESCRIPTION("Full list processing with synchronization");
+MODULE_AUTHOR("SO2");
+MODULE_LICENSE("GPL");
+
+struct task_info {
+	pid_t pid;
+	unsigned long timestamp;
+	atomic_t count;
+	struct list_head list;
+};
+
+static struct list_head head;
+
+/* TODO 1: you can use either a spinlock or rwlock, define it here */
+// 写互斥，读并行，没毛病哦老铁们。
+DEFINE_RWLOCK(lock);
+
+static struct task_info *task_info_alloc(int pid)
+{
+	struct task_info *ti;
+
+	ti = kmalloc(sizeof(*ti), GFP_KERNEL);
+	if (ti == NULL)
+		return NULL;
+	ti->pid = pid;
+	ti->timestamp = jiffies;
+	atomic_set(&ti->count, 0);
+
+	return ti;
+}
+
+static struct task_info *task_info_find_pid(int pid)
+{
+	struct list_head *p;
+	struct task_info *ti;
+
+	list_for_each(p, &head) {
+		ti = list_entry(p, struct task_info, list);
+		if (ti->pid == pid) {
+			return ti;
+		}
+	}
+
+	return NULL;
+}
+
+static void task_info_add_to_list(int pid)
+{
+	struct task_info *ti;
+
+	/* TODO 1: Protect list, is this read or write access? */
+    // find_pid 会读，那肯定拿读锁
+	read_lock(&lock);
+	ti = task_info_find_pid(pid);
+	if (ti != NULL) {
+         // 注意这里，如果找到了那就先释放读锁，准备写。等所有读都解锁了在写。
+		read_unlock(&lock);
+         write_lock(&lock);
+		ti->timestamp = jiffies;
+		atomic_inc(&ti->count);
+         write_unlock(&lock);
+		/* TODO: Guess why this comment was added  here */
+
+		return;
+	}
+	read_unlock(&lock);
+	
+	/* TODO 1: critical section ends here */
+    
+	ti = task_info_alloc(pid);
+	// 这里注意，alloc 因为有 GFP_KERNEL FLAG，因此是可抢占的，我们不能在上一句里面拿锁！！
+	write_lock(&lock);
+	/* TODO 1: protect list access, is this read or write access? */
+	list_add(&ti->list, &head);
+	write_unlock(&lock);
+	/* TODO 1: critical section ends here */
+}
+
+void task_info_add_for_current(void)
+{
+	task_info_add_to_list(current->pid);
+	task_info_add_to_list(current->parent->pid);
+	task_info_add_to_list(next_task(current)->pid);
+	task_info_add_to_list(next_task(next_task(current))->pid);
+}
+/* TODO 2: Export the kernel symbol */
+EXPORT_SYMBOL(task_info_add_for_current);
+
+void task_info_print_list(const char *msg)
+{
+	struct list_head *p;
+	struct task_info *ti;
+
+	pr_info("%s: [ ", msg);
+
+	/* TODO 1: Protect list, is this read or write access? */
+    // 这个没必要写在循环里，拿锁贵的
+	read_lock(&lock);
+	list_for_each(p, &head) {
+		
+		ti = list_entry(p, struct task_info, list);
+		pr_info("(%d, %lu) ", ti->pid, ti->timestamp);
+		
+	}
+    read_unlock(&lock);
+	
+	/* TODO 1: Critical section ends here */
+	pr_info("]\n");
+}
+/* TODO 2: Export the kernel symbol */
+EXPORT_SYMBOL(task_info_print_list);
+
+void task_info_remove_expired(void)
+{
+	struct list_head *p, *q;
+	struct task_info *ti;
+
+	/* TODO 1: Protect list, is this read or write access? */
+    // 这里 list_del 是写操作，我们可以直接拿写锁，不需要再拿读锁读完再拿写锁了
+	write_lock(&lock);
+	list_for_each_safe(p, q, &head) {
+		ti = list_entry(p, struct task_info, list);
+		if (jiffies - ti->timestamp > 3 * HZ && atomic_read(&ti->count) < 5) {
+			list_del(p);
+			kfree(ti);
+		}
+	}
+	write_unlock(&lock);
+	/* TODO 1: Critical section ends here */
+}
+/* TODO 2: Export the kernel symbol */
+EXPORT_SYMBOL(task_info_remove_expired);
+
+static void task_info_purge_list(void)
+{
+	struct list_head *p, *q;
+	struct task_info *ti;
+
+	/* TODO 1: Protect list, is this read or write access? */
+    // 写操作
+	write_lock(&lock);
+	list_for_each_safe(p, q, &head) {
+		ti = list_entry(p, struct task_info, list);
+		list_del(p);
+		kfree(ti);
+	}
+	write_unlock(&lock);
+	/* TODO 1: Critical sections ends here */
+}
+
+static int list_sync_init(void)
+{
+	INIT_LIST_HEAD(&head);
+
+	task_info_add_for_current();
+	task_info_print_list("after first add");
+
+	set_current_state(TASK_INTERRUPTIBLE);
+	schedule_timeout(5 * HZ);
+
+	return 0;
+}
+
+static void list_sync_exit(void)
+{
+	struct task_info *ti;
+
+	ti = list_entry(head.prev, struct task_info, list);
+	atomic_set(&ti->count, 10);
+
+	task_info_remove_expired();
+	task_info_print_list("after removing expired");
+	task_info_purge_list();
+}
+
+module_init(list_sync_init);
+module_exit(list_sync_exit);
+
+```
+
+
+
+### 7. 在我们的列表模块中测试模块调用
+
+为名为 **7-list-test** 的任务生成骨架，并浏览 `list-test.c` 文件的内容。我们将使用它作为测试模块。它将调用由 **6-list-sync** 任务导出的函数。在 `list-test.c` 文件中，已经用 **extern** 标记出了导出的函数。
+
+取消注释 `7-list-test.c` 中的注释代码。查找 `TODO 1`。
+
+要从位于 `6-list-sync/` 目录中的模块导出上述函数，需要执行以下步骤：
+
+> 1. 函数不能是静态的。
+> 2. 使用 `EXPORT_SYMBOL` 宏导出内核符号。例如：`EXPORT_SYMBOL(task_info_remove_expired);`。该宏必须在函数定义后使用。浏览代码并查找 `list-sync.c` 中的 `TODO 2` 字符串。
+> 3. 从 **6-list-sync** 模块中删除避免列表项过期的代码（它与我们的练习相矛盾）。
+> 4. 编译并加载 `6-list-sync/` 中的模块。一旦加载，它会公开导出的函数，使其可以被测试模块使用。你可以通过分别在加载模块之前和之后在 `/proc/kallsyms` 中搜索函数名称来检查这一点。
+> 5. 编译测试模块，然后加载它。
+> 6. 使用 **lsmod** 命令检查这两个模块是否已加载。你注意到了什么？
+> 7. 卸载内核测试模块。
+
+两个模块（来自 **6-list-sync** 的模块和测试模块）的卸载顺序应该是什么？如果使用其他顺序会发生什么？
+
+
+
+这个没啥好说的，就是一个测试。
+
+6. ```c
+   list_test 16384 0 - Live 0xd0896000 (O)
+   list_sync 16384 1 list_test, Live 0xd086c000 (O)
+   ```
+
+肯定是先 sync 再 test，然后卸载反过来。不然就 undefined 啦
+
+结束，Kernel API
