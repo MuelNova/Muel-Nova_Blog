@@ -1691,3 +1691,1243 @@ module_exit(list_sync_exit);
 肯定是先 sync 再 test，然后卸载反过来。不然就 undefined 啦
 
 结束，Kernel API
+
+
+
+## 字符设备驱动程序
+
+到了我最爱的设备，在这里就可以写一些笔记了。我们都知道 linux 使用特殊的设备文件访问硬件设备，操作系统会对针对这些文件的系统调用重定向到关联的设备驱动程序上。
+
+### 分类与鉴别
+
+按照速率、容量和数据的组织方式，我们可以把设备分为块设备和字符设备两类。
+
+- 对于字符设备而言，它仅处理少量的数据，并且不需要频繁的搜索这些数据。例如说键盘、鼠标等等，通常来说，这些设备的读取写入也是按字节顺序逐个执行的。
+- 对于块设备而言，它处理大量的数据，例如说硬盘、RAM 等等，还是比较明确的。
+
+Linux 对两种设备提供了不同的 API。如果是字符设备，那么系统调用就会直接传递给设备驱动程序；如果是块设备，那么就要通过文件管理子系统和块设备子系统进行交互。（猜测是为了性能，譬如说 DMA 之类的？）
+
+
+
+设备一般用 <主设备号><次设备号> 的形式标识，其中主设备号一般用于标识设备类型，次设备号就是本身。一个例子就是 hda1、hda2、ttyS0、ttyS1
+
+```bash
+❯ ls -la /dev/tty?
+crw--w---- 1 root tty 4, 0 Jul 24 18:25 /dev/tty0
+crw--w---- 1 root tty 4, 1 Jul 24 18:25 /dev/tty1
+crw--w---- 1 root tty 4, 2 Jul 24 18:25 /dev/tty2
+crw--w---- 1 root tty 4, 3 Jul 24 18:25 /dev/tty3
+crw--w---- 1 root tty 4, 4 Jul 24 18:25 /dev/tty4
+crw--w---- 1 root tty 4, 5 Jul 24 18:25 /dev/tty5
+crw--w---- 1 root tty 4, 6 Jul 24 18:25 /dev/tty6
+crw--w---- 1 root tty 4, 7 Jul 24 18:25 /dev/tty7
+crw--w---- 1 root tty 4, 8 Jul 24 18:25 /dev/tty8
+crw--w---- 1 root tty 4, 9 Jul 24 18:25 /dev/tty9
+```
+
+可以看到第一位就是 c 代表 `char dev`，而自然块设备第一位就是 `b`。其中，主设备号是 4，次设备号依次递增。
+
+
+
+### 创建设备
+
+我们可以使用 `mknod` 命令创建一个新设备，他也需要提供一些参数，例如名字、类型、主设备号、次设备号等等。一个简单的例子如下，它创建了一个名为 `muelnova` 的字符设备，主设备号为 114，次设备号为 514
+
+```bash
+[root@MuelNova-Laptop nova]# mknod /dev/muelnova c 114 514
+[root@MuelNova-Laptop nova]# ls -la /dev/muelnova
+crw-r--r-- 1 root root 114, 514 Jul 24 19:03 /dev/muelnova
+```
+
+
+
+内核使用 [`struct cdev`](https://elixir.bootlin.com/linux/v6.10/source/include/linux/cdev.h#L14) 来注册字符设备。一般而言，驱动程序还会利用以下几个结构：
+
+- `struct file_operations`：实现特定于文件的系统调用，例如 `open`、`close`、`read`、`mmap` 等。
+
+  ```c
+  struct file_operations {
+      struct module *owner;
+      loff_t (*llseek) (struct file *, loff_t, int);
+      ssize_t (*read) (struct file *, char __user *, size_t, loff_t *);
+      ssize_t (*write) (struct file *, const char __user *, size_t, loff_t *);
+      [...]
+      long (*unlocked_ioctl) (struct file *, unsigned int, unsigned long);
+      [...]
+      int (*open) (struct inode *, struct file *);
+      int (*flush) (struct file *, fl_owner_t id);
+      int (*release) (struct inode *, struct file *);
+      [...]
+  ```
+
+  你可以注意到，这些函数的入参和原本是不一样的，多了两个用户态下不常见的 `struct file` 和 `struct inode`。
+
+
+  简单来说，file 和 inode 有点像进程和程序的区别。file 具有状态，而 inode 只包括有一些静态映像。
+
+- `struct file`：包含了打开标记、关联操作 等
+
+  ```c
+  struct file {
+  	union {
+  		/* fput() uses task work when closing and freeing file (default). */
+  		struct callback_head 	f_task_work;
+  		/* fput() must use workqueue (most kernel threads). */
+  		struct llist_node	f_llist;
+  		unsigned int 		f_iocb_flags;
+  	};
+  
+  	/*
+  	 * Protects f_ep, f_flags.
+  	 * Must not be taken from IRQ context.
+  	 */
+  	spinlock_t		f_lock;
+  	fmode_t			f_mode;
+  	atomic_long_t		f_count;
+  	struct mutex		f_pos_lock;
+  	loff_t			f_pos;
+  	unsigned int		f_flags;
+  	struct fown_struct	f_owner;
+  	const struct cred	*f_cred;
+  	struct file_ra_state	f_ra;
+  	struct path		f_path;
+  	struct inode		*f_inode;	/* cached value */
+  	const struct file_operations	*f_op;
+  
+  	u64			f_version;
+  #ifdef CONFIG_SECURITY
+  	void			*f_security;
+  #endif
+  	/* needed for tty driver, and maybe others */
+  	void			*private_data;
+  
+  #ifdef CONFIG_EPOLL
+  	/* Used by fs/eventpoll.c to link all the hooks to this file */
+  	struct hlist_head	*f_ep;
+  #endif /* #ifdef CONFIG_EPOLL */
+  	struct address_space	*f_mapping;
+  	errseq_t		f_wb_err;
+  	errseq_t		f_sb_err; /* for syncfs */
+  } __randomize_layout
+    __attribute__((aligned(4)));	/* lest something weird decides that 2 is OK */
+  ```
+
+- `struct inode`：包含了许多字段，例如 `i_cdev`，它就指向一个定义字符设备结构的指针。
+
+  ```c
+  struct inode {
+  	umode_t			i_mode;
+  	unsigned short		i_opflags;
+  	kuid_t			i_uid;
+  	kgid_t			i_gid;
+  	unsigned int		i_flags;
+  
+  #ifdef CONFIG_FS_POSIX_ACL
+  	struct posix_acl	*i_acl;
+  	struct posix_acl	*i_default_acl;
+  #endif
+  
+  	const struct inode_operations	*i_op;
+  	struct super_block	*i_sb;
+  	struct address_space	*i_mapping;
+  
+  #ifdef CONFIG_SECURITY
+  	void			*i_security;
+  #endif
+  
+  	/* Stat data, not accessed from path walking */
+  	unsigned long		i_ino;
+  	/*
+  	 * Filesystems may only read i_nlink directly.  They shall use the
+  	 * following functions for modification:
+  	 *
+  	 *    (set|clear|inc|drop)_nlink
+  	 *    inode_(inc|dec)_link_count
+  	 */
+  	union {
+  		const unsigned int i_nlink;
+  		unsigned int __i_nlink;
+  	};
+  	dev_t			i_rdev;
+  	loff_t			i_size;
+  	struct timespec64	__i_atime;
+  	struct timespec64	__i_mtime;
+  	struct timespec64	__i_ctime; /* use inode_*_ctime accessors! */
+  	spinlock_t		i_lock;	/* i_blocks, i_bytes, maybe i_size */
+  	unsigned short          i_bytes;
+  	u8			i_blkbits;
+  	enum rw_hint		i_write_hint;
+  	blkcnt_t		i_blocks;
+  
+  #ifdef __NEED_I_SIZE_ORDERED
+  	seqcount_t		i_size_seqcount;
+  #endif
+  
+  	/* Misc */
+  	unsigned long		i_state;
+  	struct rw_semaphore	i_rwsem;
+  
+  	unsigned long		dirtied_when;	/* jiffies of first dirtying */
+  	unsigned long		dirtied_time_when;
+  
+  	struct hlist_node	i_hash;
+  	struct list_head	i_io_list;	/* backing dev IO list */
+  #ifdef CONFIG_CGROUP_WRITEBACK
+  	struct bdi_writeback	*i_wb;		/* the associated cgroup wb */
+  
+  	/* foreign inode detection, see wbc_detach_inode() */
+  	int			i_wb_frn_winner;
+  	u16			i_wb_frn_avg_time;
+  	u16			i_wb_frn_history;
+  #endif
+  	struct list_head	i_lru;		/* inode LRU list */
+  	struct list_head	i_sb_list;
+  	struct list_head	i_wb_list;	/* backing dev writeback list */
+  	union {
+  		struct hlist_head	i_dentry;
+  		struct rcu_head		i_rcu;
+  	};
+  	atomic64_t		i_version;
+  	atomic64_t		i_sequence; /* see futex */
+  	atomic_t		i_count;
+  	atomic_t		i_dio_count;
+  	atomic_t		i_writecount;
+  #if defined(CONFIG_IMA) || defined(CONFIG_FILE_LOCKING)
+  	atomic_t		i_readcount; /* struct files open RO */
+  #endif
+  	union {
+  		const struct file_operations	*i_fop;	/* former ->i_op->default_file_ops */
+  		void (*free_inode)(struct inode *);
+  	};
+  	struct file_lock_context	*i_flctx;
+  	struct address_space	i_data;
+  	struct list_head	i_devices;
+  	union {
+  		struct pipe_inode_info	*i_pipe;
+  		struct cdev		*i_cdev;
+  		char			*i_link;
+  		unsigned		i_dir_seq;
+  	};
+  
+  	__u32			i_generation;
+  
+  #ifdef CONFIG_FSNOTIFY
+  	__u32			i_fsnotify_mask; /* all events this inode cares about */
+  	struct fsnotify_mark_connector __rcu	*i_fsnotify_marks;
+  #endif
+  
+  #ifdef CONFIG_FS_ENCRYPTION
+  	struct fscrypt_inode_info	*i_crypt_info;
+  #endif
+  
+  #ifdef CONFIG_FS_VERITY
+  	struct fsverity_info	*i_verity_info;
+  #endif
+  
+  	void			*i_private; /* fs or device private pointer */
+  } __randomize_layout;
+  ```
+
+  
+
+### 0. 简介
+
+使用 [LXR](http://elixir.free-electrons.com/linux/latest/source) 查找 Linux 内核中以下符号的定义：
+
+  > - `struct file`
+  > - `struct file_operations`
+  > - `generic_ro_fops`
+  > - `vfs_read()`
+
+前两个看过了，现在就看看  generic_ro_fops 和 vfs_read 吧
+
+  ```c
+  const struct file_operations generic_ro_fops = {
+  	.llseek		= generic_file_llseek,
+  	.read_iter	= generic_file_read_iter,
+  	.mmap		= generic_file_readonly_mmap,
+  	.splice_read	= filemap_splice_read,
+  };
+  ```
+
+这显然定义了一个通用的 readonly file operations。
+
+  ```c
+  ssize_t vfs_read(struct file *file, char __user *buf, size_t count, loff_t *pos)
+  {
+  	ssize_t ret;
+  
+  	if (!(file->f_mode & FMODE_READ))
+  		return -EBADF;
+  	if (!(file->f_mode & FMODE_CAN_READ))
+  		return -EINVAL;
+  	if (unlikely(!access_ok(buf, count)))
+  		return -EFAULT;
+  
+  	ret = rw_verify_area(READ, file, pos, count);
+  	if (ret)
+  		return ret;
+  	if (count > MAX_RW_COUNT)
+  		count =  MAX_RW_COUNT;
+  
+  	if (file->f_op->read)
+  		ret = file->f_op->read(file, buf, count, pos);
+  	else if (file->f_op->read_iter)
+  		ret = new_sync_read(file, buf, count, pos);
+  	else
+  		ret = -EINVAL;
+  	if (ret > 0) {
+  		fsnotify_access(file);
+  		add_rchar(current, ret);
+  	}
+  	inc_syscr(current);
+  	return ret;
+  }
+  ```
+
+这个首先确认我们有权限读，然后就去检查从 file 的 pos 开始，是不是能读 count 个。之后它就去尝试用不同的方法去读。读完之后，就去通知访问过，更新计数（current + ret），然后增加系统调用的计数。
+
+### 1. 注册/注销[¶](https://linux-kernel-labs-zh.xyz/labs/device_drivers.html#section-14)
+
+驱动程序控制一个具有 `MY_MAJOR` 主设备号和 `MY_MINOR` 次设备号的设备（这些宏定义在 kernel/so2_cdev.c 文件中）。
+
+1. 使用 **mknod** 创建 **/dev/so2_cdev** 字符设备节点。
+
+2. 在 init 和 exit 模块函数中实现设备的注册和注销，设备名称应为 `so2_cdev`。实现 **TODO 1**。
+
+3. 通过 `pr_info` 函数使得在注册和注销操作后显示一条消息，以确认它们是否成功。然后将模块加载到内核中：
+
+```bash
+$ insmod so2_cdev.ko
+```
+
+并查看 `/proc/devices` 中的字符设备：
+
+```bash
+$ cat /proc/devices | less
+```
+
+确定使用主设备号 42 注册的设备类型。请注意，`/proc/devices` 仅包含设备类型（主设备号），而不包含实际设备（即次设备号）。
+
+:::info
+
+/dev 中的条目不会通过加载模块来创建。可以通过两种方式创建：
+
+- 手动使用 `mknod` 命令，就像我们上面所做的那样。
+
+- 使用 udev 守护进程自动创建
+
+:::
+
+4. 卸载内核模块
+
+```bash
+rmmod so2_cdev
+```
+
+
+
+观察 so2_cdev.c 文件，我们可以看到它是 42,0，那我们就创一个
+
+```bash
+root@qemux86:~/.ash_history/kernel# mknod /dev/so2_cdev c 42 0
+```
+
+TODO 1
+
+```c
+static int so2_cdev_init(void)
+{
+	int err;
+	int i;
+
+	/* TODO 1: register char device region for MY_MAJOR and NUM_MINORS starting at MY_MINOR */
+	register_chrdev_region(MKDEV(MY_MAJOR, MY_MINOR), NUM_MINORS, MODULE_NAME);
+
+	for (i = 0; i < NUM_MINORS; i++) {
+#ifdef EXTRA
+		/* TODO 7: extra tasks, for home */
+#else
+		/*TODO 4: initialize buffer with MESSAGE string */
+		/* TODO 3: set access variable to 0, use atomic_set */
+#endif
+		/* TODO 7: extra tasks for home */
+		/* TODO 2: init and add cdev to kernel core */
+	}
+
+	return 0;
+}
+
+static void so2_cdev_exit(void)
+{
+	int i;
+
+	for (i = 0; i < NUM_MINORS; i++) {
+		/* TODO 2: delete cdev from kernel core */
+	}
+
+	/* TODO 1: unregister char device region, for MY_MAJOR and NUM_MINORS starting at MY_MINOR */
+	unregister_chrdev_region(MKDEV(MY_MAJOR, MY_MINOR), NUM_MINORS);
+}
+```
+
+要加 info 也是很简单，就不说了。但是不知道为什么我这写反了么还是什么，第一次 ins 的时候没有东西，第一次 rm 的时候提示 Register，后面 ins 则提示 unRegister，神秘。
+
+```c
+pr_info("WHOW, YOU unREGISTERED %d DEVICES!!!!", NUM_MINORS);
+```
+
+```c
+root@qemux86:~/.ash_history/kernel# insmod so2_cdev.ko
+WHOW, YOU unREGISTERED 1 DEVICES!!!!
+root@qemux86:~/.ash_history/kernel# rmmod so2_cdev.ko
+WHOW, YOU REGISTERED 1 DEVICES!!!!
+```
+
+
+
+### 2. 注册一个已注册的主设备号[¶](https://linux-kernel-labs-zh.xyz/labs/device_drivers.html#section-15)
+
+修改 **MY_MAJOR**，使其指向已经使用的主设备号。
+
+提示
+
+查看 `/proc/devices` 来获取一个已分配的主设备号。
+
+参考 [errno-base.h](http://elixir.free-electrons.com/linux/v4.9/source/include/uapi/asm-generic/errno-base.h) 并找出错误码的含义。恢复模块的初始配置。
+
+
+
+```c
+root@qemux86:~/.ash_history/kernel# cat /proc/devices
+Character devices:
+  1 mem
+  2 pty
+  3 ttyp
+  4 /dev/vc/0
+  4 tty
+  5 /dev/tty
+  5 /dev/console
+  5 /dev/ptmx
+  7 vcs
+ 10 misc
+ 13 input
+128 ptm
+136 pts
+229 hvc
+253 virtio-portsdev
+254 bsg
+```
+
+
+
+我们把它改成 4 试试看，咋没报错呢。哈哈，原来是我们没有处理报错。改成这样
+
+```c
+err = register_chrdev_region(MKDEV(MY_MAJOR, MY_MINOR), NUM_MINORS, MODULE_NAME);
+	if (err < 0) {
+		pr_err("Failed to register char device: %d", err);
+		return err;
+	}
+	pr_info("WHOW, YOU REGISTERED %d DEVICES!!!!", NUM_MINORS);
+```
+
+有报错了：insmod: can't insert 'so2_cdev.ko': Device or resource busy
+
+### 3. 打开和关闭[¶](https://linux-kernel-labs-zh.xyz/labs/device_drivers.html#section-16)
+
+运行 `cat /dev/so2_cdev` ，从我们的字符设备中读取数据。由于驱动程序没有实现打开函数，因此读取操作无法正常工作。按照标记为 TODO 2 的注释进行操作并实现以下内容。
+
+> 1. 初始化设备
+>    - 在 `so2_device_data` 结构体中添加一个 cdev 字段。
+>    - 阅读实验中的 [字符设备的注册和注销](https://linux-kernel-labs-zh.xyz/labs/device_drivers.html#section-7) 部分。
+> 2. 在驱动程序中实现打开和释放函数。
+> 3. 在打开和释放函数中显示一条消息。
+> 4. 再次读取 `/dev/so2_cdev` 文件。按照内核显示的消息进行操作。由于尚未实现 `read` 函数，因此仍会出现错误。
+
+
+
+cdev 是 `struct cdev` 类型，不是指针。
+
+```c
+struct so2_device_data {
+	/* TODO 2: add cdev member */
+	struct cdev cdev;
+	/* TODO 4: add buffer with BUFSIZ elements */
+	/* TODO 7: extra members for home */
+	/* TODO 3: add atomic_t access variable to keep track if file is opened */
+};
+
+static int so2_cdev_open(struct inode *inode, struct file *file)
+{
+	struct so2_device_data *data;
+
+	/* TODO 2: print message when the device file is open. */
+	pr_info("Whow, the device file is open!!!!");
+    
+static int
+so2_cdev_release(struct inode *inode, struct file *file)
+{
+	/* TODO 2: print message when the device file is closed. */
+	pr_info("No!!! You closed the device, you evil!");
+    
+static const struct file_operations so2_fops = {
+	.owner = THIS_MODULE,
+/* TODO 2: add open and release functions */
+	.open = so2_cdev_open,
+	.release = so2_cdev_release,
+    
+
+static int so2_cdev_init(void)
+{
+	int err;
+	int i;
+
+	/* TODO 1: register char device region for MY_MAJOR and NUM_MINORS starting at MY_MINOR */
+	err = register_chrdev_region(MKDEV(MY_MAJOR, MY_MINOR), NUM_MINORS, MODULE_NAME);
+	if (err < 0) {
+		pr_err("Failed to register char device: %d", err);
+		return err;
+	}
+	pr_info("WHOW, YOU REGISTERED %d DEVICES!!!!", NUM_MINORS);
+
+	for (i = 0; i < NUM_MINORS; i++) {
+#ifdef EXTRA
+		/* TODO 7: extra tasks, for home */
+#else
+		/*TODO 4: initialize buffer with MESSAGE string */
+		/* TODO 3: set access variable to 0, use atomic_set */
+#endif
+		/* TODO 7: extra tasks for home */
+		/* TODO 2: init and add cdev to kernel core */
+		cdev_init(&devs[i].cdev, &so2_fops);
+		cdev_add(&devs[i].cdev, MKDEV(MY_MAJOR, i), 1);
+	}
+    
+    
+static void so2_cdev_exit(void)
+{
+	int i;
+
+	for (i = 0; i < NUM_MINORS; i++) {
+		/* TODO 2: delete cdev from kernel core */
+		cdev_del(&devs[i].cdev);
+	}
+```
+
+```bash
+root@qemux86:~/.ash_history/kernel# cat /dev/so2_cdev
+WHOW, YOU REGISTERED 1 DEVICES!!!!
+cat: read error: Invalid argument
+Whow, the device file is open!!!!
+root@qemux86:~/.ash_history/kernel# cat /dev/so2_cdev
+No!!! You closed the device, you evil!
+cat: read error: Invalid argument
+Whow, the device file is open!!!!
+```
+
+非常好！
+
+
+
+### 4. 访问限制[¶](https://linux-kernel-labs-zh.xyz/labs/device_drivers.html#section-17)
+
+使用原子变量限制设备访问，以便一次只能有一个进程打开该设备。其他进程将收到“设备忙”错误 (`-EBUSY`)。限制访问将在驱动程序中的打开函数中完成。按照标记为 **TODO 3** 的注释进行操作并实现以下内容。
+
+> 1. 在设备结构体中添加 `atomic_t` 变量。
+> 2. 在模块初始化时对该变量进行初始化。
+> 3. 在打开函数中使用该变量限制对设备的访问。我们建议使用 `atomic_cmpxchg()`。
+> 4. 在释放函数中重置该变量以恢复对设备的访问权限。
+> 5. 要测试你的部署，你需要模拟对设备的长期使用。要模拟休眠，请在设备打开操作的末尾调用调度器：
+
+```c
+set_current_state(TASK_INTERRUPTIBLE);
+schedule_timeout(1000);
+```
+
+注解
+
+atomic_cmpxchg 函数的优点在于它可以在一个原子操作中检查变量的旧值并将其设置为新值。详细了解 [atomic_cmpxchg](https://www.khronos.org/registry/OpenCL/sdk/1.1/docs/man/xhtml/atomic_cmpxchg.html)。这里有一个使用示例 http://elixir.free-electrons.com/linux/v4.9/source/lib/dump_stack.c#L24 。
+
+
+
+练练手
+
+```c
+/*
+ * Character device drivers lab
+ *
+ * All tasks
+ */
+
+#include <asm/atomic.h>
+#include <linux/module.h>
+#include <linux/init.h>
+#include <linux/kernel.h>
+#include <linux/fs.h>
+#include <linux/cdev.h>
+#include <linux/uaccess.h>
+#include <linux/sched.h>
+#include <linux/wait.h>
+
+#include "../include/so2_cdev.h"
+
+MODULE_DESCRIPTION("SO2 character device");
+MODULE_AUTHOR("SO2");
+MODULE_LICENSE("GPL");
+
+#define LOG_LEVEL	KERN_INFO
+
+#define MY_MAJOR		42
+#define MY_MINOR		0
+#define NUM_MINORS		1
+#define MODULE_NAME		"so2_cdev"
+#define MESSAGE			"hello\n"
+#define IOCTL_MESSAGE		"Hello ioctl"
+
+#ifndef BUFSIZ
+#define BUFSIZ		4096
+#endif
+
+
+struct so2_device_data {
+	/* TODO 2: add cdev member */
+	struct cdev cdev;
+	/* TODO 4: add buffer with BUFSIZ elements */
+	/* TODO 7: extra members for home */
+	/* TODO 3: add atomic_t access variable to keep track if file is opened */
+	atomic_t access;
+};
+
+struct so2_device_data devs[NUM_MINORS];
+
+static int so2_cdev_open(struct inode *inode, struct file *file)
+{
+	struct so2_device_data *data;
+
+	/* TODO 2: print message when the device file is open. */
+	pr_info("Whow, the device file is open!!!!");
+
+	/* TODO 3: inode->i_cdev contains our cdev struct, use container_of to obtain a pointer to so2_device_data */
+	data = container_of(inode->i_cdev, struct so2_device_data, cdev);
+
+	file->private_data = data;
+
+#ifndef EXTRA
+	/* TODO 3: return immediately if access is != 0, use atomic_cmpxchg */
+	if (atomic_cmpxchg(&data->access, 0, 1) != 0) {
+		pr_info("I'm using the device!!!!");
+		return -EBUSY;
+	}
+#endif
+
+	set_current_state(TASK_INTERRUPTIBLE);
+	schedule_timeout(10 * HZ);
+
+	return 0;
+}
+
+static int
+so2_cdev_release(struct inode *inode, struct file *file)
+{
+	/* TODO 2: print message when the device file is closed. */
+	pr_info("No!!! You closed the device, you evil!");
+
+#ifndef EXTRA
+	struct so2_device_data *data =
+		(struct so2_device_data *) file->private_data;
+
+	/* TODO 3: reset access variable to 0, use atomic_set */
+	atomic_set(&data->access, 0);
+#endif
+	return 0;
+}
+
+static ssize_t
+so2_cdev_read(struct file *file,
+		char __user *user_buffer,
+		size_t size, loff_t *offset)
+{
+	struct so2_device_data *data =
+		(struct so2_device_data *) file->private_data;
+	size_t to_read;
+
+#ifdef EXTRA
+	/* TODO 7: extra tasks for home */
+#endif
+
+	/* TODO 4: Copy data->buffer to user_buffer, use copy_to_user */
+
+	return to_read;
+}
+
+static ssize_t
+so2_cdev_write(struct file *file,
+		const char __user *user_buffer,
+		size_t size, loff_t *offset)
+{
+	struct so2_device_data *data =
+		(struct so2_device_data *) file->private_data;
+
+
+	/* TODO 5: copy user_buffer to data->buffer, use copy_from_user */
+	/* TODO 7: extra tasks for home */
+
+	return size;
+}
+
+static long
+so2_cdev_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+{
+	struct so2_device_data *data =
+		(struct so2_device_data *) file->private_data;
+	int ret = 0;
+	int remains;
+
+	switch (cmd) {
+	/* TODO 6: if cmd = MY_IOCTL_PRINT, display IOCTL_MESSAGE */
+	/* TODO 7: extra tasks, for home */
+	default:
+		ret = -EINVAL;
+	}
+
+	return ret;
+}
+
+static const struct file_operations so2_fops = {
+	.owner = THIS_MODULE,
+/* TODO 2: add open and release functions */
+	.open = so2_cdev_open,
+	.release = so2_cdev_release,
+/* TODO 4: add read function */
+/* TODO 5: add write function */
+/* TODO 6: add ioctl function */
+};
+
+static int so2_cdev_init(void)
+{
+	int err;
+	int i;
+
+	/* TODO 1: register char device region for MY_MAJOR and NUM_MINORS starting at MY_MINOR */
+	err = register_chrdev_region(MKDEV(MY_MAJOR, MY_MINOR), NUM_MINORS, MODULE_NAME);
+	if (err < 0) {
+		pr_err("Failed to register char device: %d", err);
+		return err;
+	}
+	pr_info("WHOW, YOU REGISTERED %d DEVICES!!!!", NUM_MINORS);
+
+	for (i = 0; i < NUM_MINORS; i++) {
+#ifdef EXTRA
+		/* TODO 7: extra tasks, for home */
+#else
+		/*TODO 4: initialize buffer with MESSAGE string */
+		/* TODO 3: set access variable to 0, use atomic_set */
+		atomic_set(&devs[i].access, 0);
+#endif
+		/* TODO 7: extra tasks for home */
+		/* TODO 2: init and add cdev to kernel core */
+		cdev_init(&devs[i].cdev, &so2_fops);
+		cdev_add(&devs[i].cdev, MKDEV(MY_MAJOR, i), 1);
+	}
+
+	return 0;
+}
+
+static void so2_cdev_exit(void)
+{
+	int i;
+
+	for (i = 0; i < NUM_MINORS; i++) {
+		/* TODO 2: delete cdev from kernel core */
+		cdev_del(&devs[i].cdev);
+	}
+
+	/* TODO 1: unregister char device region, for MY_MAJOR and NUM_MINORS starting at MY_MINOR */
+	
+	unregister_chrdev_region(MKDEV(MY_MAJOR, MY_MINOR), NUM_MINORS);
+	pr_info("WHOW, YOU REGISTERED %d DEVICES!!!!", NUM_MINORS);
+}
+
+module_init(so2_cdev_init);
+module_exit(so2_cdev_exit);
+
+```
+
+虽然输出和我们想的不一样，但是还是能跑的，哈哈
+
+```bash
+root@qemux86:~/.ash_history/kernel# cat /dev/so2_cdev & cat /dev/so2_cdev &
+root@qemux86:~/.ash_history/kernel# Whow, the device file is open!!!!
+Whow, the device file is open!!!!
+cat: can't open '/dev/so2_cdev': Device or resource busy
+
+[2]+  Done(1)                    cat /dev/so2_cdev
+root@qemux86:~/.ash_history/kernel# cat: read error: Invalid argument
+I'm using the device!!!!
+
+[1]+  Done(1)                    cat /dev/so2_cdev
+```
+
+### 5. 读操作[¶](https://linux-kernel-labs-zh.xyz/labs/device_drivers.html#section-18)
+
+在驱动程序中实现读取函数。按照标有 `TODO 4` 的注释并实现以下步骤：
+
+> 1. 在 `so2_device_data` 结构中保持一个缓冲区，并用 `MESSAGE` 宏的值进行初始化。缓冲区的初始化在模块的 `init` 函数中完成。
+> 2. 在读取调用时，将内核空间缓冲区的内容复制到用户空间缓冲区。
+>    - 使用 `copy_to_user()` 函数将信息从内核空间复制到用户空间。
+>    - 暂时忽略大小和偏移参数。可以假设用户空间的缓冲区足够大，不需要检查读取函数的大小参数的有效性。
+>    - 读取调用返回的值是从内核空间缓冲区传输到用户空间缓冲区的字节数。
+> 3. 实现完成后，使用 `cat /dev/so2_cdev` 进行测试。
+
+:::info
+
+命令 `cat /dev/so2_cdev` 不会结束（使用Ctrl+C）。请阅读 [读取和写入](https://linux-kernel-labs-zh.xyz/labs/device_drivers.html#section-10) 和 [访问进程地址空间](https://linux-kernel-labs-zh.xyz/labs/device_drivers.html#section-8) 部分。如果要显示偏移值，请使用以下形式的构造: `pr_info("Offset: %lld \n", *offset)`；偏移值的数据类型 `loff_t` 是 `long long int` 的 typedef。
+
+:::
+
+`cat` 命令一直读取到文件的末尾，文件通过读取返回值为 0 来表示读到末尾了。因此，为了正确实现，你需要更新并使用读函数中接收的偏移参数，并在用户达到缓冲区末尾时返回 0。
+
+修改驱动程序以使 `cat` 命令结束：
+
+> 1. 使用大小参数。
+> 2. 对于每次读取，相应地更新偏移参数。
+> 3. 确保读取函数返回已复制到用户缓冲区的字节数。
+
+:::info
+
+通过解引用偏移参数，可以读取并移动在文件中的当前位置。每次成功进行读取后都需要更新其值。
+
+:::
+
+
+
+我们首先测试第一个，忽略 Offset 的
+
+```c
+/*
+ * Character device drivers lab
+ *
+ * All tasks
+ */
+
+#include <asm/atomic.h>
+#include <linux/module.h>
+#include <linux/init.h>
+#include <linux/kernel.h>
+#include <linux/fs.h>
+#include <linux/cdev.h>
+#include <linux/uaccess.h>
+#include <linux/sched.h>
+#include <linux/wait.h>
+
+#include "../include/so2_cdev.h"
+
+MODULE_DESCRIPTION("SO2 character device");
+MODULE_AUTHOR("SO2");
+MODULE_LICENSE("GPL");
+
+#define LOG_LEVEL	KERN_INFO
+
+#define MY_MAJOR		42
+#define MY_MINOR		0
+#define NUM_MINORS		1
+#define MODULE_NAME		"so2_cdev"
+#define MESSAGE			"hello\n"
+#define IOCTL_MESSAGE		"Hello ioctl"
+
+#ifndef BUFSIZ
+#define BUFSIZ		4096
+#endif
+
+
+struct so2_device_data {
+	/* TODO 2: add cdev member */
+	struct cdev cdev;
+	/* TODO 4: add buffer with BUFSIZ elements */
+	char buffer[BUFSIZ];
+	/* TODO 7: extra members for home */
+	/* TODO 3: add atomic_t access variable to keep track if file is opened */
+	atomic_t access;
+};
+
+struct so2_device_data devs[NUM_MINORS];
+
+static int so2_cdev_open(struct inode *inode, struct file *file)
+{
+	struct so2_device_data *data;
+
+	/* TODO 2: print message when the device file is open. */
+	pr_info("Whow, the device file is open!!!!");
+
+	/* TODO 3: inode->i_cdev contains our cdev struct, use container_of to obtain a pointer to so2_device_data */
+	data = container_of(inode->i_cdev, struct so2_device_data, cdev);
+
+	file->private_data = data;
+
+#ifndef EXTRA
+	/* TODO 3: return immediately if access is != 0, use atomic_cmpxchg */
+	if (atomic_cmpxchg(&data->access, 0, 1) != 0) {
+		pr_info("I'm using the device!!!!");
+		return -EBUSY;
+	}
+#endif
+
+	// set_current_state(TASK_INTERRUPTIBLE);
+	// schedule_timeout(10 * HZ);
+
+	return 0;
+}
+
+static int
+so2_cdev_release(struct inode *inode, struct file *file)
+{
+	/* TODO 2: print message when the device file is closed. */
+	pr_info("No!!! You closed the device, you evil!");
+
+#ifndef EXTRA
+	struct so2_device_data *data =
+
+		(struct so2_device_data *) file->private_data;
+
+	/* TODO 3: reset access variable to 0, use atomic_set */
+	atomic_set(&data->access, 0);
+#endif
+	return 0;
+}
+
+static ssize_t
+so2_cdev_read(struct file *file,
+		char __user *user_buffer,
+		size_t size, loff_t *offset)
+{
+	struct so2_device_data *data =
+		(struct so2_device_data *) file->private_data;
+	size_t to_read;
+
+#ifdef EXTRA
+	/* TODO 7: extra tasks for home */
+#endif
+
+	/* TODO 4: Copy data->buffer to user_buffer, use copy_to_user */
+	int err = copy_to_user(user_buffer, data->buffer, strlen(data->buffer));
+	if (err) {
+		pr_err("Failed to copy data to user space\n");
+		return -EFAULT;
+	}
+	to_read = strlen(data->buffer);
+	pr_info("size: %d, to_read: %d", size, to_read);
+	pr_info("Content: %s", data->buffer);
+
+	return to_read;
+}
+
+static ssize_t
+so2_cdev_write(struct file *file,
+		const char __user *user_buffer,
+		size_t size, loff_t *offset)
+{
+	struct so2_device_data *data =
+		(struct so2_device_data *) file->private_data;
+
+
+	/* TODO 5: copy user_buffer to data->buffer, use copy_from_user */
+	/* TODO 7: extra tasks for home */
+
+	return size;
+}
+
+static long
+so2_cdev_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+{
+	struct so2_device_data *data =
+		(struct so2_device_data *) file->private_data;
+	int ret = 0;
+	int remains;
+
+	switch (cmd) {
+	/* TODO 6: if cmd = MY_IOCTL_PRINT, display IOCTL_MESSAGE */
+	/* TODO 7: extra tasks, for home */
+	default:
+		ret = -EINVAL;
+	}
+
+	return ret;
+}
+
+static const struct file_operations so2_fops = {
+	.owner = THIS_MODULE,
+/* TODO 2: add open and release functions */
+	.open = so2_cdev_open,
+	.release = so2_cdev_release,
+/* TODO 4: add read function */
+	.read = so2_cdev_read,
+/* TODO 5: add write function */
+/* TODO 6: add ioctl function */
+};
+
+static int so2_cdev_init(void)
+{
+	int err;
+	int i;
+
+	/* TODO 1: register char device region for MY_MAJOR and NUM_MINORS starting at MY_MINOR */
+	err = register_chrdev_region(MKDEV(MY_MAJOR, MY_MINOR), NUM_MINORS, MODULE_NAME);
+	if (err < 0) {
+		pr_err("Failed to register char device: %d", err);
+		return err;
+	}
+	pr_info("WHOW, YOU REGISTERED %d DEVICES!!!!", NUM_MINORS);
+
+	for (i = 0; i < NUM_MINORS; i++) {
+#ifdef EXTRA
+		/* TODO 7: extra tasks, for home */
+#else
+		/*TODO 4: initialize buffer with MESSAGE string */
+		strncpy(devs[i].buffer, MESSAGE, strlen(MESSAGE));
+		/* TODO 3: set access variable to 0, use atomic_set */
+		atomic_set(&devs[i].access, 0);
+#endif
+		/* TODO 7: extra tasks for home */
+		/* TODO 2: init and add cdev to kernel core */
+		cdev_init(&devs[i].cdev, &so2_fops);
+		cdev_add(&devs[i].cdev, MKDEV(MY_MAJOR, i), 1);
+	}
+
+	return 0;
+}
+
+static void so2_cdev_exit(void)
+{
+	int i;
+
+	for (i = 0; i < NUM_MINORS; i++) {
+		/* TODO 2: delete cdev from kernel core */
+		cdev_del(&devs[i].cdev);
+	}
+
+	/* TODO 1: unregister char device region, for MY_MAJOR and NUM_MINORS starting at MY_MINOR */
+	
+	unregister_chrdev_region(MKDEV(MY_MAJOR, MY_MINOR), NUM_MINORS);
+	pr_info("WHOW, YOU REGISTERED %d DEVICES!!!!", NUM_MINORS);
+}
+
+module_init(so2_cdev_init);
+module_exit(so2_cdev_exit);
+
+```
+
+在这里，我们就读取一点点 :P 然后它就一直在传
+
+
+
+然后我们继续改一下，让他没问题
+
+```c
+static ssize_t
+so2_cdev_read(struct file *file,
+		char __user *user_buffer,
+		size_t size, loff_t *offset)
+{
+	struct so2_device_data *data =
+		(struct so2_device_data *) file->private_data;
+	size_t to_read;
+
+#ifdef EXTRA
+	/* TODO 7: extra tasks for home */
+#endif
+
+	/* TODO 4: Copy data->buffer to user_buffer, use copy_to_user */
+	to_read = min(size, (unsigned int)(strlen(data->buffer) - *offset));
+	if (to_read <= 0) return 0;
+	if (copy_to_user(user_buffer, data->buffer + *offset, to_read)) {
+		pr_err("Failed to copy data to user space\n");
+		return -EFAULT;
+	}
+	*offset += to_read;
+	return to_read;
+}
+```
+
+```bash
+root@qemux86:~/.ash_history/kernel# cat /dev/so2_cdev
+WHOW, YOU REGISTERED 1 DEVICES!!!!
+hello
+Whow, the device file is open!!!!
+```
+
+### 6. 写操作[¶](https://linux-kernel-labs-zh.xyz/labs/device_drivers.html#section-19)
+
+添加将消息写入内核缓冲区以替换预定义消息的功能。在驱动程序中实现写函数。按照标有 `TODO 5` 的注释进行操作。
+
+此时忽略偏移参数。你可以假设驱动程序缓冲区足够大。你无需检查写函数大小参数的有效性。
+
+注意
+
+设备驱动程序操作的原型位于 file_operations 结构中。使用以下命令进行测试：
+
+```
+echo "arpeggio"> /dev/so2_cdev
+cat /dev/so2_cdev
+```
+
+请阅读 [读取和写入](https://linux-kernel-labs-zh.xyz/labs/device_drivers.html#section-10) 小节和 [访问进程地址空间](https://linux-kernel-labs-zh.xyz/labs/device_drivers.html#section-8) 小节。
+
+
+
+简单简单
+
+```c
+static const struct file_operations so2_fops = {
+	.owner = THIS_MODULE,
+/* TODO 2: add open and release functions */
+	.open = so2_cdev_open,
+	.release = so2_cdev_release,
+/* TODO 4: add read function */
+	.read = so2_cdev_read,
+/* TODO 5: add write function */
+	.write = so2_cdev_write,
+/* TODO 6: add ioctl function */
+};
+
+static ssize_t
+so2_cdev_write(struct file *file,
+		const char __user *user_buffer,
+		size_t size, loff_t *offset)
+{
+	struct so2_device_data *data =
+		(struct so2_device_data *) file->private_data;
+
+
+	/* TODO 5: copy user_buffer to data->buffer, use copy_from_user */
+	copy_from_user(data->buffer, user_buffer, size);
+	data->buffer[size] = '\0';
+	/* TODO 7: extra tasks for home */
+
+	return size;
+}
+```
+
+### 7. ioctl 操作[¶](https://linux-kernel-labs-zh.xyz/labs/device_drivers.html#ioctl-2)
+
+对于这个练习，我们希望在驱动程序中添加 ioctl `MY_IOCTL_PRINT` 来显示来自宏 `IOCTL_MESSAGE` 的消息。按照标有 `TODO 6` 的注释进行操作。
+
+为此：
+
+> 1. 在驱动程序中实现 ioctl 函数。
+> 2. 我们需要使用 `user/so2_cdev_test.c` 调用 ioctl 函数，并传递适当的参数。
+> 3. 为了进行测试，我们将使用一个用户空间程序 (`user/so2_cdev_test.c`) 来调用具有所需参数的 `ioctl` 函数。
+
+:::tip
+
+宏 `MY_IOCTL_PRINT` 在文件 `include/so2_cdev.h` 中定义，该文件在内核模块和用户空间程序之间共享。
+
+请阅读实验中的 [ioctl](https://linux-kernel-labs-zh.xyz/labs/device_drivers.html#ioctl) 章节。
+:::
+
+:::tip
+
+用户空间代码在 `make build` 时会自动编译，并在 `make copy` 时被复制。
+
+由于我们需要为 32 位的 qemu 机器编译程序，如果你的主机是 64 位的，那么你需要安装 `gcc-multilib` 软件包。
+
+:::
+
+
+
+```c title="so2_cdev_ioctl.c"
+static long
+so2_cdev_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+{
+	struct so2_device_data *data =
+		(struct so2_device_data *) file->private_data;
+	int ret = 0;
+	int remains;
+
+	switch (cmd) {
+	/* TODO 6: if cmd = MY_IOCTL_PRINT, display IOCTL_MESSAGE */
+	case MY_IOCTL_PRINT:
+		pr_info("%s\n", IOCTL_MESSAGE);
+		break;
+	/* TODO 7: extra tasks, for home */
+	default:
+		ret = -EINVAL;
+	}
+
+	return ret;
+}
+
+static const struct file_operations so2_fops = {
+	.owner = THIS_MODULE,
+/* TODO 2: add open and release functions */
+	.open = so2_cdev_open,
+	.release = so2_cdev_release,
+/* TODO 4: add read function */
+	.read = so2_cdev_read,
+/* TODO 5: add write function */
+	.write = so2_cdev_write,
+/* TODO 6: add ioctl function */
+	.unlocked_ioctl = so2_cdev_ioctl
+};
+```
+
+```bash
+root@qemux86:~/skels/device_drivers/user# ./so2_cdev_test p
+WHOW, YOU REGISTERED 1 DEVICES!!!!
+Whow, the device file is open!!!!
+Hello ioctl
+```
+
+### Ex1. 带消息的 ioctl[¶](https://linux-kernel-labs-zh.xyz/labs/device_drivers.html#ioctl-3)
+
+为驱动程序添加两个 ioctl 操作，用于修改与驱动程序关联的消息。应使用固定长度的缓冲区（BUFFER_SIZE）。
+
+1. 在驱动程序的 ioctl 函数中添加以下操作：
+   - `MY_IOCTL_SET_BUFFER`：用于向设备写入消息；
+   - `MY_IOCTL_GET_BUFFER`：用于从设备读取消息。
+2. 为进行测试，将所需的命令行参数传递给用户空间程序。
+
+
+
+以 SET_BUFFER 为例，我们可以看到它会 ioctl 传一个 char[] 过去
+
+差不多就这个样子吧，我虚拟机打不开了。
+
+```c
+static long
+so2_cdev_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+{
+	struct so2_device_data *data =
+		(struct so2_device_data *) file->private_data;
+	int ret = 0;
+	int remains;
+
+	switch (cmd) {
+	/* TODO 6: if cmd = MY_IOCTL_PRINT, display IOCTL_MESSAGE */
+	case MY_IOCTL_PRINT:
+		pr_info("%s\n", IOCTL_MESSAGE);
+		break;
+	/* TODO 7: extra tasks, for home */
+	case MY_IOCTL_SET_BUFFER:
+		if (copy_to_user(data->buffer, (char __user *)arg, BUFSIZ)) {
+			pr_err("ERR!!!");
+			return -EFAULT;
+		}
+		data->buffer[BUFSIZ - 1] = '\0';
+		pr_info("I set %s", data->buffer);
+		break;
+	case MY_IOCTL_GET_BUFFER:
+		if(copy_to_user((char __user *) arg, data->buffer, strlen(data->buffer))) {
+			pr_err("ERR!!!");
+			return -EFAULT;
+		}
+		pr_info("I put %s to 0x%lx", data->buffer, arg);
+		break;
+	default:
+		ret = -EINVAL;
+	}
+
+	return ret;
+}
+```
+
