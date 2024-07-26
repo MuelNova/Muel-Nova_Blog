@@ -5,7 +5,7 @@ tags: [kernel]
 date: 2024-07-14
 last_update:
   author: nova
-  date: 2024-07-22
+  date: 2024-07-26
 ---
 
 ## 在此之前
@@ -59,6 +59,73 @@ root@MuelNova-Laptop:/linux/tools/labs# ls skels/kernel_modules/
 ```
 
 具体说明可以看 https://github.com/linux-kernel-labs-zh/so2-labs
+
+## wsl2 环境
+
+由于我的 WSL2 开启了 mirrored 模式，导致它的 console 模式进不去，我花了一些时间进行探索，可以看 [#3](https://github.com/linux-kernel-labs-zh/so2-labs/issues/3#issuecomment-2252445228)。
+
+简单而言就是把已使用的网段换了一个没使用的网段。
+
+```diff
+diff --git a/tools/labs/qemu/Makefile b/tools/labs/qemu/Makefile
+index e9ee4ec1b..6e10ac6f0 100644
+--- a/tools/labs/qemu/Makefile
++++ b/tools/labs/qemu/Makefile
+@@ -135,7 +135,7 @@ rootfs: $(YOCTO_ROOTFS)
+ 	printf '%s\n' '#!/bin/sh' '/bin/login -f root' > rootfs/sbin/rootlogin
+ 	chmod +x rootfs/sbin/rootlogin
+ 	mkdir -p rootfs/home/root/skels
+-	echo "//10.0.2.1/skels /home/root/skels cifs port=4450,guest,user=dummy 0 0" >> rootfs/etc/fstab
++	echo "//172.31.2.1/skels /home/root/skels cifs port=4450,guest,user=dummy 0 0" >> rootfs/etc/fstab
+ 	echo "hvc0:12345:respawn:/sbin/getty 115200 hvc0" >> rootfs/etc/inittab
+ 
+ $(YOCTO_ROOTFS):
+diff --git a/tools/labs/qemu/create_net.sh b/tools/labs/qemu/create_net.sh
+index c97b6fa0a..f803ed1e4 100755
+--- a/tools/labs/qemu/create_net.sh
++++ b/tools/labs/qemu/create_net.sh
+@@ -18,7 +18,7 @@ case "$device" in
+         subnet=172.30.0
+         ;;
+     "lkt-tap-smbd")
+-        subnet=10.0.2
++        subnet=172.31.2
+ 	    ;;
+     *)
+         echo "Unknown device" 1>&2
+diff --git a/tools/labs/qemu/run-qemu.sh b/tools/labs/qemu/run-qemu.sh
+index 9938ec18e..abd245be1 100755
+--- a/tools/labs/qemu/run-qemu.sh
++++ b/tools/labs/qemu/run-qemu.sh
+@@ -24,7 +24,7 @@ case "$mode" in
+ 	    ;;
+     gui)
+ 	    # QEMU_DISPLAY = sdl, gtk, ...
+-	    qemu_display="-display ${QEMU_DISPLAY:-"sdl"}"
++	    qemu_display="-display ${QEMU_DISPLAY:-"gtk"}"
+ 	    linux_console=""
+ 	    ;;
+     checker)
+@@ -56,13 +56,13 @@ linux_loglevel=${LINUX_LOGLEVEL:-"15"}
+ linux_term=${LINUX_TERM:-"TERM=xterm"}
+ linux_addcmdline=${LINUX_ADD_CMDLINE:-""}
+ 
+-linux_cmdline=${LINUX_CMDLINE:-"root=/dev/cifs rw ip=dhcp cifsroot=//10.0.2.1/rootfs,port=4450,guest,user=dummy $linux_console loglevel=$linux_loglevel pci=noacpi $linux_term $linux_addcmdline"}
++linux_cmdline=${LINUX_CMDLINE:-"root=/dev/cifs rw ip=dhcp cifsroot=//172.31.2.1/rootfs,port=4450,guest,user=dummy $linux_console loglevel=$linux_loglevel pci=noacpi $linux_term $linux_addcmdline"}
+ 
+ user=$(id -un)
+ 
+ cat << EOF > "$SAMBA_DIR/smbd.conf"
+ [global]
+-    interfaces = 10.0.2.1
++    interfaces = 172.31.2.1
+     smb ports = 4450
+     private dir = $SAMBA_DIR
+     bind interfaces only = yes
+
+```
+
+
 
 ### VS-Code 开发环境
 
@@ -2929,5 +2996,937 @@ so2_cdev_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 
 	return ret;
 }
+```
+
+
+
+## I/O 访问与中断
+
+### 0. 简介[¶](https://linux-kernel-labs-zh.xyz/labs/interrupts.html#section-14)
+
+使用 [LXR](http://elixir.free-electrons.com/linux/latest/source)，在 Linux 内核中查找以下符号的定义：
+
+- `struct resource`
+- `request_region()` 和 `__request_region()`
+- `request_irq()` 和 `request_threaded_irq()`
+- :c:func:[`](https://linux-kernel-labs-zh.xyz/labs/interrupts.html#system-message-2)inb`（适用于 x86 架构）
+
+分析以下 Linux 代码：
+
+- 键盘初始化函数 `i8042_setup_kbd()`
+- AT 或 PS/2 键盘中断函数 `atkbd_interrupt()`
+
+
+
+- `struct resource`: 看得出来是一个树？对双亲、兄弟、孩子都有标记。然后包含了一些 flags 之类的。
+
+  ```c
+  struct resource {
+  	resource_size_t start;
+  	resource_size_t end;
+  	const char *name;
+  	unsigned long flags;
+  	unsigned long desc;
+  	struct resource *parent, *sibling, *child;
+  };
+  ```
+
+- `request_region()`：一个对 `__request_region` 的包装。那么它以 GFP_KERNEL 分配了一个资源，并且标记了 parent, start, n, name, flags 等信息i。
+
+  ```c
+  #define request_region(start,n,name)		__request_region(&ioport_resource, (start), (n), (name), 0)
+  
+  struct resource *__request_region(struct resource *parent,
+  				  resource_size_t start, resource_size_t n,
+  				  const char *name, int flags)
+  {
+  	struct resource *res = alloc_resource(GFP_KERNEL);
+  	int ret;
+  
+  	if (!res)
+  		return NULL;
+  
+  	write_lock(&resource_lock);
+  	ret = __request_region_locked(res, parent, start, n, name, flags);
+  	write_unlock(&resource_lock);
+  
+  	if (ret) {
+  		free_resource(res);
+  		return NULL;
+  	}
+  
+  	if (parent == &iomem_resource)
+  		revoke_iomem(res);
+  
+  	return res;
+  }
+  ```
+
+- `request_irq`：也是 request_threaded_irq 的一个包装，说白了就是一个没有 thread_fn 作为 thread context 的包装。它用于注册中断，如果 irqflags 有 SHARED 标记，那么必须要有一个唯一的标识符 dev_id。之后就会通过 GFP_KERNEL 去分配一个 irqaction 结构体，然后在芯片上添加终端。
+
+  ```c
+  static inline int __must_check
+  request_irq(unsigned int irq, irq_handler_t handler, unsigned long flags,
+  	    const char *name, void *dev)
+  {
+  	return request_threaded_irq(irq, handler, NULL, flags, name, dev);
+  }
+  
+  int request_threaded_irq(unsigned int irq, irq_handler_t handler,
+  			 irq_handler_t thread_fn, unsigned long irqflags,
+  			 const char *devname, void *dev_id)
+  {
+  	struct irqaction *action;
+  	struct irq_desc *desc;
+  	int retval;
+  
+  	if (irq == IRQ_NOTCONNECTED)
+  		return -ENOTCONN;
+  
+  	/*
+  	 * Sanity-check: shared interrupts must pass in a real dev-ID,
+  	 * otherwise we'll have trouble later trying to figure out
+  	 * which interrupt is which (messes up the interrupt freeing
+  	 * logic etc).
+  	 *
+  	 * Also shared interrupts do not go well with disabling auto enable.
+  	 * The sharing interrupt might request it while it's still disabled
+  	 * and then wait for interrupts forever.
+  	 *
+  	 * Also IRQF_COND_SUSPEND only makes sense for shared interrupts and
+  	 * it cannot be set along with IRQF_NO_SUSPEND.
+  	 */
+  	if (((irqflags & IRQF_SHARED) && !dev_id) ||
+  	    ((irqflags & IRQF_SHARED) && (irqflags & IRQF_NO_AUTOEN)) ||
+  	    (!(irqflags & IRQF_SHARED) && (irqflags & IRQF_COND_SUSPEND)) ||
+  	    ((irqflags & IRQF_NO_SUSPEND) && (irqflags & IRQF_COND_SUSPEND)))
+  		return -EINVAL;
+  
+  	desc = irq_to_desc(irq);
+  	if (!desc)
+  		return -EINVAL;
+  
+  	if (!irq_settings_can_request(desc) ||
+  	    WARN_ON(irq_settings_is_per_cpu_devid(desc)))
+  		return -EINVAL;
+  
+  	if (!handler) {
+  		if (!thread_fn)
+  			return -EINVAL;
+  		handler = irq_default_primary_handler;
+  	}
+  
+  	action = kzalloc(sizeof(struct irqaction), GFP_KERNEL);
+  	if (!action)
+  		return -ENOMEM;
+  
+  	action->handler = handler;
+  	action->thread_fn = thread_fn;
+  	action->flags = irqflags;
+  	action->name = devname;
+  	action->dev_id = dev_id;
+  
+  	retval = irq_chip_pm_get(&desc->irq_data);
+  	if (retval < 0) {
+  		kfree(action);
+  		return retval;
+  	}
+  
+  	retval = __setup_irq(irq, desc, action);
+  
+  	if (retval) {
+  		irq_chip_pm_put(&desc->irq_data);
+  		kfree(action->secondary);
+  		kfree(action);
+  	}
+  
+  #ifdef CONFIG_DEBUG_SHIRQ_FIXME
+  	if (!retval && (irqflags & IRQF_SHARED)) {
+  		/*
+  		 * It's a shared IRQ -- the driver ought to be prepared for it
+  		 * to happen immediately, so let's make sure....
+  		 * We disable the irq to make sure that a 'real' IRQ doesn't
+  		 * run in parallel with our fake.
+  		 */
+  		unsigned long flags;
+  
+  		disable_irq(irq);
+  		local_irq_save(flags);
+  
+  		handler(irq, dev_id);
+  
+  		local_irq_restore(flags);
+  		enable_irq(irq);
+  	}
+  #endif
+  	return retval;
+  }
+  ```
+
+- `inb`: 我真没找到这个符号的具体实现，这个应该是和架构有关的。但是 x86 下面都是 wrap。但是简单来说他有这么一个实现，读取一个端口一个字节的数据。
+
+  ```c
+  u8 inb(unsigned long port)
+  {
+  	return ioread8(ioport_map(port, 1));
+  }
+  ```
+
+
+
+分析代码
+
+**i8042_setup_kbd()**：
+
+```c
+static int i8042_setup_kbd(void)
+{
+	int error;
+
+	error = i8042_create_kbd_port();
+	if (error)
+		return error;
+
+	error = request_irq(I8042_KBD_IRQ, i8042_interrupt, IRQF_SHARED,
+			    "i8042", i8042_platform_device);
+	if (error)
+		goto err_free_port;
+
+	error = i8042_enable_kbd_port();
+	if (error)
+		goto err_free_irq;
+
+	i8042_kbd_irq_registered = true;
+	return 0;
+
+ err_free_irq:
+	free_irq(I8042_KBD_IRQ, i8042_platform_device);
+ err_free_port:
+	i8042_free_kbd_port();
+	return error;
+}
+```
+
+代码比较容易理解，它申请了一个中断，然后对错误进行了处理。我们可以看一下里面的几个函数。
+
+`i8042_create_kbd_port` 大体上创建了一个 struct serio 结构体，并且对值进行了设置。
+
+```c
+static int i8042_create_kbd_port(void)
+{
+	struct serio *serio;
+	struct i8042_port *port = &i8042_ports[I8042_KBD_PORT_NO];
+
+	serio = kzalloc(sizeof(struct serio), GFP_KERNEL);
+	if (!serio)
+		return -ENOMEM;
+
+	serio->id.type		= i8042_direct ? SERIO_8042 : SERIO_8042_XL;
+	serio->write		= i8042_dumbkbd ? NULL : i8042_kbd_write;
+	serio->start		= i8042_start;
+	serio->stop		= i8042_stop;
+	serio->close		= i8042_port_close;
+	serio->ps2_cmd_mutex	= &i8042_mutex;
+	serio->port_data	= port;
+	serio->dev.parent	= &i8042_platform_device->dev;
+	strscpy(serio->name, "i8042 KBD port", sizeof(serio->name));
+	strscpy(serio->phys, I8042_KBD_PHYS_DESC, sizeof(serio->phys));
+	strscpy(serio->firmware_id, i8042_kbd_firmware_id,
+		sizeof(serio->firmware_id));
+	set_primary_fwnode(&serio->dev, i8042_kbd_fwnode);
+
+	port->serio = serio;
+	port->irq = I8042_KBD_IRQ;
+
+	return 0;
+}
+```
+
+`i8042_enable_kbd_port` 则通过设置控制寄存器来启用整个 port。具体而言，它禁用了 DISABLE 位，打开了 Intterupt 位，然后发送给 WriteConTrolRegister 指令。
+
+```c
+static int i8042_enable_kbd_port(void)
+{
+	i8042_ctr &= ~I8042_CTR_KBDDIS;
+	i8042_ctr |= I8042_CTR_KBDINT;
+
+	if (i8042_command(&i8042_ctr, I8042_CMD_CTL_WCTR)) {
+		i8042_ctr &= ~I8042_CTR_KBDINT;
+		i8042_ctr |= I8042_CTR_KBDDIS;
+		pr_err("Failed to enable KBD port\n");
+		return -EIO;
+	}
+
+	return 0;
+}
+```
+
+中断函数稍微有些复杂，但具体来说，它拿了自旋锁之后去读数据，然后处理多路复用器的错误和数据，调用 serio_interrupt 去真正的处理数据。
+
+```c
+static irqreturn_t i8042_interrupt(int irq, void *dev_id)
+{
+	struct i8042_port *port;
+	struct serio *serio;
+	unsigned long flags;
+	unsigned char str, data;
+	unsigned int dfl;
+	unsigned int port_no;
+	bool filtered;
+	int ret = 1;
+
+	spin_lock_irqsave(&i8042_lock, flags);
+
+	str = i8042_read_status();
+	if (unlikely(~str & I8042_STR_OBF)) {
+		spin_unlock_irqrestore(&i8042_lock, flags);
+		if (irq)
+			dbg("Interrupt %d, without any data\n", irq);
+		ret = 0;
+		goto out;
+	}
+
+	data = i8042_read_data();
+
+	if (i8042_mux_present && (str & I8042_STR_AUXDATA)) {
+		static unsigned long last_transmit;
+		static unsigned char last_str;
+
+		dfl = 0;
+		if (str & I8042_STR_MUXERR) {
+			dbg("MUX error, status is %02x, data is %02x\n",
+			    str, data);
+/*
+ * When MUXERR condition is signalled the data register can only contain
+ * 0xfd, 0xfe or 0xff if implementation follows the spec. Unfortunately
+ * it is not always the case. Some KBCs also report 0xfc when there is
+ * nothing connected to the port while others sometimes get confused which
+ * port the data came from and signal error leaving the data intact. They
+ * _do not_ revert to legacy mode (actually I've never seen KBC reverting
+ * to legacy mode yet, when we see one we'll add proper handling).
+ * Anyway, we process 0xfc, 0xfd, 0xfe and 0xff as timeouts, and for the
+ * rest assume that the data came from the same serio last byte
+ * was transmitted (if transmission happened not too long ago).
+ */
+
+			switch (data) {
+				default:
+					if (time_before(jiffies, last_transmit + HZ/10)) {
+						str = last_str;
+						break;
+					}
+					fallthrough;	/* report timeout */
+				case 0xfc:
+				case 0xfd:
+				case 0xfe: dfl = SERIO_TIMEOUT; data = 0xfe; break;
+				case 0xff: dfl = SERIO_PARITY;  data = 0xfe; break;
+			}
+		}
+
+		port_no = I8042_MUX_PORT_NO + ((str >> 6) & 3);
+		last_str = str;
+		last_transmit = jiffies;
+	} else {
+
+		dfl = ((str & I8042_STR_PARITY) ? SERIO_PARITY : 0) |
+		      ((str & I8042_STR_TIMEOUT && !i8042_notimeout) ? SERIO_TIMEOUT : 0);
+
+		port_no = (str & I8042_STR_AUXDATA) ?
+				I8042_AUX_PORT_NO : I8042_KBD_PORT_NO;
+	}
+
+	port = &i8042_ports[port_no];
+	serio = port->exists ? port->serio : NULL;
+
+	filter_dbg(port->driver_bound, data, "<- i8042 (interrupt, %d, %d%s%s)\n",
+		   port_no, irq,
+		   dfl & SERIO_PARITY ? ", bad parity" : "",
+		   dfl & SERIO_TIMEOUT ? ", timeout" : "");
+
+	filtered = i8042_filter(data, str, serio);
+
+	spin_unlock_irqrestore(&i8042_lock, flags);
+
+	if (likely(serio && !filtered))
+		serio_interrupt(serio, data, dfl);
+
+ out:
+	return IRQ_RETVAL(ret);
+}
+```
+
+
+
+**atkbd_interrupt()**
+
+我没找到这个函数，但是通过翻 at 的 driver 的代码，看得到它的 interrupt 是 ps2_interrupt，那就分析这个。
+
+```c
+static struct serio_driver atkbd_drv = {
+	.driver		= {
+		.name		= "atkbd",
+		.dev_groups	= atkbd_attribute_groups,
+	},
+	.description	= DRIVER_DESC,
+	.id_table	= atkbd_serio_ids,
+	.interrupt	= ps2_interrupt,
+	.connect	= atkbd_connect,
+	.reconnect	= atkbd_reconnect,
+	.disconnect	= atkbd_disconnect,
+	.cleanup	= atkbd_cleanup,
+};
+```
+
+这个倒是简洁不少，它从 serio 拿到 dev 之后，取出 receive_handler，然后针对不同类型进行处理。
+
+```c
+irqreturn_t ps2_interrupt(struct serio *serio, u8 data, unsigned int flags) {
+	struct ps2dev *ps2dev = serio_get_drvdata(serio);
+	enum ps2_disposition rc;
+
+	rc = ps2dev->pre_receive_handler(ps2dev, data, flags);
+	switch (rc) {
+	case PS2_ERROR:
+		ps2_cleanup(ps2dev);
+		break;
+
+	case PS2_IGNORE:
+		break;
+
+	case PS2_PROCESS:
+		if (ps2dev->flags & PS2_FLAG_ACK)
+			ps2_handle_ack(ps2dev, data);
+		else if (ps2dev->flags & PS2_FLAG_CMD)
+			ps2_handle_response(ps2dev, data);
+		else
+			ps2dev->receive_handler(ps2dev, data);
+		break;
+	}
+
+	return IRQ_HANDLED;
+}
+```
+
+
+
+### 1. 请求 I/O 端口[¶](https://linux-kernel-labs-zh.xyz/labs/interrupts.html#i-o-4)
+
+首先，我们的目标是在 I/O 空间中为硬件设备分配内存。我们看到，我们无法为键盘分配空间，因为指定的区域已经被分配。然后，我们将为未使用的端口分配 I/O 空间。
+
+*kbd.c* 文件中包含了键盘驱动程序的框架。浏览源代码并检查 `kbd_init()` 函数。注意我们需要的 I/O 端口是 I8042_STATUS_REG 和 I8042_DATA_REG。
+
+按照骨架中标有 **TODO 1** 的部分进行操作。在 `kbd_init()` 函数中请求 I/O 端口，并确保检查错误并在出现错误时进行适当的清理。在请求时，使用 `MODULE_NAME` 宏设置调用者的 ID 字符串（`name`）设置为该宏的值。此外，在 `kbd_exit()` 函数中添加代码以释放 I/O 端口。
+
+
+
+```c
+static int kbd_init(void)
+{
+	int err;
+
+	err = register_chrdev_region(MKDEV(KBD_MAJOR, KBD_MINOR),
+				     KBD_NR_MINORS, MODULE_NAME);
+	if (err != 0) {
+		pr_err("register_region failed: %d\n", err);
+		goto out;
+	}
+
+	/* TODO 1: request the keyboard I/O ports */
+	if (!request_region(0x65, 1, MODULE_NAME) ||
+		!request_region(0x61, 1, MODULE_NAME)) {
+		goto out_unregister;
+	}
+
+	/* TODO 3: initialize spinlock */
+
+	/* TODO 2: Register IRQ handler for keyboard IRQ (IRQ 1). */
+
+	cdev_init(&devs[0].cdev, &kbd_fops);
+	cdev_add(&devs[0].cdev, MKDEV(KBD_MAJOR, KBD_MINOR), 1);
+
+	pr_notice("Driver %s loaded\n", MODULE_NAME);
+	return 0;
+
+	/*TODO 2: release regions in case of error */
+
+out_unregister:
+	unregister_chrdev_region(MKDEV(KBD_MAJOR, KBD_MINOR),
+				 KBD_NR_MINORS);
+out:
+	return err;
+}
+
+static void kbd_exit(void)
+{
+	cdev_del(&devs[0].cdev);
+
+	/* TODO 2: Free IRQ. */
+
+	/* TODO 1: release keyboard I/O ports */
+
+	release_region(I8042_STATUS_REG, 1);
+	release_region(I8042_DATA_REG, 1);
+
+
+	unregister_chrdev_region(MKDEV(KBD_MAJOR, KBD_MINOR),
+				 KBD_NR_MINORS);
+	pr_notice("Driver %s unloaded\n", MODULE_NAME);
+}
+```
+
+```bash
+root@qemux86:~/skels/interrupts# cat /proc/ioports
+0000-0cf7 : PNP0A03:00
+0000-001f : dma1
+0020-0021 : pic1
+0040-0043 : timer0
+0050-0053 : timer1
+0060-0060 : keyboard
+0061-0061 : kbd
+0064-0064 : keyboard
+0065-0065 : kbd
+```
+
+可以看到进去了。
+
+### 2. 中断处理例程[¶](https://linux-kernel-labs-zh.xyz/labs/interrupts.html#section-16)
+
+对于这个任务，我们将实现并注册一个键盘中断的中断处理例程。在继续之前，你可以先回顾一下 [请求中断](https://linux-kernel-labs-zh.xyz/labs/interrupts.html#section-5) 一节。
+
+请按照骨架中标有 **TODO 2** 的部分进行操作。
+
+首先，定义一个名为 `kbd_interrupt_handler()` 的空中断处理例程。
+
+:::info
+
+由于我们已经有一个使用该中断的驱动程序，我们应该将中断报告为未处理（即返回 `IRQ_NONE`），以便原始驱动程序仍有机会进行处理。
+
+然后，使用 `request_irq` 注册中断处理例程。中断号由 I8042_KBD_IRQ 宏定义。中断处理例程必须使用 `IRQF_SHARED` 进行请求，以与键盘驱动程序（i8042）共享中断线。
+
+:::
+
+:::info
+
+对于共享中断, *dev_id* 不能为 NULL。请使用 `&devs[0]`，即 `struct kbd` 的指针。此结构包含了设备管理所需的所有信息。为了在 */proc/interrupts* 中看到该中断，请不要使用 NULL 作为 *dev_name* 。你可以使用 MODULE_NAME 宏。
+
+如果中断请求失败，请确保通过跳转到正确的标签（label）来进行适当的清理，即释放 I/O 端口并注销字符设备驱动程序。
+
+:::
+
+编译、复制并加载模块到内核中。通过查看 */proc/interrupts*，检查中断线是否已注册。从源代码中确定 IRQ 号码（参见 I8042_KBD_IRQ）并验证该中断线上有两个注册的驱动程序（这表示我们有一个共享中断线）：i8042 初始驱动程序和我们的驱动程序。
+
+在例程内部打印一条消息，以确保它被调用。将模块编译并重新加载到内核中。使用 **dmesg** 检查在虚拟机上按键时是否调用了中断处理例程。还要注意，当使用串口时不会触发键盘中断。
+
+
+
+那么也就是糊代码的一个过程，我们需要在 init 的时候注册中断，然后在中断处理程序中法案回一个 IRQ_NONE 以移交其它键盘处理。
+
+```c
+/* TODO 2: implement interrupt handler */
+irqreturn_t kbd_interrupt_handler(int irq_no, void *dev_id) {
+	/* TODO 3: read the scancode */
+	/* TODO 3: interpret the scancode */
+	/* TODO 3: display information about the keystrokes */
+	/* TODO 3: store ASCII key to buffer */
+	return IRQ_NONE;
+
+}
+
+...
+    /* TODO 2: Register IRQ handler for keyboard IRQ (IRQ 1). */
+	if (request_irq(I8042_KBD_IRQ, kbd_interrupt_handler, IRQF_SHARED, MODULE_NAME, &devs[0])) {
+		pr_err("request_irq failed\n");
+		err = -EBUSY;
+		goto out_unregister;
+	}
+
+static void kbd_exit(void)
+{
+	cdev_del(&devs[0].cdev);
+
+	/* TODO 2: Free IRQ. */
+	free_irq(I8042_KBD_IRQ, &devs[0]);
+```
+
+```bash
+root@qemux86:~/skels/interrupts# cat /proc/interrupts
+           CPU0
+  1:          9   IO-APIC   1-edge      i8042, kbd
+```
+
+可以看到我们的 kbd 已经在上面了。
+
+
+
+### 3. 将 ASCII 键存储到缓冲区[¶](https://linux-kernel-labs-zh.xyz/labs/interrupts.html#ascii)
+
+接下来，我们希望收集按键的输入到缓冲区里，并将其内容发送到用户空间。为此，我们将在中断处理中添加以下内容：
+
+- 捕获按下的键（只捕获按下的键，忽略释放的键）
+- 识别 ASCII 字符
+- 将与按键对应的 ASCII 字符复制并存储在设备的缓冲区中
+
+请按照骨架中标记为 **TODO 3** 的部分进行操作。
+
+#### 读取数据寄存器[¶](https://linux-kernel-labs-zh.xyz/labs/interrupts.html#section-17)
+
+首先，填写 `i8042_read_data()` 函数，以读取键盘控制器的 `I8042_DATA_REG` 寄存器。该函数只需要返回寄存器的值。寄存器的值也称为扫描码（scancode），它在每次按键时生成。
+
+:::tip
+
+使用 `inb()` 读取 `I8042_DATA_REG` 寄存器，并将值存储在局部变量 `val` 中。请参阅 [访问 I/O 端口](https://linux-kernel-labs-zh.xyz/labs/interrupts.html#i-o-2) 部分。
+
+:::
+
+在 `kbd_interrupt_handler()` 中调用 `i8042_read_data()` 并打印读取的值。
+
+按以下格式打印有关按键的信息：
+
+```c
+pr_info("IRQ:% d, scancode = 0x%x (%u,%c)\n",
+   irq_no, scancode, scancode, scancode);
+```
+
+其中，scancode，即扫描码，是使用 `i8042_read_data()` 函数读取的寄存器的值。
+
+请注意，扫描码（读取的寄存器的值）不是按下键的 ASCII 字符。我们需要理解扫描码。
+
+
+
+与之前不同的，我们打开 XLaunch，然后使用 --allow-gui 运行。编译后，我们也使用 `make gui` 来打开，因为串口不会触发中断。
+
+```c
+/*
+ * Return the value of the DATA register.
+ */
+static inline u8 i8042_read_data(void)
+{
+	u8 val;
+	/* TODO 3: Read DATA register (8 bits). */
+	val = inb(I8042_DATA_REG);
+	return val;
+}
+
+/* TODO 2: implement interrupt handler */
+irqreturn_t kbd_interrupt_handler(int irq_no, void *dev_id) {
+	/* TODO 3: read the scancode */
+	u8 scancode = i8042_read_data();
+	pr_info("IRQ:%d, scancode = 0x%x (%u,%c)\n",
+		irq_no, scancode, scancode, scancode);
+	/* TODO 3: interpret the scancode */
+	/* TODO 3: display information about the keystrokes */
+	/* TODO 3: store ASCII key to buffer */
+	return IRQ_NONE;
+
+}
+```
+
+![image-20240726185825523](https://cdn.ova.moe/img/image-20240726185825523.png)
+
+可以看到，此时按下就有响应了，666
+
+#### 解释扫描码[¶](https://linux-kernel-labs-zh.xyz/labs/interrupts.html#section-18)
+
+请注意，寄存器值是扫描码，而不是按下的字符的 ASCII 值。还要注意，中断在按键按下和释放时都会发送。我们只需要在按键按下时获取扫描码，然后解码 ASCII 字符。
+
+:::info
+
+要检查扫描码，可以使用 showkey 命令（showkey -s）。
+
+命令将在按下键后显示 10 秒钟的键扫描码，然后停止。如果按下并释放一个键，你将获得两个扫描码：一个对应按下的键，一个对应释放的键。例如：
+
+- 如果按下回车键，你将获得 0x1c（0x1c）和 0x9c（释放键）。
+
+- 如果按下键 a，你将获得 0x1e（按下的键）和 0x9e（释放键）。
+
+- 如果按下键 b，你将获得 0x30（按下的键）和 0xb0（释放键）。
+
+- 如果按下键 c，你将获得 0x2e（按下的键）和 0xae（释放键）。
+
+- 如果按下 Shift 键，你将获得 0x2a（按下的键）和 0xaa（释放键）。
+
+- 如果按下 Ctrl 键，你将获得 0x1d（按下的键）和 0x9d（释放键）。
+
+  正如在 [这篇文章](http://www.linuxjournal.com/article/1080) 中所指出的，释放键的扫描码比按下键的扫描码高 128（0x80）。这是我们区分按下键的扫描码和释放键的扫描码的方法。
+
+  扫描码被转换为与键匹配的键码（keycode）。按下的扫描码和释放的扫描码具有相同的键码。对于上面显示的键，我们有以下表格：
+
+  | 键    | 按下的扫描码 | 释放的扫描码 | 键码       |
+  | ----- | ------------ | ------------ | ---------- |
+  | 回车  | 0x1c         | 0x9c         | 0x1c（28） |
+  | a     | 0x1e         | 0x9e         | 0x1e（30） |
+  | b     | 0x30         | 0xb0         | 0x30（48） |
+  | c     | 0x2e         | 0xae         | 0x2e（46） |
+  | Shift | 0x2a         | 0xaa         | 0x2a（42） |
+  | Ctrl  | 0x1d         | 0x9d         | 0x1d（29） |
+
+  按键按下/释放操作在 is_key_press() 函数中执行，获取扫描码的 ASCII 字符在 get_ascii() 函数中进行。
+
+:::
+
+在中断处理程序中，先检查扫描码以确定按键是按下还是释放，然后确定相应的 ASCII 字符。
+
+
+
+:::tip
+
+要检查按下/释放，请使用 `is_key_press()` 函数。使用 `get_ascii()` 函数获取相应的 ASCII 码。这两个函数都以扫描码作为参数。
+:::
+
+:::tip
+
+要显示接收到的信息，请使用以下格式。
+
+```c
+pr_info("IRQ %d: scancode=0x%x (%u) pressed=%d ch=%c\n",
+        irq_no, scancode, scancode, pressed, ch);
+```
+
+其中，scancode 是数据寄存器的值，ch 是 get_ascii() 函数返回的值。 
+
+:::
+
+简单加两句就好
+
+```c
+	/* TODO 3: display information about the keystrokes */
+	if (is_key_press(scancode)) {
+		const char ch = (const char) get_ascii(scancode);
+		pr_info("IRQ %d: scancode=0x%x (%u) pressed=1 ch=%c\n",
+        irq_no, scancode, scancode, ch);
+	}
+```
+
+
+
+#### 将字符存储到缓冲区[¶](https://linux-kernel-labs-zh.xyz/labs/interrupts.html#section-19)
+
+我们希望将按下的字符（而不是其他键）收集到一个循环缓冲区（circular buffer）中，以便可以从用户空间中使用。
+
+更新中断处理程序，将按下的 ASCII 字符添加到设备缓冲区的末尾。如果缓冲区已满，则将丢弃该字符。
+
+:::info
+
+设备缓冲区是设备的 `struct kbd` 中的字段 `buf`。要从中断处理程序中获取设备数据，请使用以下结构：
+
+```
+struct kbd *data = (struct kbd *) dev_id;
+```
+
+缓冲区的大小位于 `struct kbd` 的字段 `count` 中。`put_idx` 和 `get_idx` 字段指定下一个写入和读取的索引。查看 `put_char()` 函数的实现，了解数据是如何添加到循环缓冲区中的。
+
+:::
+
+:::tip
+
+使用自旋锁对缓冲区和辅助索引进行同步访问。在设备结构体 `struct kbd` 中定义自旋锁，并在 `kbd_init()` 中进行初始化。
+
+使用 `spin_lock()` 和 `spin_unlock()` 函数来保护中断处理程序中的缓冲区。
+
+请参阅 [锁定](https://linux-kernel-labs-zh.xyz/labs/interrupts.html#section-7) 小节。
+
+:::
+
+
+
+需要加一个自旋锁，大概是这样的
+
+```c
+struct kbd {
+	struct cdev cdev;
+	/* TODO 3: add spinlock */
+	spinlock_t lock;
+	char buf[BUFFER_SIZE];
+	size_t put_idx, get_idx, count;
+} devs[1];
+
+/* TODO 2: implement interrupt handler */
+irqreturn_t kbd_interrupt_handler(int irq_no, void *dev_id) {
+	/* TODO 3: read the scancode */
+	u8 scancode = i8042_read_data();
+	/* TODO 3: interpret the scancode */
+	pr_info("IRQ:%d, scancode = 0x%x (%u,%c)\n",
+		irq_no, scancode, scancode, scancode);
+	/* TODO 3: display information about the keystrokes */
+	if (is_key_press(scancode)) {
+		const char ch = (const char) get_ascii(scancode);
+		pr_info("IRQ %d: scancode=0x%x (%u) pressed=1 ch=%c\n",
+        irq_no, scancode, scancode, ch);
+		/* TODO 3: store ASCII key to buffer */
+		spin_lock(&((struct kbd *) dev_id)->lock);
+		put_char((struct kbd *) dev_id, ch);
+		spin_unlock(&((struct kbd *) dev_id)->lock);
+	}
+	
+	return IRQ_NONE;
+
+}
+
+static int kbd_init(void)
+{
+	int err;
+
+	err = register_chrdev_region(MKDEV(KBD_MAJOR, KBD_MINOR),
+				     KBD_NR_MINORS, MODULE_NAME);
+	if (err != 0) {
+		pr_err("register_region failed: %d\n", err);
+		goto out;
+	}
+
+	/* TODO 1: request the keyboard I/O ports */
+	if (!request_region(0x65, 1, MODULE_NAME) ||
+		!request_region(0x61, 1, MODULE_NAME)) {
+		pr_err("request_region failed\n");
+		err = -EBUSY;
+		goto out_unregister;
+	}
+
+	/* TODO 3: initialize spinlock */
+	spin_lock_init(&devs[0].lock);
+```
+
+### 4. 读取缓冲区[¶](https://linux-kernel-labs-zh.xyz/labs/interrupts.html#section-20)
+
+为了访问键盘记录器的数据，我们需要将其发送到用户空间。我们将使用 */dev/kbd* 字符设备来实现这一点。当从该设备读取数据时，我们将从内核空间的缓冲区中获取按键数据。
+
+在这一步中，请按照 `kbd_read()` 函数中标有 **TODO 4** 的部分进行操作。
+
+`get_char()` 的实现类似于 `put_char()` 。在实现循环缓冲区时要小心。
+
+在 `kbd_read()` 函数中，将数据从缓冲区复制到用户空间缓冲区。
+
+:::tip
+
+使用 `get_char()` 从缓冲区中读取一个字符，并使用 `put_user()` 将其存储到用户缓冲区中。
+
+:::
+
+:::info
+
+在读取函数中，使用 `spin_lock_irqsave()` 和 `spin_unlock_irqrestore()` 进行加锁。
+
+请参阅 [锁定](https://linux-kernel-labs-zh.xyz/labs/interrupts.html#section-7) 部分。
+
+:::
+
+:::info
+
+我们不能在持有锁的情况下使用 `put_user()` 或 `copy_to_user()`，因为在原子上下文中不允许访问用户空间。
+
+有关更多信息，请阅读前面实验中的 访问进程地址空间。
+
+:::
+
+要进行测试，你需要在读取之前使用 mknod 创建 */dev/kbd* 字符设备驱动程序。设备的主设备号和次设备号定义为 `KBD_MAJOR` 和 `KBD_MINOR`：
+
+```c
+mknod /dev/kbd c 42 0
+```
+
+构建、复制和启动虚拟机，并加载该模块。使用以下命令进行测试：
+
+```bash
+cat /dev/kbd
+```
+
+
+
+读取的时候我们需要关中断说是。
+
+```c
+static bool get_char(char *c, struct kbd *data)
+{
+	/* TODO 4: get char from buffer; update count and get_idx */
+	if (data->count > 0) {
+		*c = data->buf[data->get_idx];
+		data->get_idx = (data->get_idx + 1) % BUFFER_SIZE;
+		data->count--;
+		return true;
+	}
+	return false;
+}
+
+static ssize_t kbd_read(struct file *file,  char __user *user_buffer,
+			size_t size, loff_t *offset)
+{
+	struct kbd *data = (struct kbd *) file->private_data;
+	size_t read = 0;
+	/* TODO 4: read data from buffer */
+	unsigned long flags;
+
+	
+	while (read < size) {
+		char c;
+		spin_lock_irqsave(&data->lock, flags);
+		if (!get_char(&c, data)) {
+			spin_unlock_irqrestore(&data->lock, flags);
+			break;
+        }
+		spin_unlock_irqrestore(&data->lock, flags);
+		if (copy_to_user(user_buffer + read, &c, 1)) {
+			spin_unlock_irqrestore(&data->lock, flags);
+			return -EFAULT;
+		}
+		read++;
+	}
+	return read;
+}
+```
+
+修修补补，谈笑风生间写了一堆有问题的（例如没有错误检查，没有 kfree 等等，还写出了 off-by-null 的），最后留下一个每次都 copy_to_user 的，至少可以用嘛。
+
+![image-20240726233116401](https://cdn.ova.moe/img/image-20240726233116401.png)
+
+
+
+### 5. 重置缓冲区[¶](https://linux-kernel-labs-zh.xyz/labs/interrupts.html#section-21)
+
+如果对设备进行写操作，则重置缓冲区。在这一步中，请按照骨架中标有 **TODO 5** 的部分进行操作。
+
+实现 `reset_buffer()` 并将写操作添加到 *kbd_fops* 中。
+
+:::info
+
+在写函数中，当重置缓冲区时，请使用 `spin_lock_irqsave()` 和 `spin_unlock_irqrestore()` 进行加锁。
+
+请参阅 [锁定](https://linux-kernel-labs-zh.xyz/labs/interrupts.html#section-7) 部分。
+
+:::
+
+
+
+没懂，这个。
+
+```c
+static void reset_buffer(struct kbd *data)
+{
+	/* TODO 5: reset count, put_idx, get_idx */
+	data->count = 0;
+	data->put_idx = 0;
+	data->get_idx = 0;
+}
+
+/* TODO 5: add write operation and reset the buffer */
+
+static ssize_t kdb_write(struct file *file, const char __user *user_buffer, size_t size, loff_t *offset) {
+	struct kbd *data = (struct kbd *) file->private_data;
+	unsigned long flags;
+
+	spin_lock_irqsave(&data->lock, flags);
+	reset_buffer(data);
+	spin_unlock_irqrestore(&data->lock, flags);
+    
+    return 0;
+
+}
+
+static const struct file_operations kbd_fops = {
+	.owner = THIS_MODULE,
+	.open = kbd_open,
+	.release = kbd_release,
+	.read = kbd_read,
+	/* TODO 5: add write operation */
+	.write = kdb_write
+};
 ```
 
