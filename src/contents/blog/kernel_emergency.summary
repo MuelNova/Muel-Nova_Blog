@@ -1,7 +1,5 @@
-博客作者 nova 复述了他最近复现 kernel CVE 时的一些经验，重点回顾了 kernel pwn 的各类对策。在文章中，nova 从基础到复杂，逐步讲解了如何应对不同的 kernel 防护机制。
+作者nova最近在复现一些kernel CVE，但发现自己对kernel的知识已经遗忘，因此决定利用三周时间进行复习。文章主要围绕kernel ROP（Return Oriented Programming）展开，逐步增强防护措施并探讨不同的绕过方法。
 
-首先，他介绍了基本的漏洞利用环境设置，包括如何读取关键内核函数的地址，并利用栈溢出修改返回地址。接下来，文章讨论了在启用不同防护机制（如 KCanary、KASLR、SMEP、SMAP）情况下，如何通过 ret2usr 方法和改变 cr4 寄存器来成功利用漏洞。
+首先，nova分析了强网杯2018 core的漏洞，并介绍了在不同防护措施下的绕过方法。在Lv1（KCanary + KASLR）中，虽然KASLR存在，但由于可以直接获取函数地址，因此影响不大。在Lv2（KCanary + KASLR + SMEP + SMAP）中，介绍了使用krop和disable smep/smap的方法。在Lv3（KCanary + KASLR + SMEP + SMAP + KPTI）中，讨论了KPTI的影响，并介绍了使用`swapgs_restore_regs_and_return_to_usermode`和信号处理的方法。在Lv4（KCANARY + FGKASLR + SMEP + SMAP + KPTI）中，尽管FGKASLR存在，但由于能知道所有符号的位置，影响有限。此外，还介绍了使用`.text gadgets`、`__ksymtab`和`modprobe_path`的方法。
 
-在高级阶段，nova 进一步探讨了应对 KPTI 保护的方法，提出了利用 `swapgs_restore_regs_and_return_to_usermode` 函数正确切换页表的技巧。最后，针对最复杂的防护设置（包括 FGKASLR），他详细说明了如何利用固定偏移段来计算所需地址，并通过覆盖 modprobe_path 来执行恶意程序获取 root 权限。
-
-整体来看，文章内容系统地列举了不同阶段的防护和绕过技巧，结合具体实例和方法展示了如何在实际环境中进行 kernel pwn。
+文章最后提供了参考资料，帮助读者进一步了解kernel pwn的相关知识。
