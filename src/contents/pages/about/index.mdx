@@ -1,27 +1,40 @@
-import style from '@site/src/contents/pages/about/index.module.scss';
-import Svg from '@site/src/contents/pages/about/_Svg'
-import svgList from '@site/src/theme/utils/_SocialMediaList'
+import style from "@site/src/contents/pages/about/index.module.scss";
+import Svg from "@site/src/contents/pages/about/_Svg";
+import svgList from "@site/src/theme/utils/_SocialMediaList";
 
-<div style={{ display: 'flex', alignItems: 'center', flexDirection: 'column'}}>
-    <div style={{height: '160px', width: '160px', textAlign: 'center'}}>
-        <img src="https://avatars.githubusercontent.com/u/68760718?v=4" className={style['avatar']} alt="Avatar"/>
-    </div>
-    <div style={{marginTop: '16px', fontWeight: 'bold', fontSize: '36px', color: 'var(--ifm-link-color)'}}>
-        <a href='mailto:n@ova.moe'><span>Nova  Muel</span><span style={{fontSize: '16px'}}>📧</span></a>
-    </div>
-    <div className={style['socialMediaList']}>
-    { svgList.map((item) => {
-          return (
-            <div key={item.title}>
-              <Svg {...item}/>
-            </div>
-          )
-        })}
-    </div>
+<div style={{ display: "flex", alignItems: "center", flexDirection: "column" }}>
+  <div style={{ height: "160px", width: "160px", textAlign: "center" }}>
+    <img
+      src="https://avatars.githubusercontent.com/u/68760718?v=4"
+      className={style["avatar"]}
+      alt="Avatar"
+    />
+  </div>
+  <div
+    style={{
+      marginTop: "16px",
+      fontWeight: "bold",
+      fontSize: "36px",
+      color: "var(--ifm-link-color)",
+    }}
+  >
+    <a href="mailto:n@ova.moe">
+      <span>Nova Muel</span>
+    </a>
+  </div>
+  <div className={style["socialMediaList"]}>
+    {svgList.map((item) => {
+      return (
+        <div key={item.title}>
+          <Svg {...item} />
+        </div>
+      );
+    })}
+  </div>
 </div>
 
-
 # 关于
+
 > Communication Disorder Myself.
 
 :::info
@@ -34,16 +47,16 @@ import svgList from '@site/src/theme/utils/_SocialMediaList'
 Last Update: 03/11/2024
 :::
 
-<div align='center'>
-Miao "MuElNova" ZHAO
-GPG Fingerprint: `D9D2 7F47 1A32 9D21 02ED A847 28BE C713 C265 A2F4`
+<div align="center">
+  Miao "MuElNova" ZHAO GPG Fingerprint: `D9D2 7F47 1A32 9D21 02ED A847 28BE C713
+  C265 A2F4`
 </div>
 
 目前大三本科就读（排名 3/72(含选修) | 18/97(不含选修)），是天璇/天枢的 Pwn 手。
 
 目前基本算是 CTF 退役（尽管我不觉得我在役过），考虑进军安全（系统安全）学术领域。
 
-本科就读于 *北京邮电大学 网络安全专业*，现位于 [vul337](https://netsec.ccert.edu.cn/chs/vul337) A&D 小组进行科研实习。
+本科就读于 _北京邮电大学 网络安全专业_，现位于 [vul337](https://netsec.ccert.edu.cn/chs/vul337) A&D 小组进行科研实习。
 
 目前个人的目标是 ~~東京大学~~/~~National University of Singapore~~/~~清华大学~~/北京大学/~~华五 CS/SEC 相关~~
 
@@ -53,16 +66,16 @@ GPG Fingerprint: `D9D2 7F47 1A32 9D21 02ED A847 28BE C713 C265 A2F4`
 
 人格测试是 ~~INTP-T~~ INTP-A
 
-
-
 ## 掌握的技能
-- [X] 基本的 Python、C++、TypeScript 等常见编程语言
-- [X] 基本的 PWN（用户态、内核态）
-- [X] 基本的计算机
+
+- [x] 基本的 Python、C++、TypeScript 等常见编程语言
+- [x] 基本的 PWN（用户态、内核态）
+- [x] 基本的计算机
 
 ## 兴趣
 
 ### ACGN 方面
+
 ACGN 爱好者，不过大部分是 A|C|G 领域，N 几乎没有接触过。
 
 对谷子不怎么感兴趣，为数不多的谷子都是 [明日方舟](https://ak.hypergrph.com/) 的。
@@ -73,13 +86,11 @@ ACGN 爱好者，不过大部分是 A|C|G 领域，N 几乎没有接触过。
 
 基本没有。
 
-
 ### 游戏方面
-- FPS、TPS等等，基本上是射击游戏吧
-- ~~最近在尝试 [剑网3](https://jx3.xoyo.com)，一直对于 MMORPG 一直很有兴趣（氪的有点多，处于半 AFK 状态）~~ 已 AFK
+
+- FPS、TPS 等等，基本上是射击游戏吧
+- ~~最近在尝试 [剑网 3](https://jx3.xoyo.com)，一直对于 MMORPG 一直很有兴趣（氪的有点多，处于半 AFK 状态）~~ 已 AFK
 - 对于 RTS、Moba 之类的没天赋也没兴趣
-
-
 
 ## 个人项目
 
@@ -93,14 +104,12 @@ ACGN 爱好者，不过大部分是 A|C|G 领域，N 几乎没有接触过。
 
 适用于 glibc challenge 的 PWN Docker。
 
-
-
 ## 漏洞挖掘
 
 无
 
-
 ## 竞赛经历
+
 :::info 注意
 这里说的竞赛绝大多数都是组队参赛的，绝大多数情况下我只对拿奖起到微乎其微的作用
 :::
