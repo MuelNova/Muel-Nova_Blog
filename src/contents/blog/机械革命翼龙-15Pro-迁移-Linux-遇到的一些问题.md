@@ -14,17 +14,17 @@ authors: [nova]
 这个问题的产生原因，简单来说就是 BIOS 里把键盘的高电平触发和低电平触发写反了，因此要用一个表来防止 ACPI override 它。具体可以看 patch 的内容。
 
 > From c33381bad489668de6f78f39bc9424e5de781964 Mon Sep 17 00:00:00 2001
-> From: MuelNova <n@ova.moe>
+> From: MuelNova <muel@nova.gal>
 > Date: Sun, 26 May 2024 14:20:57 +0800
 > Subject: [PATCH] ACPI: resource: Do IRQ override on MECHREVO Yilong15 Series
->  GM5HG0A
+> GM5HG0A
 >
 > MECHREVO Yilong15 Serie has a DSDT table that describes IRQ 1 as ActiveLow
 > while the kernel is overriding it to Edge_High. This prevents the internal
 > keyboard from working. This patch prevents this issue by adding this laptop
 > to the override table that prevents the kernel from overriding this IRQ
 >
-> Signed-off-by: MuelNova <n@ova.moe>
+> Signed-off-by: MuelNova <muel@nova.gal>
 
 ```diff
 ---
@@ -48,7 +48,7 @@ index b5bf8b81a..fed3c5e1b 100644
         {
                 /* XMG APEX 17 (M23) */
                 .matches = {
--- 
+--
 2.45.1
 ```
 
@@ -92,7 +92,7 @@ index 46f99a1..b8f4100 100644
 +    pte_unmap_unlock(ptep, ptl);
 +    return 0;
  }
- 
+
  /*!
 ```
 
@@ -136,13 +136,11 @@ DEST_MODULE_LOCATION[4]="/kernel/drivers/video"
 
 [这个 commit](https://lore.kernel.org/all/20221012221028.4817-1-mario.limonciello@amd.com/T/) 解决了我的问题
 
-
-
 首先查看被唤醒的时候是因为哪个中断
 
 ```bash
 cat /sys/power/pm_wakeup_irq
-cat /proc/interrupts 
+cat /proc/interrupts
 ```
 
 如果中断是 `pinctrl_amd`，那么你很大概率遭遇到了同样的问题。在 root 下执行以下命令开启 DEBUG，然后再次休眠
@@ -160,8 +158,6 @@ echo 1 > /sys/power/pm_debug_messages
 ```bash
 gpiolib_acpi.ignore_interrupt=AMDI0030:00@$N$  # 替换 $N$ 为你的 GPIO 接口号
 ```
-
-
 
 重启，问题应该得到解决
 

@@ -14,14 +14,14 @@ Although there are many solutions available online for this issue, using DSDT on
 The root cause of this problem is that the BIOS incorrectly sets the keyboard's high-level trigger and low-level trigger, which requires preventing ACPI from overriding it with a table. You can refer to the details in the patch.
 
 > From c33381bad489668de6f78f39bc9424e5de781964 Mon Sep 17 00:00:00 2001
-> From: MuelNova <n@ova.moe>
+> From: MuelNova <muel@nova.gal>
 > Date: Sun, 26 May 2024 14:20:57 +0800
 > Subject: [PATCH] ACPI: resource: Do IRQ override on MECHREVO Yilong15 Series
 > GM5HG0A
 >
 > MECHREVO Yilong15 Series has a DSDT table that describes IRQ 1 as ActiveLow while the kernel is overriding it to Edge_High. This prevents the internal keyboard from working. This patch prevents this issue by adding this laptop to the override table that prevents the kernel from overriding this IRQ
 >
-> Signed-off-by: MuelNova <n@ova.moe>
+> Signed-off-by: MuelNova <muel@nova.gal>
 
 ```diff
 ---
@@ -45,7 +45,7 @@ index b5bf8b81a..fed3c5e1b 100644
         {
                 /* XMG APEX 17 (M23) */
                 .matches = {
--- 
+--
 2.45.1
 ```
 
@@ -89,7 +89,7 @@ index 46f99a1..b8f4100 100644
 +    pte_unmap_unlock(ptep, ptl);
 +    return 0;
  }
- 
+
  /*!
 ```
 

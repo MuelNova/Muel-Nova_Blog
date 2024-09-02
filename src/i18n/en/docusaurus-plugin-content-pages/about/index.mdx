@@ -1,26 +1,39 @@
-import style from '@site/src/contents/pages/about/index.module.scss';
-import Svg from '@site/src/contents/pages/about/_Svg'
-import svgList from '@site/src/theme/utils/_SocialMediaList'
+import style from "@site/src/contents/pages/about/index.module.scss";
+import Svg from "@site/src/contents/pages/about/_Svg";
+import svgList from "@site/src/theme/utils/_SocialMediaList";
 
-<div style={{ display: 'flex', alignItems: 'center', flexDirection: 'column'}}>
-    <div style={{height: '160px', width: '160px', textAlign: 'center'}}>
-        <img src="https://avatars.githubusercontent.com/u/68760718?v=4" className={style['avatar']} alt="Avatar"/>
-    </div>
-    <div style={{marginTop: '16px', fontWeight: 'bold', fontSize: '36px', color: 'var(--ifm-link-color)'}}>
-        <a href='mailto:n@ova.moe'><span>Nova  Muel</span><span style={{fontSize: '16px'}}>📧</span></a>
-    </div>
-    <div className={style['socialMediaList']}>
-    { svgList.map((item) => {
-          return (
-            <div key={item.title}>
-              <Svg {...item}/>
-            </div>
-          )
-        })}
-    </div>
+<div style={{ display: "flex", alignItems: "center", flexDirection: "column" }}>
+  <div style={{ height: "160px", width: "160px", textAlign: "center" }}>
+    <img
+      src="https://avatars.githubusercontent.com/u/68760718?v=4"
+      className={style["avatar"]}
+      alt="Avatar"
+    />
+  </div>
+  <div
+    style={{
+      marginTop: "16px",
+      fontWeight: "bold",
+      fontSize: "36px",
+      color: "var(--ifm-link-color)",
+    }}
+  >
+    <a href="mailto:muel@nova.gal">
+      <span>Nova Muel</span>
+      <span style={{ fontSize: "16px" }}>📧</span>
+    </a>
+  </div>
+  <div className={style["socialMediaList"]}>
+    {svgList.map((item) => {
+      return (
+        <div key={item.title}>
+          <Svg {...item} />
+        </div>
+      );
+    })}
+  </div>
 </div>
-# About
-:::warning
+# About :::warning
 
 This is **not** a translated version of CHINESE about page. You may miss some information of the original version.
 :::
@@ -29,13 +42,14 @@ This is **not** a translated version of CHINESE about page. You may miss some in
 ZHAO "Nova" Miao
 
 GPG Fingerprint: `D9D2 7F47 1A32 9D21 02ED A847 28BE C713 C265 A2F4`
+
 </div>
 
 Currently a junior undergraduate (ranked 3/72 with electives | 18/97 without electives), and a Pwn player of Tianxuan/Tianshu.
 
 Currently, I am basically retired from CTF (although I don't think I was ever actively in it), and I am considering advancing into the academic field of security (system security).
 
-Studying for a bachelor's degree in *Cybersecurity at Beijing University of Posts and Telecommunications*, now doing research internships in the A&D group at [vul337](https://netsec.ccert.edu.cn/chs/vul337).
+Studying for a bachelor's degree in _Cybersecurity at Beijing University of Posts and Telecommunications_, now doing research internships in the A&D group at [vul337](https://netsec.ccert.edu.cn/chs/vul337).
 
 My current personal goals are ~~University of Tokyo~~/~~National University of Singapore~~/~~Tsinghua University~~/Peking University/~~Top Five Universities CS/SEC related~~
 
@@ -46,13 +60,15 @@ It doesn't matter if you read the air or not, I don't want to read it myself, no
 Personality test is ~~INTP-T~~ INTP-A
 
 ## Skills Mastered
-- [X] Basic Python, C++, TypeScript and other common programming languages
-- [X] Basic PWN (user mode, kernel mode)
-- [X] Basic computer skills
+
+- [x] Basic Python, C++, TypeScript and other common programming languages
+- [x] Basic PWN (user mode, kernel mode)
+- [x] Basic computer skills
 
 ## Interests
 
 ### ACGN
+
 ACGN enthusiast, but mostly in A|C|G fields, N is almost untouched.
 
 Not very interested in Vocaloid, the few Vocaloids I have are from [Arknights](https://ak.hypergrph.com/).
@@ -64,6 +80,7 @@ Likes to watch romantic comedies / brainless isekai / yuri, indifferent to hot-b
 Basically none.
 
 ### Games
+
 - FPS, TPS, etc., mainly shooting games
 - ~~Recently trying [JX3 Online](https://jx3.xoyo.com), always been interested in MMORPGs (spent quite a lot, now semi-AFK)~~ now AFK
 - No talent or interest in RTS, Moba, etc.
@@ -85,6 +102,7 @@ PWN Docker for glibc challenges.
 None
 
 ## Competition Experience
+
 :::info Note
 Most of the competitions mentioned here are team-based, and in most cases, I played a minimal role in winning the awards.
 :::
@@ -107,8 +125,8 @@ Most of the competitions mentioned here are team-based, and in most cases, I pla
 
 ➢ ... and more unlisted awards (non-national awards | some CTF competitions with not very high value)
 
-
 # Note
+
 Since I only maintain the blog in my spare time, it is not possible for me to translate all my blogs into English and I always use Chinese as my preferred language.
 
 So if you're unclear or have a question you'd like to discuss, please contact me via the email above, I'll do my best to help you.

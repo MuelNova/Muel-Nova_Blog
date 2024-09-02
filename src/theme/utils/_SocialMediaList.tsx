@@ -17,7 +17,7 @@ const svgList = [
   {
     title: "Email",
     Svg: require("@site/src/static/img/email.svg").default,
-    link: "mailto:n@ova.moe",
+    link: "mailto:muel@nova.gal",
   },
   {
     title: "rss",

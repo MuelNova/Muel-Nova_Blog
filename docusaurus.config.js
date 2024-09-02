@@ -287,7 +287,7 @@ const config = {
               },
               {
                 label: "Mail",
-                href: "mailto:n@ova.moe",
+                href: "mailto:muel@nova.gal",
               },
             ],
           },
