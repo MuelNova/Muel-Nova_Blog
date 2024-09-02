@@ -14,7 +14,7 @@ import rehypeKatex from "rehype-katex";
 const config = {
   title: "ネコのメモ帳",
   tagline: "Meow~",
-  url: "https://n.ova.moe",
+  url: "https://nova.gal",
   baseUrl: "/",
   onBrokenLinks: "warn",
   onBrokenMarkdownLinks: "warn",

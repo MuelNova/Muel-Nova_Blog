@@ -4,17 +4,17 @@
   <p><img src="#PLACEHOLDER" width="240" alt="MuelNova - Text"></p>
 </div>
 
-
 <div align="center">
 
 # MuelNova Blog
 
-_✨ MuelNova [博客](https://n.ova.moe)的备份 ✨_
+_✨ MuelNova [博客](https://nova.gal)的备份 ✨_
+
 <p>
 <a href="./LICENSE">
     <img src="https://img.shields.io/github/license/MuelNova/Muel-Nova_Blog.svg" alt="license">
 </a>
-<a href="https://n.ova.moe">
+<a href="https://nova.gal">
   <img alt="n.ova.moe" src="https://img.shields.io/website?down_color=lightgrey&down_message=Offline&label=n.ova.moe&logo=Glitch&logoColor=white&style=for-the-badge&up_color=blue&up_message=Online&url=https%3A%2F%2Fn.ova.moe">
 </a>
 <a href="https://www.npmjs.com/package/@docusaurus/core">

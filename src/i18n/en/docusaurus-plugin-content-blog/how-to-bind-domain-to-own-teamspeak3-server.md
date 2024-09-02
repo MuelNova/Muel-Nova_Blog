@@ -1,7 +1,7 @@
 ---
 title: How to Replace TS Self-built Server IP with Your Own Domain Name
 date: 2021-11-30
-tags: ['teamspeak', investigate]
+tags: ["teamspeak", investigate]
 ---
 
 # TeamSpeak3 Self-built Server Using Domain Name to Replace IP
@@ -16,10 +16,12 @@ tags: ['teamspeak', investigate]
 ## Steps (Using [GoDaddy](https://www.godaddy.com/) DNS Control as an Example)
 
 ### 1. Add an A Record
-- Fill in the `Name` with the host header (For example, if I want to use `ts.n.ova.moe` to log into Teamspeak for my domain [n.ova.moe](https://n.ova.moe), then fill in `ts`)
+
+- Fill in the `Name` with the host header (For example, if I want to use `ts.n.ova.moe` to log into Teamspeak for my domain [n.ova.moe](https://nova.gal), then fill in `ts`)
 - Fill in the `Value` with the corresponding server IP (the IP originally used to log into Teamspeak)
 
 ### 2. Add an SRV Record
+
 - Use `_ts3` as the Service
 - Use `_udp` as the Protocol
 - Use the `host header` filled in step 1 as the Name
@@ -30,16 +32,18 @@ tags: ['teamspeak', investigate]
 
 After saving the settings, your two records should look like this: (please replace the content with your own)
 
-| Type | Name | Value | TTL |
-| ---- | ---- | ---- | ---- |
-| A | ts | 127.0.0.1 | 3600 seconds | 
-| SRV | _ts3._udp.ts | 0 5 9987 ts.n.ova.moe | 1800 seconds |
+| Type | Name           | Value                 | TTL          |
+| ---- | -------------- | --------------------- | ------------ |
+| A    | ts             | 127.0.0.1             | 3600 seconds |
+| SRV  | \_ts3.\_udp.ts | 0 5 9987 ts.n.ova.moe | 1800 seconds |
 
 ## Mission Accomplished
+
 Now, you can try to connect to Teamspeak using the domain name you set up!
 If it fails, you can wait for about half an hour and try connecting again.
 
 ## Some Notes
+
 I have no idea either, hehe
 
 :::info

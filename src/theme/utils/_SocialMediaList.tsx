@@ -22,7 +22,7 @@ const svgList = [
   {
     title: "rss",
     Svg: require("@site/src/static/img/rss.svg").default,
-    link: "https://n.ova.moe/blog/rss.xml",
+    link: "https://nova.gal/blog/rss.xml",
   },
 ];
 

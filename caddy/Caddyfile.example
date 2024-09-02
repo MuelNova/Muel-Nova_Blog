@@ -31,5 +31,5 @@
 }
 
 ova.moe {
-        redir https://n.ova.moe{uri}
+        redir https://nova.gal{uri}
 }
