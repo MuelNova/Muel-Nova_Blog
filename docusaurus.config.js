@@ -18,7 +18,7 @@ const config = {
   baseUrl: "/",
   onBrokenLinks: "warn",
   onBrokenMarkdownLinks: "warn",
-  favicon: "img/logo.png",
+  favicon: "img/nova-logo-par.png",
   titleDelimiter: "🐱",
   staticDirectories: ["src/static"],
 
@@ -210,7 +210,7 @@ const config = {
         title: "Muel-Nova",
         logo: {
           alt: "SiteLogo",
-          src: "img/logo.png",
+          src: "img/nova-logo-par.png",
         },
         items: [
           // {
