@@ -143,6 +143,7 @@ const config = {
 
         feedOptions: {
           type: "rss",
+          description: "feedId:56327270751371264+userId:56300998939738112",
           copyright: `Copyright © ${new Date().getFullYear()} NovaNo1r with ❤`,
         },
       },
