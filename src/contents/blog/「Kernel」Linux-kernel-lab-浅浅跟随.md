@@ -14,8 +14,6 @@ last_update:
 
 值得注意的是，这个课程也拥有 [中文版本](https://linux-kernel-labs-zh.xyz/index.html)，你可以在 [linux-kernel-labs-zh/docs-linux-kernel-labs-zh-cn](https://github.com/linux-kernel-labs-zh/docs-linux-kernel-labs-zh-cn) 进行 star 以支持他们的工作。
 
-
-
 在接下来的博客中，我可能仅对 课程 部分进行简述，重复抄写已有内容而不加自己的思考总是没有意义的。我们的重点将放在 实验 部分。
 
 <!--truncate-->
@@ -78,7 +76,7 @@ index e9ee4ec1b..6e10ac6f0 100644
 -	echo "//10.0.2.1/skels /home/root/skels cifs port=4450,guest,user=dummy 0 0" >> rootfs/etc/fstab
 +	echo "//172.31.2.1/skels /home/root/skels cifs port=4450,guest,user=dummy 0 0" >> rootfs/etc/fstab
  	echo "hvc0:12345:respawn:/sbin/getty 115200 hvc0" >> rootfs/etc/inittab
- 
+
  $(YOCTO_ROOTFS):
 diff --git a/tools/labs/qemu/create_net.sh b/tools/labs/qemu/create_net.sh
 index c97b6fa0a..f803ed1e4 100755
@@ -109,12 +107,12 @@ index 9938ec18e..abd245be1 100755
 @@ -56,13 +56,13 @@ linux_loglevel=${LINUX_LOGLEVEL:-"15"}
  linux_term=${LINUX_TERM:-"TERM=xterm"}
  linux_addcmdline=${LINUX_ADD_CMDLINE:-""}
- 
+
 -linux_cmdline=${LINUX_CMDLINE:-"root=/dev/cifs rw ip=dhcp cifsroot=//10.0.2.1/rootfs,port=4450,guest,user=dummy $linux_console loglevel=$linux_loglevel pci=noacpi $linux_term $linux_addcmdline"}
 +linux_cmdline=${LINUX_CMDLINE:-"root=/dev/cifs rw ip=dhcp cifsroot=//172.31.2.1/rootfs,port=4450,guest,user=dummy $linux_console loglevel=$linux_loglevel pci=noacpi $linux_term $linux_addcmdline"}
- 
+
  user=$(id -un)
- 
+
  cat << EOF > "$SAMBA_DIR/smbd.conf"
  [global]
 -    interfaces = 10.0.2.1
@@ -124,8 +122,6 @@ index 9938ec18e..abd245be1 100755
      bind interfaces only = yes
 
 ```
-
-
 
 ### VS-Code 开发环境
 
@@ -149,14 +145,12 @@ root@MuelNova-Laptop:/linux# bear make CC=clang
 
 ```json
 {
-    "clangd.arguments": [
-        // highlight-next-line
-        "--compile-commands-dir=/linux"
-    ]
+  "clangd.arguments": [
+    // highlight-next-line
+    "--compile-commands-dir=/linux"
+  ]
 }
 ```
-
-
 
 注意你需要再重新 make 一下，不然里面环境就炸了。
 
@@ -168,110 +162,108 @@ root@MuelNova-Laptop:/linux# bear make CC=clang
 
 ```json
 [
-    {
-        "arguments": [
-            "clang",
-            "-c",
-            "-Wp,-MMD,scripts/mod/.empty.o.d",
-            "-nostdinc",
-            "-isystem",
-            "/usr/lib/llvm-10/lib/clang/10.0.0/include",
-            "-I./arch/x86/include",
-            "-I./arch/x86/include/generated",
-            "-I./include",
-            "-I./arch/x86/include/uapi",
-            "-I./arch/x86/include/generated/uapi",
-            "-I./include/uapi",
-            "-I./include/generated/uapi",
-            "-include",
-            "./include/linux/kconfig.h",
-            "-include",
-            "./include/linux/compiler_types.h",
-            "-D__KERNEL__",
-            "-Qunused-arguments",
-            "-fmacro-prefix-map=./=",
-            "-Wall",
-            "-Wundef",
-            "-Werror=strict-prototypes",
-            "-Wno-trigraphs",
-            "-fno-strict-aliasing",
-            "-fno-common",
-            "-fshort-wchar",
-            "-fno-PIE",
-            "-Werror=implicit-function-declaration",
-            "-Werror=implicit-int",
-            "-Werror=return-type",
-            "-Wno-format-security",
-            "-std=gnu89",
-            "-no-integrated-as",
-            "-Werror=unknown-warning-option",
-            "-mno-sse",
-            "-mno-mmx",
-            "-mno-sse2",
-            "-mno-3dnow",
-            "-mno-avx",
-            "-m32",
-            "-msoft-float",
-            "-mregparm=3",
-            "-freg-struct-return",
-            "-fno-pic",
-            "-mstack-alignment=4",
-            "-march=i686",
-            "-Wa,-mtune=generic32",
-            "-ffreestanding",
-            "-Wno-sign-compare",
-            "-fno-asynchronous-unwind-tables",
-            "-mretpoline-external-thunk",
-            "-fno-delete-null-pointer-checks",
-            "-Wno-address-of-packed-member",
-            "-O2",
-            "-Wframe-larger-than=1024",
-            "-fstack-protector-strong",
-            "-Wno-format-invalid-specifier",
-            "-Wno-gnu",
-            "-mno-global-merge",
-            "-Wno-unused-const-variable",
-            "-fno-omit-frame-pointer",
-            "-fno-optimize-sibling-calls",
-            "-g",
-            "-gdwarf-4",
-            "-Wdeclaration-after-statement",
-            "-Wvla",
-            "-Wno-pointer-sign",
-            "-Wno-array-bounds",
-            "-fno-strict-overflow",
-            "-fno-stack-check",
-            "-Werror=date-time",
-            "-Werror=incompatible-pointer-types",
-            "-fcf-protection=none",
-            "-Wno-initializer-overrides",
-            "-Wno-format",
-            "-Wno-sign-compare",
-            "-Wno-format-zero-length",
-            "-Wno-tautological-constant-out-of-range-compare",
-            "-DKBUILD_MODFILE=\"scripts/mod/empty\"",
-            "-DKBUILD_BASENAME=\"empty\"",
-            "-DKBUILD_MODNAME=\"empty\"",
-            "-o",
-            "scripts/mod/empty.o",
-            "scripts/mod/empty.c"
-        ],
-        "directory": "/linux",
-        "file": "scripts/mod/empty.c"
-    }
+  {
+    "arguments": [
+      "clang",
+      "-c",
+      "-Wp,-MMD,scripts/mod/.empty.o.d",
+      "-nostdinc",
+      "-isystem",
+      "/usr/lib/llvm-10/lib/clang/10.0.0/include",
+      "-I./arch/x86/include",
+      "-I./arch/x86/include/generated",
+      "-I./include",
+      "-I./arch/x86/include/uapi",
+      "-I./arch/x86/include/generated/uapi",
+      "-I./include/uapi",
+      "-I./include/generated/uapi",
+      "-include",
+      "./include/linux/kconfig.h",
+      "-include",
+      "./include/linux/compiler_types.h",
+      "-D__KERNEL__",
+      "-Qunused-arguments",
+      "-fmacro-prefix-map=./=",
+      "-Wall",
+      "-Wundef",
+      "-Werror=strict-prototypes",
+      "-Wno-trigraphs",
+      "-fno-strict-aliasing",
+      "-fno-common",
+      "-fshort-wchar",
+      "-fno-PIE",
+      "-Werror=implicit-function-declaration",
+      "-Werror=implicit-int",
+      "-Werror=return-type",
+      "-Wno-format-security",
+      "-std=gnu89",
+      "-no-integrated-as",
+      "-Werror=unknown-warning-option",
+      "-mno-sse",
+      "-mno-mmx",
+      "-mno-sse2",
+      "-mno-3dnow",
+      "-mno-avx",
+      "-m32",
+      "-msoft-float",
+      "-mregparm=3",
+      "-freg-struct-return",
+      "-fno-pic",
+      "-mstack-alignment=4",
+      "-march=i686",
+      "-Wa,-mtune=generic32",
+      "-ffreestanding",
+      "-Wno-sign-compare",
+      "-fno-asynchronous-unwind-tables",
+      "-mretpoline-external-thunk",
+      "-fno-delete-null-pointer-checks",
+      "-Wno-address-of-packed-member",
+      "-O2",
+      "-Wframe-larger-than=1024",
+      "-fstack-protector-strong",
+      "-Wno-format-invalid-specifier",
+      "-Wno-gnu",
+      "-mno-global-merge",
+      "-Wno-unused-const-variable",
+      "-fno-omit-frame-pointer",
+      "-fno-optimize-sibling-calls",
+      "-g",
+      "-gdwarf-4",
+      "-Wdeclaration-after-statement",
+      "-Wvla",
+      "-Wno-pointer-sign",
+      "-Wno-array-bounds",
+      "-fno-strict-overflow",
+      "-fno-stack-check",
+      "-Werror=date-time",
+      "-Werror=incompatible-pointer-types",
+      "-fcf-protection=none",
+      "-Wno-initializer-overrides",
+      "-Wno-format",
+      "-Wno-sign-compare",
+      "-Wno-format-zero-length",
+      "-Wno-tautological-constant-out-of-range-compare",
+      "-DKBUILD_MODFILE=\"scripts/mod/empty\"",
+      "-DKBUILD_BASENAME=\"empty\"",
+      "-DKBUILD_MODNAME=\"empty\"",
+      "-o",
+      "scripts/mod/empty.o",
+      "scripts/mod/empty.c"
+    ],
+    "directory": "/linux",
+    "file": "scripts/mod/empty.c"
+  }
 ]
 ```
-
-
 
 然后打开 remote 的 settings.json，加这么一句
 
 ```json
 {
-    "clangd.arguments": [
-        // highlight-next-line
-        "--compile-commands-dir=/linux/tools/lab"
-    ]
+  "clangd.arguments": [
+    // highlight-next-line
+    "--compile-commands-dir=/linux/tools/lab"
+  ]
 }
 ```
 
@@ -323,11 +315,9 @@ vim -t module_init
 #endif
 ```
 
-宏真是难看。这里定义了一个 __inittest 函数，返回我们传入的 initfn 指针，在模块插入后作为入口函数调用。之后，它定义了一个 int 类型的函数 init_module，这里 `__copy` 宏设置了 `__copy__` 属性，同时设置了别名为 #initfn，这些用于给编译器提供信息。
+宏真是难看。这里定义了一个 **inittest 函数，返回我们传入的 initfn 指针，在模块插入后作为入口函数调用。之后，它定义了一个 int 类型的函数 init_module，这里 `**copy`宏设置了`**copy**` 属性，同时设置了别名为 #initfn，这些用于给编译器提供信息。
 
 `module_exit` 也是类似，我们不再解释。
-
-
 
 对于 `ignore_loglevel`，字面意义，就是忽略日志等级，全部输出。
 
@@ -339,8 +329,6 @@ static bool suppress_message_printing(int level)
 	return (level >= console_loglevel && !ignore_loglevel);
 }
 ```
-
-
 
 ### 1. 内核模块
 
@@ -378,7 +366,7 @@ Poky (Yocto Project Reference Distro) 2.3 qemux86 /dev/hvc0
 qemux86 login: root
 ```
 
-![image-20240714220741790](https://cdn.ova.moe/img/image-20240714220741790.png)
+![image-20240714220741790](https://oss.nova.gal/img/image-20240714220741790.png)
 
 ```bash
 root@qemux86:~/skels/kernel_modules/1-2-test-mod# insmod hello_mod.ko
@@ -389,8 +377,6 @@ hello_mod 16384 0 - Live 0xd085f000 (O)
 root@qemux86:~/skels/kernel_modules/1-2-test-mod# rmmod hello_mod.ko
 Goodbye!
 ```
-
-
 
 ### 2. Printk
 
@@ -419,8 +405,6 @@ root@qemux86:~# insmod skels/kernel_modules/1-2-test-mod/hello_mod.ko
 root@qemux86:~# rmmod skels/kernel_modules/1-2-test-mod/hello_mod.ko
 root@qemux86:~#
 ```
-
-
 
 ### 3. 错误
 
@@ -482,8 +466,6 @@ err_mod: loading out-of-tree module taints kernel.
 n1 is 1, n2 is 2
 ```
 
-
-
 ### 4. 子模块
 
 > 查看 4-multi-mod/ 目录中的 C 源代码文件 mod1.c 和 mod2.c。模块 2 仅包含模块 1 使用的函数的定义。
@@ -511,29 +493,25 @@ ccflags-y = -Wno-unused-function -Wno-unused-label -Wno-unused-variable
 # TODO: add rules to create a multi object module
 # highlight-start
 multi-y = mod1.o mod2.o
-obj-m = multi.o 
+obj-m = multi.o
 # highlight-end
 ```
 
 再编译，可以看到 4 已经成功编译，并且运行正常。
 
 ```bash title="minicom"
-root@qemux86:~/skels/kernel_modules/4-multi-mod# insmod multi.ko                                    
-multi: loading out-of-tree module taints kernel.                                                     
-n1 is 1, n2 is 2       
-root@qemux86:~/skels/kernel_modules/4-multi-mod# rmmod multi.ko         
+root@qemux86:~/skels/kernel_modules/4-multi-mod# insmod multi.ko
+multi: loading out-of-tree module taints kernel.
+n1 is 1, n2 is 2
+root@qemux86:~/skels/kernel_modules/4-multi-mod# rmmod multi.ko
 sum is 3
 ```
-
-
 
 ### 5. 内核 oops
 
 > 内核 oops 是内核检测到的无效操作，只可能由内核生成。对于稳定的内核版本，这几乎可以肯定意味着模块含有错误。在 oops 出现后，内核仍将继续工作。
 
 > 进入任务目录 5-oops-mod 并检查 C 源代码文件。注意问题将在哪里发生。在 Kbuild 文件中添加编译标记 -g。
->
-> 
 
 看它的源代码，看着就有一个空指针。
 
@@ -682,7 +660,8 @@ d086600d:       c6 05 00 00 00 00 61    movb   $0x61,0x0
 ```
 
 ### 6. 模块参数
->  进入任务目录 6-cmd-mod 并检查 C 源代码文件 cmd_mod.c。编译并复制相关的模块，然后加载内核模块以查看 printk 消息。然后从内核中卸载该模块。
+
+> 进入任务目录 6-cmd-mod 并检查 C 源代码文件 cmd_mod.c。编译并复制相关的模块，然后加载内核模块以查看 printk 消息。然后从内核中卸载该模块。
 >
 > 在不修改源代码的情况下，加载内核模块以显示消息 Early bird gets tired。
 
@@ -693,8 +672,8 @@ module_param(str, charp, 0000);
 MODULE_PARM_DESC(str, "A simple string");
 
 static int __init cmd_init(void)
-{      
-    pr_info("Early bird gets %s\n", str);                                                          
+{
+    pr_info("Early bird gets %s\n", str);
     return 0;
 }
 ```
@@ -732,8 +711,6 @@ static int __init cmd_init(void)
 
 ```
 
-
-
 显然它需要传入一个 str="tired" 的参数。
 
 ```bash
@@ -742,11 +719,8 @@ cmd_mod: loading out-of-tree module taints kernel.
 Early bird gets tired
 ```
 
-
-
 ### 7. 进程信息
 
->
 > 检查名为 7-list-proc 的任务的框架。添加代码来显示当前进程的进程 ID（ PID ）和可执行文件名。
 >
 > 按照标记为 TODO 的命令进行操作。在加载和卸载模块时，必须显示这些信息。
@@ -785,8 +759,6 @@ module_exit(my_proc_exit);
 
 第一个就是要加缺少的头，我们可以查一下 task_struct 是哪里定义的，来自 `include/linux/sched.h` (CSCOPE 不好用，查不懂)
 
-
-
 第二个要 print current process pid 和 name，查询资料后我们知道 sched.h 里有一个宏 `current` 会返回一个当前进程的 task_struct 指针。
 
 pid 是一个 pid_t 的成员，其实就是 signed int 的别名，所以我们可以直接输出
@@ -821,8 +793,6 @@ list_proc: loading out-of-tree module taints kernel.
 
 测试，证明是可以用的。
 
-
-
 第三个 TODO，我们要打印所有进程的，那么我们推测应该是有一个链表之类的保存了所有的进程的 task_struct，我们只需要找到他，然后遍历他就好了。得益于大模型，我们信息搜集到了一个 `for_each_process` 的宏，它可以遍历所有的进程。
 
 :::info
@@ -832,8 +802,6 @@ list_proc: loading out-of-tree module taints kernel.
 :::
 
 因此，我们利用这个宏，即可遍历完成。
-
-
 
 最终代码：
 
@@ -927,8 +895,6 @@ module_exit(my_proc_exit);
 
 很有精神！
 
-
-
 ### Ex1. KDB
 
 ```bash
@@ -937,27 +903,21 @@ echo g > /proc/sysrq-trigger
 # 或者用 Ctrl+O g
 ```
 
-![image-20240715233154679](https://cdn.ova.moe/img/image-20240715233154679.png)
+![image-20240715233154679](https://oss.nova.gal/img/image-20240715233154679.png)
 
 我这里有 BUG，显示不全，就这样吧。
 
 利用 echo 写入就会直接进入 KDB 里
 
-![image-20240715233319670](https://cdn.ova.moe/img/image-20240715233319670.png)
+![image-20240715233319670](https://oss.nova.gal/img/image-20240715233319670.png)
 
 看堆栈 bt 就可以知道是 dummy_func1+0x8 的地方出了问题。还可以看到 current=0xc42b2b40，我们用 lsmod 可以看到基地址 0xd0880000。但是我们 bt 的时候看不到回溯栈，所以就搁置了。
 
-
-
 接下来就是 gdb add-symbol-file 把它导入，然后设置基地址，看看指令是什么了，也是比较简单就不看了
-
-
 
 ### Ex2. PS 模块
 
 前面 7. proc-info 写完了
-
-
 
 ### Ex3. 内存信息
 
@@ -991,8 +951,6 @@ ccflags-y = -Wno-unused-function -Wno-unused-label -Wno-unused-variable -DDEBUG
 obj-m = proc.o
 ```
 
-
-
 框架大概就是这样，接下来，我们查询 vm_area_struct 的用法。它被定义在 `include/linux/mm_types.h` 里，那么我们可以直接利用 vm_start 和 vm_end 来表示大小，它也是一个链表，用 vm_next 就可以找到下一个。
 
 那么我们就需要知道如何找到当前进程的所有 vm_area_struct 结构体了。我们可以想到用 current 去找，翻一下可以看到 task_struct->mm 是一个 mm_struct 的结构体指针，那么我们继续去翻 mm_struct，第一个就是 struct vm_area_struct 的字段 mmap
@@ -1006,9 +964,9 @@ obj-m = proc.o
 > ```c
 > struct maple_tree *mt = &mm->mm_mt;
 > struct vm_area_struct *vma_mt;
-> 
+>
 > MA_STATE(mas, mt, 0, 0);
-> 
+>
 > mas_for_each(&mas, vma_mt, ULONG_MAX) {
 >     // do sth...
 > }
@@ -1017,8 +975,6 @@ obj-m = proc.o
 > 根据 diff 找到的新的用法
 
 :::
-
-
 
 因此最终的代码：
 
@@ -1069,8 +1025,6 @@ proc: loading out-of-tree module taints kernel.
 0xbffcc000 - 0xbffed000
 ```
 
-
-
 ### Ex4. 动态调试
 
 首先先 mount debugfs
@@ -1081,8 +1035,6 @@ mount -t debugfs none /debug
 ```
 
 然后没找到 /debug/dynamic_debug，估计是内核没开吧，跑路
-
-
 
 ## Kernel API
 
@@ -1118,7 +1070,7 @@ mount -t debugfs none /debug
   {
   	if (!__list_add_valid(new, prev, next))
   		return;
-  
+
   	next->prev = new;
   	new->next = next;
   	new->prev = prev;
@@ -1208,8 +1160,6 @@ mem = kmalloc(4096 * sizeof(*mem), GFP_KERNEL);
 
 现在你应该会遇到一个错误。查看堆栈跟踪。错误的原因是什么？
 
-
-
 一开始的显然是可抢占的内核。我们要做的操作就是把 schedule_timeout 改成 atomic 的
 
 ```cpp
@@ -1226,13 +1176,11 @@ mem = kmalloc(4096 * sizeof(*mem), GFP_KERNEL);
 
 ```bash
 root@qemux86:~/skels/kernel_api/2-sched-spin# insmod sched-spin.ko
-sched_spin: loading out-of-tree module taints kernel.              
+sched_spin: loading out-of-tree module taints kernel.
 BUG: scheduling while atomic: insmod/322/0x00000002                1 lock held by insmod/322:
 ```
 
 因为我们 schedule 了，这在原子段里肯定是不允许的
-
-
 
 ### 3. 使用内核内存
 
@@ -1283,8 +1231,6 @@ BUG: scheduling while atomic: insmod/322/0x00000002                1 lock held b
 
 :::
 
-
-
 TODO1
 
 ```c
@@ -1309,13 +1255,13 @@ TODO2
 
 ```c
 static int memory_init(void)
-{	
+{
 	struct task_struct* cur = get_current();
 	ti1 = task_info_alloc(cur->pid);
 	ti2 = task_info_alloc(cur->parent->pid);
 	ti3 = task_info_alloc(next_task(cur)->pid);
 	ti4 = task_info_alloc(next_task(next_task(cur))->pid);
-	
+
 	/* TODO 2: call task_info_alloc for current pid */
 
 	/* TODO 2: call task_info_alloc for parent PID */
@@ -1420,8 +1366,6 @@ before exiting: [
 ]
 ```
 
-
-
 ### 5. 使用内核列表进行进程处理
 
 生成名为 **5-list-full** 的任务骨架。浏览 `list-full.c` 文件的内容，并注意标有 `TODO` 的注释。除了 `4-list` 的功能外，我们还添加了以下内容：
@@ -1452,8 +1396,6 @@ before exiting: [
    :::
 
 3. 编译、复制、加载和卸载内核模块，这个过程中请遵从显示的消息来操作。加载内核模块需要一些时间，因为 `schedule_timeout()` 函数会调用 `sleep()`。
-
-
 
 这个遍历也是很简单，扫一遍链表就可以。第二个也是给了提示了，count 设置成 5 就可以。
 
@@ -1517,7 +1459,7 @@ after removing expired: [
 
 为名为 **6-list-sync** 的任务生成骨架。
 
-> 1. 浏览代码并查找``TODO 1``字符串。
+> 1. 浏览代码并查找`TODO 1`字符串。
 > 2. 使用自旋锁或读写锁来同步对列表的访问。
 > 3. 编译、加载和卸载内核模块。
 
@@ -1526,8 +1468,6 @@ after removing expired: [
 始终锁定数据，而不是代码！
 
 :::
-
-
 
 又到了我最喜欢的并发编程环节
 
@@ -1612,9 +1552,9 @@ static void task_info_add_to_list(int pid)
 		return;
 	}
 	read_unlock(&lock);
-	
+
 	/* TODO 1: critical section ends here */
-    
+
 	ti = task_info_alloc(pid);
 	// 这里注意，alloc 因为有 GFP_KERNEL FLAG，因此是可抢占的，我们不能在上一句里面拿锁！！
 	write_lock(&lock);
@@ -1645,13 +1585,13 @@ void task_info_print_list(const char *msg)
     // 这个没必要写在循环里，拿锁贵的
 	read_lock(&lock);
 	list_for_each(p, &head) {
-		
+
 		ti = list_entry(p, struct task_info, list);
 		pr_info("(%d, %lu) ", ti->pid, ti->timestamp);
-		
+
 	}
     read_unlock(&lock);
-	
+
 	/* TODO 1: Critical section ends here */
 	pr_info("]\n");
 }
@@ -1726,8 +1666,6 @@ module_exit(list_sync_exit);
 
 ```
 
-
-
 ### 7. 在我们的列表模块中测试模块调用
 
 为名为 **7-list-test** 的任务生成骨架，并浏览 `list-test.c` 文件的内容。我们将使用它作为测试模块。它将调用由 **6-list-sync** 任务导出的函数。在 `list-test.c` 文件中，已经用 **extern** 标记出了导出的函数。
@@ -1746,8 +1684,6 @@ module_exit(list_sync_exit);
 
 两个模块（来自 **6-list-sync** 的模块和测试模块）的卸载顺序应该是什么？如果使用其他顺序会发生什么？
 
-
-
 这个没啥好说的，就是一个测试。
 
 6. ```c
@@ -1758,8 +1694,6 @@ module_exit(list_sync_exit);
 肯定是先 sync 再 test，然后卸载反过来。不然就 undefined 啦
 
 结束，Kernel API
-
-
 
 ## 字符设备驱动程序
 
@@ -1773,8 +1707,6 @@ module_exit(list_sync_exit);
 - 对于块设备而言，它处理大量的数据，例如说硬盘、RAM 等等，还是比较明确的。
 
 Linux 对两种设备提供了不同的 API。如果是字符设备，那么系统调用就会直接传递给设备驱动程序；如果是块设备，那么就要通过文件管理子系统和块设备子系统进行交互。（猜测是为了性能，譬如说 DMA 之类的？）
-
-
 
 设备一般用 <主设备号><次设备号> 的形式标识，其中主设备号一般用于标识设备类型，次设备号就是本身。一个例子就是 hda1、hda2、ttyS0、ttyS1
 
@@ -1794,8 +1726,6 @@ crw--w---- 1 root tty 4, 9 Jul 24 18:25 /dev/tty9
 
 可以看到第一位就是 c 代表 `char dev`，而自然块设备第一位就是 `b`。其中，主设备号是 4，次设备号依次递增。
 
-
-
 ### 创建设备
 
 我们可以使用 `mknod` 命令创建一个新设备，他也需要提供一些参数，例如名字、类型、主设备号、次设备号等等。一个简单的例子如下，它创建了一个名为 `muelnova` 的字符设备，主设备号为 114，次设备号为 514
@@ -1805,8 +1735,6 @@ crw--w---- 1 root tty 4, 9 Jul 24 18:25 /dev/tty9
 [root@MuelNova-Laptop nova]# ls -la /dev/muelnova
 crw-r--r-- 1 root root 114, 514 Jul 24 19:03 /dev/muelnova
 ```
-
-
 
 内核使用 [`struct cdev`](https://elixir.bootlin.com/linux/v6.10/source/include/linux/cdev.h#L14) 来注册字符设备。一般而言，驱动程序还会利用以下几个结构：
 
@@ -1829,7 +1757,6 @@ crw-r--r-- 1 root root 114, 514 Jul 24 19:03 /dev/muelnova
 
   你可以注意到，这些函数的入参和原本是不一样的，多了两个用户态下不常见的 `struct file` 和 `struct inode`。
 
-
   简单来说，file 和 inode 有点像进程和程序的区别。file 具有状态，而 inode 只包括有一些静态映像。
 
 - `struct file`：包含了打开标记、关联操作 等
@@ -1843,7 +1770,7 @@ crw-r--r-- 1 root root 114, 514 Jul 24 19:03 /dev/muelnova
   		struct llist_node	f_llist;
   		unsigned int 		f_iocb_flags;
   	};
-  
+
   	/*
   	 * Protects f_ep, f_flags.
   	 * Must not be taken from IRQ context.
@@ -1860,14 +1787,14 @@ crw-r--r-- 1 root root 114, 514 Jul 24 19:03 /dev/muelnova
   	struct path		f_path;
   	struct inode		*f_inode;	/* cached value */
   	const struct file_operations	*f_op;
-  
+
   	u64			f_version;
   #ifdef CONFIG_SECURITY
   	void			*f_security;
   #endif
   	/* needed for tty driver, and maybe others */
   	void			*private_data;
-  
+
   #ifdef CONFIG_EPOLL
   	/* Used by fs/eventpoll.c to link all the hooks to this file */
   	struct hlist_head	*f_ep;
@@ -1888,20 +1815,20 @@ crw-r--r-- 1 root root 114, 514 Jul 24 19:03 /dev/muelnova
   	kuid_t			i_uid;
   	kgid_t			i_gid;
   	unsigned int		i_flags;
-  
+
   #ifdef CONFIG_FS_POSIX_ACL
   	struct posix_acl	*i_acl;
   	struct posix_acl	*i_default_acl;
   #endif
-  
+
   	const struct inode_operations	*i_op;
   	struct super_block	*i_sb;
   	struct address_space	*i_mapping;
-  
+
   #ifdef CONFIG_SECURITY
   	void			*i_security;
   #endif
-  
+
   	/* Stat data, not accessed from path walking */
   	unsigned long		i_ino;
   	/*
@@ -1925,23 +1852,23 @@ crw-r--r-- 1 root root 114, 514 Jul 24 19:03 /dev/muelnova
   	u8			i_blkbits;
   	enum rw_hint		i_write_hint;
   	blkcnt_t		i_blocks;
-  
+
   #ifdef __NEED_I_SIZE_ORDERED
   	seqcount_t		i_size_seqcount;
   #endif
-  
+
   	/* Misc */
   	unsigned long		i_state;
   	struct rw_semaphore	i_rwsem;
-  
+
   	unsigned long		dirtied_when;	/* jiffies of first dirtying */
   	unsigned long		dirtied_time_when;
-  
+
   	struct hlist_node	i_hash;
   	struct list_head	i_io_list;	/* backing dev IO list */
   #ifdef CONFIG_CGROUP_WRITEBACK
   	struct bdi_writeback	*i_wb;		/* the associated cgroup wb */
-  
+
   	/* foreign inode detection, see wbc_detach_inode() */
   	int			i_wb_frn_winner;
   	u16			i_wb_frn_avg_time;
@@ -1975,82 +1902,80 @@ crw-r--r-- 1 root root 114, 514 Jul 24 19:03 /dev/muelnova
   		char			*i_link;
   		unsigned		i_dir_seq;
   	};
-  
+
   	__u32			i_generation;
-  
+
   #ifdef CONFIG_FSNOTIFY
   	__u32			i_fsnotify_mask; /* all events this inode cares about */
   	struct fsnotify_mark_connector __rcu	*i_fsnotify_marks;
   #endif
-  
+
   #ifdef CONFIG_FS_ENCRYPTION
   	struct fscrypt_inode_info	*i_crypt_info;
   #endif
-  
+
   #ifdef CONFIG_FS_VERITY
   	struct fsverity_info	*i_verity_info;
   #endif
-  
+
   	void			*i_private; /* fs or device private pointer */
   } __randomize_layout;
   ```
-
-  
 
 ### 0. 简介
 
 使用 [LXR](http://elixir.free-electrons.com/linux/latest/source) 查找 Linux 内核中以下符号的定义：
 
-  > - `struct file`
-  > - `struct file_operations`
-  > - `generic_ro_fops`
-  > - `vfs_read()`
+> - `struct file`
+> - `struct file_operations`
+> - `generic_ro_fops`
+> - `vfs_read()`
 
-前两个看过了，现在就看看  generic_ro_fops 和 vfs_read 吧
+前两个看过了，现在就看看 generic_ro_fops 和 vfs_read 吧
 
-  ```c
-  const struct file_operations generic_ro_fops = {
-  	.llseek		= generic_file_llseek,
-  	.read_iter	= generic_file_read_iter,
-  	.mmap		= generic_file_readonly_mmap,
-  	.splice_read	= filemap_splice_read,
-  };
-  ```
+```c
+const struct file_operations generic_ro_fops = {
+	.llseek		= generic_file_llseek,
+	.read_iter	= generic_file_read_iter,
+	.mmap		= generic_file_readonly_mmap,
+	.splice_read	= filemap_splice_read,
+};
+```
 
 这显然定义了一个通用的 readonly file operations。
 
-  ```c
-  ssize_t vfs_read(struct file *file, char __user *buf, size_t count, loff_t *pos)
-  {
-  	ssize_t ret;
-  
-  	if (!(file->f_mode & FMODE_READ))
-  		return -EBADF;
-  	if (!(file->f_mode & FMODE_CAN_READ))
-  		return -EINVAL;
-  	if (unlikely(!access_ok(buf, count)))
-  		return -EFAULT;
-  
-  	ret = rw_verify_area(READ, file, pos, count);
-  	if (ret)
-  		return ret;
-  	if (count > MAX_RW_COUNT)
-  		count =  MAX_RW_COUNT;
-  
-  	if (file->f_op->read)
-  		ret = file->f_op->read(file, buf, count, pos);
-  	else if (file->f_op->read_iter)
-  		ret = new_sync_read(file, buf, count, pos);
-  	else
-  		ret = -EINVAL;
-  	if (ret > 0) {
-  		fsnotify_access(file);
-  		add_rchar(current, ret);
-  	}
-  	inc_syscr(current);
-  	return ret;
-  }
-  ```
+```c
+ssize_t vfs_read(struct file *file, char __user *buf, size_t count, loff_t *pos)
+{
+	ssize_t ret;
+
+	if (!(file->f_mode & FMODE_READ))
+		return -EBADF;
+	if (!(file->f_mode & FMODE_CAN_READ))
+		return -EINVAL;
+	if (unlikely(!access_ok(buf, count)))
+		return -EFAULT;
+
+	ret = rw_verify_area(READ, file, pos, count);
+	if (ret)
+		return ret;
+	if (count > MAX_RW_COUNT)
+		count =  MAX_RW_COUNT;
+
+	if (file->f_op->read)
+		ret = file->f_op->read(file, buf, count, pos);
+	else if (file->f_op->read_iter)
+		ret = new_sync_read(file, buf, count, pos);
+	else
+		ret = -EINVAL;
+	if (ret > 0) {
+		fsnotify_access(file);
+		add_rchar(current, ret);
+	}
+	inc_syscr(current);
+	return ret;
+}
+```
 
 这个首先确认我们有权限读，然后就去检查从 file 的 pos 开始，是不是能读 count 个。之后它就去尝试用不同的方法去读。读完之后，就去通知访问过，更新计数（current + ret），然后增加系统调用的计数。
 
@@ -2091,8 +2016,6 @@ $ cat /proc/devices | less
 ```bash
 rmmod so2_cdev
 ```
-
-
 
 观察 so2_cdev.c 文件，我们可以看到它是 42,0，那我们就创一个
 
@@ -2151,8 +2074,6 @@ root@qemux86:~/.ash_history/kernel# rmmod so2_cdev.ko
 WHOW, YOU REGISTERED 1 DEVICES!!!!
 ```
 
-
-
 ### 2. 注册一个已注册的主设备号[¶](https://linux-kernel-labs-zh.xyz/labs/device_drivers.html#section-15)
 
 修改 **MY_MAJOR**，使其指向已经使用的主设备号。
@@ -2162,8 +2083,6 @@ WHOW, YOU REGISTERED 1 DEVICES!!!!
 查看 `/proc/devices` 来获取一个已分配的主设备号。
 
 参考 [errno-base.h](http://elixir.free-electrons.com/linux/v4.9/source/include/uapi/asm-generic/errno-base.h) 并找出错误码的含义。恢复模块的初始配置。
-
-
 
 ```c
 root@qemux86:~/.ash_history/kernel# cat /proc/devices
@@ -2185,8 +2104,6 @@ Character devices:
 253 virtio-portsdev
 254 bsg
 ```
-
-
 
 我们把它改成 4 试试看，咋没报错呢。哈哈，原来是我们没有处理报错。改成这样
 
@@ -2212,8 +2129,6 @@ err = register_chrdev_region(MKDEV(MY_MAJOR, MY_MINOR), NUM_MINORS, MODULE_NAME)
 > 3. 在打开和释放函数中显示一条消息。
 > 4. 再次读取 `/dev/so2_cdev` 文件。按照内核显示的消息进行操作。由于尚未实现 `read` 函数，因此仍会出现错误。
 
-
-
 cdev 是 `struct cdev` 类型，不是指针。
 
 ```c
@@ -2231,19 +2146,19 @@ static int so2_cdev_open(struct inode *inode, struct file *file)
 
 	/* TODO 2: print message when the device file is open. */
 	pr_info("Whow, the device file is open!!!!");
-    
+
 static int
 so2_cdev_release(struct inode *inode, struct file *file)
 {
 	/* TODO 2: print message when the device file is closed. */
 	pr_info("No!!! You closed the device, you evil!");
-    
+
 static const struct file_operations so2_fops = {
 	.owner = THIS_MODULE,
 /* TODO 2: add open and release functions */
 	.open = so2_cdev_open,
 	.release = so2_cdev_release,
-    
+
 
 static int so2_cdev_init(void)
 {
@@ -2270,8 +2185,8 @@ static int so2_cdev_init(void)
 		cdev_init(&devs[i].cdev, &so2_fops);
 		cdev_add(&devs[i].cdev, MKDEV(MY_MAJOR, i), 1);
 	}
-    
-    
+
+
 static void so2_cdev_exit(void)
 {
 	int i;
@@ -2295,8 +2210,6 @@ Whow, the device file is open!!!!
 
 非常好！
 
-
-
 ### 4. 访问限制[¶](https://linux-kernel-labs-zh.xyz/labs/device_drivers.html#section-17)
 
 使用原子变量限制设备访问，以便一次只能有一个进程打开该设备。其他进程将收到“设备忙”错误 (`-EBUSY`)。限制访问将在驱动程序中的打开函数中完成。按照标记为 **TODO 3** 的注释进行操作并实现以下内容。
@@ -2315,8 +2228,6 @@ schedule_timeout(1000);
 注解
 
 atomic_cmpxchg 函数的优点在于它可以在一个原子操作中检查变量的旧值并将其设置为新值。详细了解 [atomic_cmpxchg](https://www.khronos.org/registry/OpenCL/sdk/1.1/docs/man/xhtml/atomic_cmpxchg.html)。这里有一个使用示例 http://elixir.free-electrons.com/linux/v4.9/source/lib/dump_stack.c#L24 。
-
-
 
 练练手
 
@@ -2511,7 +2422,7 @@ static void so2_cdev_exit(void)
 	}
 
 	/* TODO 1: unregister char device region, for MY_MAJOR and NUM_MINORS starting at MY_MINOR */
-	
+
 	unregister_chrdev_region(MKDEV(MY_MAJOR, MY_MINOR), NUM_MINORS);
 	pr_info("WHOW, YOU REGISTERED %d DEVICES!!!!", NUM_MINORS);
 }
@@ -2549,7 +2460,7 @@ I'm using the device!!!!
 
 :::info
 
-命令 `cat /dev/so2_cdev` 不会结束（使用Ctrl+C）。请阅读 [读取和写入](https://linux-kernel-labs-zh.xyz/labs/device_drivers.html#section-10) 和 [访问进程地址空间](https://linux-kernel-labs-zh.xyz/labs/device_drivers.html#section-8) 部分。如果要显示偏移值，请使用以下形式的构造: `pr_info("Offset: %lld \n", *offset)`；偏移值的数据类型 `loff_t` 是 `long long int` 的 typedef。
+命令 `cat /dev/so2_cdev` 不会结束（使用 Ctrl+C）。请阅读 [读取和写入](https://linux-kernel-labs-zh.xyz/labs/device_drivers.html#section-10) 和 [访问进程地址空间](https://linux-kernel-labs-zh.xyz/labs/device_drivers.html#section-8) 部分。如果要显示偏移值，请使用以下形式的构造: `pr_info("Offset: %lld \n", *offset)`；偏移值的数据类型 `loff_t` 是 `long long int` 的 typedef。
 
 :::
 
@@ -2566,8 +2477,6 @@ I'm using the device!!!!
 通过解引用偏移参数，可以读取并移动在文件中的当前位置。每次成功进行读取后都需要更新其值。
 
 :::
-
-
 
 我们首先测试第一个，忽略 Offset 的
 
@@ -2774,7 +2683,7 @@ static void so2_cdev_exit(void)
 	}
 
 	/* TODO 1: unregister char device region, for MY_MAJOR and NUM_MINORS starting at MY_MINOR */
-	
+
 	unregister_chrdev_region(MKDEV(MY_MAJOR, MY_MINOR), NUM_MINORS);
 	pr_info("WHOW, YOU REGISTERED %d DEVICES!!!!", NUM_MINORS);
 }
@@ -2785,8 +2694,6 @@ module_exit(so2_cdev_exit);
 ```
 
 在这里，我们就读取一点点 :P 然后它就一直在传
-
-
 
 然后我们继续改一下，让他没问题
 
@@ -2839,8 +2746,6 @@ cat /dev/so2_cdev
 ```
 
 请阅读 [读取和写入](https://linux-kernel-labs-zh.xyz/labs/device_drivers.html#section-10) 小节和 [访问进程地址空间](https://linux-kernel-labs-zh.xyz/labs/device_drivers.html#section-8) 小节。
-
-
 
 简单简单
 
@@ -2900,8 +2805,6 @@ so2_cdev_write(struct file *file,
 
 :::
 
-
-
 ```c title="so2_cdev_ioctl.c"
 static long
 so2_cdev_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
@@ -2954,8 +2857,6 @@ Hello ioctl
    - `MY_IOCTL_GET_BUFFER`：用于从设备读取消息。
 2. 为进行测试，将所需的命令行参数传递给用户空间程序。
 
-
-
 以 SET_BUFFER 为例，我们可以看到它会 ioctl 传一个 char[] 过去
 
 差不多就这个样子吧，我虚拟机打不开了。
@@ -2998,8 +2899,6 @@ so2_cdev_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 }
 ```
 
-
-
 ## I/O 访问与中断
 
 ### 0. 简介[¶](https://linux-kernel-labs-zh.xyz/labs/interrupts.html#section-14)
@@ -3016,8 +2915,6 @@ so2_cdev_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 - 键盘初始化函数 `i8042_setup_kbd()`
 - AT 或 PS/2 键盘中断函数 `atkbd_interrupt()`
 
-
-
 - `struct resource`: 看得出来是一个树？对双亲、兄弟、孩子都有标记。然后包含了一些 flags 之类的。
 
   ```c
@@ -3031,33 +2928,33 @@ so2_cdev_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
   };
   ```
 
-- `request_region()`：一个对 `__request_region` 的包装。那么它以 GFP_KERNEL 分配了一个资源，并且标记了 parent, start, n, name, flags 等信息i。
+- `request_region()`：一个对 `__request_region` 的包装。那么它以 GFP_KERNEL 分配了一个资源，并且标记了 parent, start, n, name, flags 等信息 i。
 
   ```c
   #define request_region(start,n,name)		__request_region(&ioport_resource, (start), (n), (name), 0)
-  
+
   struct resource *__request_region(struct resource *parent,
   				  resource_size_t start, resource_size_t n,
   				  const char *name, int flags)
   {
   	struct resource *res = alloc_resource(GFP_KERNEL);
   	int ret;
-  
+
   	if (!res)
   		return NULL;
-  
+
   	write_lock(&resource_lock);
   	ret = __request_region_locked(res, parent, start, n, name, flags);
   	write_unlock(&resource_lock);
-  
+
   	if (ret) {
   		free_resource(res);
   		return NULL;
   	}
-  
+
   	if (parent == &iomem_resource)
   		revoke_iomem(res);
-  
+
   	return res;
   }
   ```
@@ -3071,7 +2968,7 @@ so2_cdev_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
   {
   	return request_threaded_irq(irq, handler, NULL, flags, name, dev);
   }
-  
+
   int request_threaded_irq(unsigned int irq, irq_handler_t handler,
   			 irq_handler_t thread_fn, unsigned long irqflags,
   			 const char *devname, void *dev_id)
@@ -3079,10 +2976,10 @@ so2_cdev_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
   	struct irqaction *action;
   	struct irq_desc *desc;
   	int retval;
-  
+
   	if (irq == IRQ_NOTCONNECTED)
   		return -ENOTCONN;
-  
+
   	/*
   	 * Sanity-check: shared interrupts must pass in a real dev-ID,
   	 * otherwise we'll have trouble later trying to figure out
@@ -3101,45 +2998,45 @@ so2_cdev_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
   	    (!(irqflags & IRQF_SHARED) && (irqflags & IRQF_COND_SUSPEND)) ||
   	    ((irqflags & IRQF_NO_SUSPEND) && (irqflags & IRQF_COND_SUSPEND)))
   		return -EINVAL;
-  
+
   	desc = irq_to_desc(irq);
   	if (!desc)
   		return -EINVAL;
-  
+
   	if (!irq_settings_can_request(desc) ||
   	    WARN_ON(irq_settings_is_per_cpu_devid(desc)))
   		return -EINVAL;
-  
+
   	if (!handler) {
   		if (!thread_fn)
   			return -EINVAL;
   		handler = irq_default_primary_handler;
   	}
-  
+
   	action = kzalloc(sizeof(struct irqaction), GFP_KERNEL);
   	if (!action)
   		return -ENOMEM;
-  
+
   	action->handler = handler;
   	action->thread_fn = thread_fn;
   	action->flags = irqflags;
   	action->name = devname;
   	action->dev_id = dev_id;
-  
+
   	retval = irq_chip_pm_get(&desc->irq_data);
   	if (retval < 0) {
   		kfree(action);
   		return retval;
   	}
-  
+
   	retval = __setup_irq(irq, desc, action);
-  
+
   	if (retval) {
   		irq_chip_pm_put(&desc->irq_data);
   		kfree(action->secondary);
   		kfree(action);
   	}
-  
+
   #ifdef CONFIG_DEBUG_SHIRQ_FIXME
   	if (!retval && (irqflags & IRQF_SHARED)) {
   		/*
@@ -3149,12 +3046,12 @@ so2_cdev_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
   		 * run in parallel with our fake.
   		 */
   		unsigned long flags;
-  
+
   		disable_irq(irq);
   		local_irq_save(flags);
-  
+
   		handler(irq, dev_id);
-  
+
   		local_irq_restore(flags);
   		enable_irq(irq);
   	}
@@ -3171,8 +3068,6 @@ so2_cdev_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
   	return ioread8(ioport_map(port, 1));
   }
   ```
-
-
 
 分析代码
 
@@ -3355,8 +3250,6 @@ static irqreturn_t i8042_interrupt(int irq, void *dev_id)
 }
 ```
 
-
-
 **atkbd_interrupt()**
 
 我没找到这个函数，但是通过翻 at 的 driver 的代码，看得到它的 interrupt 是 ps2_interrupt，那就分析这个。
@@ -3407,17 +3300,13 @@ irqreturn_t ps2_interrupt(struct serio *serio, u8 data, unsigned int flags) {
 }
 ```
 
-
-
 ### 1. 请求 I/O 端口[¶](https://linux-kernel-labs-zh.xyz/labs/interrupts.html#i-o-4)
 
 首先，我们的目标是在 I/O 空间中为硬件设备分配内存。我们看到，我们无法为键盘分配空间，因为指定的区域已经被分配。然后，我们将为未使用的端口分配 I/O 空间。
 
-*kbd.c* 文件中包含了键盘驱动程序的框架。浏览源代码并检查 `kbd_init()` 函数。注意我们需要的 I/O 端口是 I8042_STATUS_REG 和 I8042_DATA_REG。
+_kbd.c_ 文件中包含了键盘驱动程序的框架。浏览源代码并检查 `kbd_init()` 函数。注意我们需要的 I/O 端口是 I8042_STATUS_REG 和 I8042_DATA_REG。
 
 按照骨架中标有 **TODO 1** 的部分进行操作。在 `kbd_init()` 函数中请求 I/O 端口，并确保检查错误并在出现错误时进行适当的清理。在请求时，使用 `MODULE_NAME` 宏设置调用者的 ID 字符串（`name`）设置为该宏的值。此外，在 `kbd_exit()` 函数中添加代码以释放 I/O 端口。
-
-
 
 ```c
 static int kbd_init(void)
@@ -3507,17 +3396,15 @@ root@qemux86:~/skels/interrupts# cat /proc/ioports
 
 :::info
 
-对于共享中断, *dev_id* 不能为 NULL。请使用 `&devs[0]`，即 `struct kbd` 的指针。此结构包含了设备管理所需的所有信息。为了在 */proc/interrupts* 中看到该中断，请不要使用 NULL 作为 *dev_name* 。你可以使用 MODULE_NAME 宏。
+对于共享中断, _dev_id_ 不能为 NULL。请使用 `&devs[0]`，即 `struct kbd` 的指针。此结构包含了设备管理所需的所有信息。为了在 _/proc/interrupts_ 中看到该中断，请不要使用 NULL 作为 _dev_name_ 。你可以使用 MODULE_NAME 宏。
 
 如果中断请求失败，请确保通过跳转到正确的标签（label）来进行适当的清理，即释放 I/O 端口并注销字符设备驱动程序。
 
 :::
 
-编译、复制并加载模块到内核中。通过查看 */proc/interrupts*，检查中断线是否已注册。从源代码中确定 IRQ 号码（参见 I8042_KBD_IRQ）并验证该中断线上有两个注册的驱动程序（这表示我们有一个共享中断线）：i8042 初始驱动程序和我们的驱动程序。
+编译、复制并加载模块到内核中。通过查看 _/proc/interrupts_，检查中断线是否已注册。从源代码中确定 IRQ 号码（参见 I8042_KBD_IRQ）并验证该中断线上有两个注册的驱动程序（这表示我们有一个共享中断线）：i8042 初始驱动程序和我们的驱动程序。
 
 在例程内部打印一条消息，以确保它被调用。将模块编译并重新加载到内核中。使用 **dmesg** 检查在虚拟机上按键时是否调用了中断处理例程。还要注意，当使用串口时不会触发键盘中断。
-
-
 
 那么也就是糊代码的一个过程，我们需要在 init 的时候注册中断，然后在中断处理程序中法案回一个 IRQ_NONE 以移交其它键盘处理。
 
@@ -3556,8 +3443,6 @@ root@qemux86:~/skels/interrupts# cat /proc/interrupts
 
 可以看到我们的 kbd 已经在上面了。
 
-
-
 ### 3. 将 ASCII 键存储到缓冲区[¶](https://linux-kernel-labs-zh.xyz/labs/interrupts.html#ascii)
 
 接下来，我们希望收集按键的输入到缓冲区里，并将其内容发送到用户空间。为此，我们将在中断处理中添加以下内容：
@@ -3591,8 +3476,6 @@ pr_info("IRQ:% d, scancode = 0x%x (%u,%c)\n",
 
 请注意，扫描码（读取的寄存器的值）不是按下键的 ASCII 字符。我们需要理解扫描码。
 
-
-
 与之前不同的，我们打开 XLaunch，然后使用 --allow-gui 运行。编译后，我们也使用 `make gui` 来打开，因为串口不会触发中断。
 
 ```c
@@ -3621,7 +3504,7 @@ irqreturn_t kbd_interrupt_handler(int irq_no, void *dev_id) {
 }
 ```
 
-![image-20240726185825523](https://cdn.ova.moe/img/image-20240726185825523.png)
+![image-20240726185825523](https://oss.nova.gal/img/image-20240726185825523.png)
 
 可以看到，此时按下就有响应了，666
 
@@ -3666,8 +3549,6 @@ irqreturn_t kbd_interrupt_handler(int irq_no, void *dev_id) {
 
 在中断处理程序中，先检查扫描码以确定按键是按下还是释放，然后确定相应的 ASCII 字符。
 
-
-
 :::tip
 
 要检查按下/释放，请使用 `is_key_press()` 函数。使用 `get_ascii()` 函数获取相应的 ASCII 码。这两个函数都以扫描码作为参数。
@@ -3682,7 +3563,7 @@ pr_info("IRQ %d: scancode=0x%x (%u) pressed=%d ch=%c\n",
         irq_no, scancode, scancode, pressed, ch);
 ```
 
-其中，scancode 是数据寄存器的值，ch 是 get_ascii() 函数返回的值。 
+其中，scancode 是数据寄存器的值，ch 是 get_ascii() 函数返回的值。
 
 :::
 
@@ -3696,8 +3577,6 @@ pr_info("IRQ %d: scancode=0x%x (%u) pressed=%d ch=%c\n",
         irq_no, scancode, scancode, ch);
 	}
 ```
-
-
 
 #### 将字符存储到缓冲区[¶](https://linux-kernel-labs-zh.xyz/labs/interrupts.html#section-19)
 
@@ -3727,8 +3606,6 @@ struct kbd *data = (struct kbd *) dev_id;
 
 :::
 
-
-
 需要加一个自旋锁，大概是这样的
 
 ```c
@@ -3757,7 +3634,7 @@ irqreturn_t kbd_interrupt_handler(int irq_no, void *dev_id) {
 		put_char((struct kbd *) dev_id, ch);
 		spin_unlock(&((struct kbd *) dev_id)->lock);
 	}
-	
+
 	return IRQ_NONE;
 
 }
@@ -3787,7 +3664,7 @@ static int kbd_init(void)
 
 ### 4. 读取缓冲区[¶](https://linux-kernel-labs-zh.xyz/labs/interrupts.html#section-20)
 
-为了访问键盘记录器的数据，我们需要将其发送到用户空间。我们将使用 */dev/kbd* 字符设备来实现这一点。当从该设备读取数据时，我们将从内核空间的缓冲区中获取按键数据。
+为了访问键盘记录器的数据，我们需要将其发送到用户空间。我们将使用 _/dev/kbd_ 字符设备来实现这一点。当从该设备读取数据时，我们将从内核空间的缓冲区中获取按键数据。
 
 在这一步中，请按照 `kbd_read()` 函数中标有 **TODO 4** 的部分进行操作。
 
@@ -3817,7 +3694,7 @@ static int kbd_init(void)
 
 :::
 
-要进行测试，你需要在读取之前使用 mknod 创建 */dev/kbd* 字符设备驱动程序。设备的主设备号和次设备号定义为 `KBD_MAJOR` 和 `KBD_MINOR`：
+要进行测试，你需要在读取之前使用 mknod 创建 _/dev/kbd_ 字符设备驱动程序。设备的主设备号和次设备号定义为 `KBD_MAJOR` 和 `KBD_MINOR`：
 
 ```c
 mknod /dev/kbd c 42 0
@@ -3828,8 +3705,6 @@ mknod /dev/kbd c 42 0
 ```bash
 cat /dev/kbd
 ```
-
-
 
 读取的时候我们需要关中断说是。
 
@@ -3854,7 +3729,7 @@ static ssize_t kbd_read(struct file *file,  char __user *user_buffer,
 	/* TODO 4: read data from buffer */
 	unsigned long flags;
 
-	
+
 	while (read < size) {
 		char c;
 		spin_lock_irqsave(&data->lock, flags);
@@ -3875,15 +3750,13 @@ static ssize_t kbd_read(struct file *file,  char __user *user_buffer,
 
 修修补补，谈笑风生间写了一堆有问题的（例如没有错误检查，没有 kfree 等等，还写出了 off-by-null 的），最后留下一个每次都 copy_to_user 的，至少可以用嘛。
 
-![image-20240726233116401](https://cdn.ova.moe/img/image-20240726233116401.png)
-
-
+![image-20240726233116401](https://oss.nova.gal/img/image-20240726233116401.png)
 
 ### 5. 重置缓冲区[¶](https://linux-kernel-labs-zh.xyz/labs/interrupts.html#section-21)
 
 如果对设备进行写操作，则重置缓冲区。在这一步中，请按照骨架中标有 **TODO 5** 的部分进行操作。
 
-实现 `reset_buffer()` 并将写操作添加到 *kbd_fops* 中。
+实现 `reset_buffer()` 并将写操作添加到 _kbd_fops_ 中。
 
 :::info
 
@@ -3892,8 +3765,6 @@ static ssize_t kbd_read(struct file *file,  char __user *user_buffer,
 请参阅 [锁定](https://linux-kernel-labs-zh.xyz/labs/interrupts.html#section-7) 部分。
 
 :::
-
-
 
 没懂，这个。
 
@@ -3915,7 +3786,7 @@ static ssize_t kdb_write(struct file *file, const char __user *user_buffer, size
 	spin_lock_irqsave(&data->lock, flags);
 	reset_buffer(data);
 	spin_unlock_irqrestore(&data->lock, flags);
-    
+
     return 0;
 
 }
@@ -3929,4 +3800,3 @@ static const struct file_operations kbd_fops = {
 	.write = kdb_write
 };
 ```
-

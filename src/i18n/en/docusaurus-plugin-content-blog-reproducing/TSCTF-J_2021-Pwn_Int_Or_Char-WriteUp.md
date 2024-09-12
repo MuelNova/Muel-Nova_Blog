@@ -1,7 +1,7 @@
 ---
 title: "TSCTF-J_2021 Pwn - Int_Or_Char WriteUp"
 date: 2021-10-30
-tags: ['TSCTF-J_2021', 'Pwn', 'writeup', 'wp']
+tags: ["TSCTF-J_2021", "Pwn", "writeup", "wp"]
 authors: [nova]
 ---
 
@@ -11,7 +11,7 @@ authors: [nova]
 
 Using `checksec` to check the file, it is found that NX and PIE are not enabled, so consider ret2text and ret2shellcode preliminarily.
 
-![checksec](https://cdn.ova.moe/img/image-20211025175327904.png)
+![checksec](https://oss.nova.gal/img/image-20211025175327904.png)
 
 <!--truncate-->
 
@@ -74,7 +74,7 @@ Here, we are required to have a length `a1 > 3 && a1 <= 8`. If so, we cannot con
 > overflow
 > ```
 
-Returning to our problem, our `v2` is an `unsigned __int8` variable, meaning its value range is from `0 to 255`. If we pass a data length of *256*, the value of `v2` actually becomes *1* (255 + 1), so the length we pass can be from *(255+4)* to *(255+8)*, which is *259-263* characters.
+Returning to our problem, our `v2` is an `unsigned __int8` variable, meaning its value range is from `0 to 255`. If we pass a data length of _256_, the value of `v2` actually becomes _1_ (255 + 1), so the length we pass can be from _(255+4)_ to _(255+8)_, which is _259-263_ characters.
 
 With the character length check bypassed, what should we do next to exploit this vulnerability?
 
@@ -86,7 +86,7 @@ This is the prototype of `strcpy`, which means the content of `src` will be copi
 
 We take a look at the stack here.
 
-[Mark's explanation](https://cdn.ova.moe/img/image-20211025192651649.png) from the image reveals that due to NX not being enabled, our buffer is **executable**, giving us the condition to use a `shellcode`. As we do not have any system call functions in place, we must craft our own shellcode.
+[Mark's explanation](https://oss.nova.gal/img/image-20211025192651649.png) from the image reveals that due to NX not being enabled, our buffer is **executable**, giving us the condition to use a `shellcode`. As we do not have any system call functions in place, we must craft our own shellcode.
 
 ```python
 from pwn import *
@@ -111,7 +111,7 @@ p.interactive()
 
 ### Personal Summary
 
-Though the implementation of the integer overflow was relatively quick, it took quite a while to figure out how to run the shellcode (due to the need to overwrite rbp after reaching the bottom of the stack, which I completely didn't understand before). 
+Though the implementation of the integer overflow was relatively quick, it took quite a while to figure out how to run the shellcode (due to the need to overwrite rbp after reaching the bottom of the stack, which I completely didn't understand before).
 
 Pwn is indeed fascinating.
 

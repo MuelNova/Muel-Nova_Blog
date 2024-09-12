@@ -33,6 +33,6 @@ Exploit script (not suitable for remote, using local libc 2.35):
 
 [Translated Python script...]
 
-![image-20230623124315352](https://cdn.ova.moe/img/image-20230623124315352.png)
+![image-20230623124315352](https://oss.nova.gal/img/image-20230623124315352.png)
 
 <!-- AI -->

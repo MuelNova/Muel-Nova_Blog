@@ -1,8 +1,7 @@
 ---
-
 title: 「PWN」【DASCTF2023 二进制专场 六月】Writeup WP 复现
 
-tags: ['CTF', 'Pwn', 'writeup', 'wp']
+tags: ["CTF", "Pwn", "writeup", "wp"]
 
 authors: [nova]
 ---
@@ -38,7 +37,7 @@ authors: [nova]
 
   设置 gdb `set scheduler-locking step`即可
 
-![image-20230623124315352](https://cdn.ova.moe/img/image-20230623124315352.png)
+![image-20230623124315352](https://oss.nova.gal/img/image-20230623124315352.png)
 
 exp（不适用于远程，本地 2.35 的 libc）
 
@@ -95,4 +94,3 @@ payload = payload.ljust(0x40, b'\x00') + p64(stack - 8) + p64(leave_ret)
 sh.send(payload)
 sh.interactive()
 ```
-

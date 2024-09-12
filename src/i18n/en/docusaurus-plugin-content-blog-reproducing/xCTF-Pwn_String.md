@@ -1,7 +1,7 @@
 ---
 title: "Pwn String WriteUp in 'Attack and Defense World'"
 date: 2021-12-30
-tags: ['CTF', 'Pwn', 'writeup', 'wp']
+tags: ["CTF", "Pwn", "writeup", "wp"]
 authors: [nova]
 ---
 
@@ -17,31 +17,31 @@ After a few days of ~~not-so-systematic three days of fishing and two days of dr
 
 <!--truncate-->
 
-
 ## Let's Go
 
 ### Analysis
-![exeinfope](https://cdn.ova.moe/img/image-20211101153717286.png)
 
-![checksec](https://cdn.ova.moe/img/image-20211101153833049.png)
+![exeinfope](https://oss.nova.gal/img/image-20211101153717286.png)
+
+![checksec](https://oss.nova.gal/img/image-20211101153833049.png)
 
 In summary, let's do a quick scan. There is no PIE in 64-bit.
 
 Let's first look at the main function.
 
-![main](https://cdn.ova.moe/img/image-20211101153942250.png)
+![main](https://oss.nova.gal/img/image-20211101153942250.png)
 
 v4 allocates memory of **8 bytes** to store the data `68, 85`, and then it prints out the addresses of these two data.
 
 Let's dive into `sub_400D72()`.
 
-![sub_400D72()](https://cdn.ova.moe/img/image-20211101154214749.png)
+![sub_400D72()](https://oss.nova.gal/img/image-20211101154214749.png)
 
 It asks us for a name, but the length of the input for 's' is checked, so no buffer overflow seems possible.
 
 Let's continue to check the other functions. First, it's `sub_400A7D()`.
 
-![sub_400A7D()](https://cdn.ova.moe/img/image-20211101154750528.png)
+![sub_400A7D()](https://oss.nova.gal/img/image-20211101154750528.png)
 
 > As a side note for improving English skills, let's translate this(?):
 >
@@ -53,15 +53,15 @@ Let's continue to check the other functions. First, it's `sub_400A7D()`.
 
 So, we are given the choice to go `east` or `up`, but looking at the code below, it seems we can only choose `east` (choosing `up` will lead you to an endless pit). Let's move on to `sub_400BB9()`.
 
-![sub_400BB9()](https://cdn.ova.moe/img/image-20211101173616709.png)
+![sub_400BB9()](https://oss.nova.gal/img/image-20211101173616709.png)
 
 Here, it mentions `address`, which easily connects to our earlier `v4`. It seems we need to manipulate v2 and the format string, but the exact operation is not clear yet. Let’s continue with `sub_400CA6()`.
 
-![sub_400CA6()](https://cdn.ova.moe/img/image-20211101174119436.png)
+![sub_400CA6()](https://oss.nova.gal/img/image-20211101174119436.png)
 
 This 'a1' is actually our initial v4, so we need to make `*v4 = v4[1]`.
 
-Pay attention to `((void (__fastcall *)(_QWORD))v1)(0LL);`, this line converts v1 into an executable function (void as return type, __fastcall as a calling convention), meaning we can now inject shellcode. 
+Pay attention to `((void (__fastcall *)(_QWORD))v1)(0LL);`, this line converts v1 into an executable function (void as return type, \_\_fastcall as a calling convention), meaning we can now inject shellcode.
 
 ### Payload
 
@@ -69,7 +69,7 @@ The next step is how to achieve it.
 
 Let’s write the first few fixed steps:
 
-![exp_01](https://cdn.ova.moe/img/image-20211102105044906.png)
+![exp_01](https://oss.nova.gal/img/image-20211102105044906.png)
 
 Now, we need to introduce the format string vulnerability, [learn more](https://ctf-wiki.org/pwn/linux/user-mode/fmtstr/fmtstr-intro/).
 
@@ -79,15 +79,15 @@ We need to find the position of v4 in the stack and craft our payload accordingl
 payload = 'AAAA'+'.%x'*10
 ```
 
-![addr_info](https://cdn.ova.moe/img/image-20211102105300535.png)
+![addr_info](https://oss.nova.gal/img/image-20211102105300535.png)
 
-We see that our `41414141` is in the eighth position on the stack, and the v4_addr we wrote is in the previous position. At this point, we can craft a payload to make *v4=85:
+We see that our `41414141` is in the eighth position on the stack, and the v4_addr we wrote is in the previous position. At this point, we can craft a payload to make \*v4=85:
 
 ```python
 payload = '%85c%7$n'
 ```
 
-![return_0](https://cdn.ova.moe/img/image-20211102105850378.png)
+![return_0](https://oss.nova.gal/img/image-20211102105850378.png)
 
 Now we have satisfied the conditions in `sub_400CA6()`, so we just need to inject a shellcode to get a shell.
 

@@ -4,10 +4,7 @@ date: 2022-12-31
 description: 从迭代器开始，一步一步进阶到 AsyncIO
 tags: [Python, investigate]
 authors: [nova]
-
 ---
-
-
 
 一直在用 `AsyncIO`在 `Python`里使用异步编程，但是从来没想过为什么，借这个机会浅浅搞一搞 `AsyncIO`
 
@@ -69,8 +66,6 @@ show_diff(*iterable)
 # {'__iter__'}
 ```
 
-
-
 ## 迭代器（`Iterator`）
 
 在 Python 中，诸如 `__iter__` 这样的魔术方法都有相对应的调用方法，也就是 `iter()`
@@ -100,7 +95,7 @@ for i in iterable:
 
 可以看到，相比于 `Iterable` 多了一个 `__next__` 方法，从名字也能看出来，这便是用于在下一次迭代中返回数据的接口。
 
-![Iterator](https://cdn.ova.moe/img/image-20220825212925388.png)
+![Iterator](https://oss.nova.gal/img/image-20220825212925388.png)
 
 我们下断点查看，发现 `list_iterator` 的 `__iter__` 显然是返回了它本身，而 `__next__` 则会返回数据（在这里应该是 `'This'`，但由于它再运行了一次 `__iter__` 所以变成了下一个 `'Is'）
 
@@ -133,8 +128,6 @@ for i in MyIterator(things):  # -> i = iter(MyIterator(things)) && i = next(i)
     print(i)
 ```
 
-
-
 ## 二者之间
 
 回到我们最开始的 `Iterable`，我们说有 `非容器` 型的 `Iterable`，事实上，这些就是直接构建了我们的 `Iterator`
@@ -145,24 +138,22 @@ for i in MyIterator(things):  # -> i = iter(MyIterator(things)) && i = next(i)
 >
 > ```python
 > import random
-> 
-> 
+>
+>
 > class Random:
 >  def __iter__(self):
 >      return self
-> 
+>
 >  def __next__(self):
 >      return random.random()
-> 
-> 
+>
+>
 > for i in Random():
 >  print(i)
-> 
+>
 > ```
 >
 > 这个程序不会自己停下来！因为它一直在实时的动态生成数据，而且不占用内存空间！（这实际上就是我们接下来要讨论的 `Generator`）
-
-
 
 ## 生成器（`Generator`）
 
@@ -173,7 +164,7 @@ def my_generator_function():
     return 0
     yield "HI"
 
-    
+
 my_generator = my_generator_function()
 print(my_generator)
 
@@ -191,11 +182,11 @@ assert my_generator is iter(my_generator)
 assert hasattr(my_generator, "__next__") and hasattr(my_generator, "__iter__")
 ```
 
-也就是说，`Generator` 实际上只是一个函数版本的 `Iterator`，唯一的不同是  `next(Generator)` 是由 `yield` 来控制的。
+也就是说，`Generator` 实际上只是一个函数版本的 `Iterator`，唯一的不同是 `next(Generator)` 是由 `yield` 来控制的。
 
 接下来我们重点关注 `yield` 这个表达式
 
-![test_yield_0](https://cdn.ova.moe/img/image-20220825220913423.png)
+![test_yield_0](https://oss.nova.gal/img/image-20220825220913423.png)
 
 从图中我们可以发现，第一次执行 `next(my_generator)` 时，函数执行到了 `yield 1` 便被 `挂起`，等到下一次的 `next(my_generator)` 后才会执行接下来的代码块。
 
@@ -210,17 +201,13 @@ def count(start: int = 0, step: int = 1):
 
 在第一次 `__next__` 执行时，直接 `yield start`
 
-此后，每次执行都会先执行 `yield`  下面的代码块 `start += step`，并重新执行循环，再次 `yield start`
-
-
+此后，每次执行都会先执行 `yield` 下面的代码块 `start += step`，并重新执行循环，再次 `yield start`
 
 我们继续来看一开始的例子。
 
 在遇到 `return` 后，`next(my_generator)` 则直接抛出了 `StopIteration` 的异常（且 `StopIteration.value` 就是我们 return 的值），且 `return` 之后的代码块不再执行（哪怕你处理了 `#line:28` 的错误执行到了 `#line:29` 也仍会抛出 `StopIteration`）
 
-![test_yield_1](https://cdn.ova.moe/img/image-20220825220957420.png)
-
-
+![test_yield_1](https://oss.nova.gal/img/image-20220825220957420.png)
 
 此时，我们可以将我们的 `MyIterator` 对象重写成 `Generator` 形式
 
@@ -254,30 +241,26 @@ for i in ge:  # 需要注意的是, `ge` 本身并非迭代器, 只有 `iter(ge)
 ```python
 def foo():
     ...
-    
+
 
 print(foo.__code__)
 ```
 
 如上的代码打印了 `foo()` 函数的代码对象，代码对象保存了函数的一些静态信息。
 
-![code_obj](https://cdn.ova.moe/img/image-20220825223328598.png)
+![code_obj](https://oss.nova.gal/img/image-20220825223328598.png)
 
 ## 帧对象
 
-![frame_obj](https://cdn.ova.moe/img/image-20220825223517564.png)
+![frame_obj](https://oss.nova.gal/img/image-20220825223517564.png)
 
 使用 `inspect` 返回当前 `frame`，需要注意的是一般情况下函数运行完毕 `frame` 就会自动销毁，因此我们使用变量保存。
 
 可以看到，`frame` 保存了函数运行时的一些状态，其中就有我们特别要关注的 `stack`
 
+你可以预想到的，正常的函数执行是一个 `先进后出` 的 _栈_ 结构，在这里不做进一步的解释。（详情请去看 _C 语言函数调用栈_）
 
-
-你可以预想到的，正常的函数执行是一个 `先进后出` 的 *栈* 结构，在这里不做进一步的解释。（详情请去看 *C 语言函数调用栈*）
-
-![function_stack](https://cdn.ova.moe/img/image-20220825225721661.png)
-
-
+![function_stack](https://oss.nova.gal/img/image-20220825225721661.png)
 
 而 `Generator` 不同，它自带了一个帧，每次调用 `__next__` 时都会使用这个帧。换句话说，每次这个帧都会执行出栈入栈操作。
 
@@ -289,7 +272,7 @@ print(foo.__code__)
 def generator():
     ...
     yield ...
-    
+
 def a():
     m = generator()
     b(m)
@@ -304,13 +287,9 @@ def c(g):
 a()
 ```
 
-
-
-![generator_stack](https://cdn.ova.moe/img/image-20220825230136192.png)
+![generator_stack](https://oss.nova.gal/img/image-20220825230136192.png)
 
 > 这部分可能有点难理解，推荐是用自己下断点调一调啃一下。
-
-
 
 ## 同步和异步
 
@@ -344,7 +323,7 @@ def generator_func_2():
     yield  # step2
     ...
     yield  # step3
-    
+
 tasks = []
 a = generator_func_1()
 b = generator_func_2()
@@ -364,8 +343,6 @@ def runner():
 > 对于迭代器，我们关注的重点是 **`yield` 返回的数据**
 >
 > 对于协程，我们关注的重点是**`yield` 前执行的业务代码**
-
-
 
 # 深入浅出 `yield from`
 
@@ -409,12 +386,12 @@ next(g)  # 2
 >  print(my_yield)
 > ```
 
-不过值得注意的是，在生成器未运行时，第一个 `generator.send()` 的参数必须是 `None`，否则它会抛出一个 `TypeError`，这是显然的，因为你无法在一个刚运行的生成器里找到一个可赋值的 `yield` 
+不过值得注意的是，在生成器未运行时，第一个 `generator.send()` 的参数必须是 `None`，否则它会抛出一个 `TypeError`，这是显然的，因为你无法在一个刚运行的生成器里找到一个可赋值的 `yield`
 
->    ```python
->    g.send(1)  # 1
->    # TypeError: can't send non-None value to a just-started generator
->    ```
+> ```python
+> g.send(1)  # 1
+> # TypeError: can't send non-None value to a just-started generator
+> ```
 
 ### 优先级
 
@@ -436,7 +413,7 @@ g.send(1)
 """
 ```
 
-`yield` 仍会保留其作为 `yield` 的特性，即 *返回 `yield` 后的语句*
+`yield` 仍会保留其作为 `yield` 的特性，即 _返回 `yield` 后的语句_
 
 也就是说，当我们执行第一次 `g.send(None)` 时，`yield` 会返回 `+ 1` 这个表达式
 
@@ -462,13 +439,11 @@ None
 """
 ```
 
-### `generator.close()` 和  `generator.throw()`
+### `generator.close()` 和 `generator.throw()`
 
 没什么好说的，`close`增加了一个方法让我们人为可控的结束 `generator` ，`throw` 则增加了一个方法让我们向 `generator` 内部抛出异常。它们会向生成器内部对应的 `yield` （与 `generator.send()` 同样的 `yield` 表达式）抛出一个 `GeneratorExit` / 自定义的异常，可以用于执行一些资源释放等的工作。
 
 除了显式调用 `generator.close()` 外，在 `Python` 执行隐式的内存释放（`del`, 程序退出等等）的时候，也会调用这个 `close` 方法
-
-
 
 最后，我们通过一个例子来体会一哈 `yield` 表达式的作用
 
@@ -487,15 +462,13 @@ def calc_average():
             total += val
             count += 1
             average = total / count
-            
+
 g = calc_average()
 g.send(None)  # 0
 g.send(1)  # 1.0
 g.send(9)  # 5.0
 ...
 ```
-
-
 
 ## `yield from`
 
@@ -504,7 +477,7 @@ RESULT = yield from EXPR  # EXPR must be Iterable
 
 # 等价于（省略了部分代码好针对协程）
 
-_i = iter(EXPR)	
+_i = iter(EXPR)
 try:
     _y = _i.send(None)  # Prime, 预激
 except StopIteration as _e:
@@ -528,7 +501,7 @@ else:
         except StopIteration as _e:
             _r = _e.value
             break
-            
+
 RESULT = _r  # 最后的结果
 ```
 
@@ -537,12 +510,12 @@ RESULT = _r  # 最后的结果
 因此，我们还可以再简化为：
 
 ```python
-_i = iter(EXPR)	
+_i = iter(EXPR)
 while True:
 	try:
     	_y = _i.send(None)
 	except StopIteration as _e:
-    	_r = _e.value 
+    	_r = _e.value
 	else:
         try:
             yield _y  # 把结果原样 yield 出去
@@ -556,7 +529,7 @@ while True:
             except StopIteration as _e:
                 _r = _e.value
                 break
-                
+
 RESULT = _r  # 最后的结果
 ```
 
@@ -589,7 +562,7 @@ def task():
 
 def main_step():
     print("         SmallStep(s)...")
-    
+
     small_result = small_step()
     ...  # There could be more steps
 
@@ -678,7 +651,7 @@ def main_step():
     print("         SmallStep(s)...")
 
     small_result = yield from small_step()
-    
+
     print(f"         SmallStep(s) Finished with result {small_result}")
     return small_result * 100
 ```
@@ -719,7 +692,7 @@ class YieldIterable:
         yield self.obj
 ```
 
-此时，我们的 `small_step` 和 `main_step` 都已经 *协程化* ，只剩下一个 `task`。对比代码我们可以发现，事实上我们的 `task` 内的代码已经很接近 `yield from` 的形式。
+此时，我们的 `small_step` 和 `main_step` 都已经 _协程化_ ，只剩下一个 `task`。对比代码我们可以发现，事实上我们的 `task` 内的代码已经很接近 `yield from` 的形式。
 
 ```python
 def task():
@@ -839,7 +812,7 @@ class Awaitable:
 
     def __await__(self):
         yield self
-        
+
 class Task:
     def __init__(self, _task):
         self.coro = _task
@@ -895,19 +868,19 @@ t.run()
 class Event:
     def __init__(self):
         self._queue = collections.deque()
-        
+
     def call_soon(self, callback, *args, **kwargs):
         self._queue.append((callback, args, kwargs))
 ```
 
-接下来我们添加定时任务。由于定时任务的特殊性，我们使用 *堆* 来储存。这里，利用 `heapq` 来操作。
+接下来我们添加定时任务。由于定时任务的特殊性，我们使用 _堆_ 来储存。这里，利用 `heapq` 来操作。
 
 ```python
 class Event:
     def __init__(self):
         self._queue = collections.deque()
         self._scheduled = []
-    
+
     def call_soon(self, callback, *args, **kwargs):
         self._queue.append((callback, args, kwargs))
 
@@ -1005,7 +978,7 @@ loop.call_later(1.1, loop.stop)  # random() 只会出现 0 ~ 1 之间的
 loop.run_forever()
 ```
 
-现在，我们试试多任务实现，并通过一些参数来实际的展示 *异步* 的效果。
+现在，我们试试多任务实现，并通过一些参数来实际的展示 _异步_ 的效果。
 
 ```python
 import collections
@@ -1128,7 +1101,7 @@ print(f"total: {total}")
 
 ```
 
-![image-20220830143812689](https://cdn.ova.moe/img/image-20220830143812689.png)
+![image-20220830143812689](https://oss.nova.gal/img/image-20220830143812689.png)
 
 可以看到，我们正常运行这么多任务需要的时间应该是 `509.3s`，但是由于多任务的调度实现的并发执行，我们实际上在 `1s` 以内便运行完成了这所有的 1000 个任务。
 
@@ -1151,13 +1124,13 @@ class Future:
     def __init__(self):
         self._result = None
         self._done = False
-    
+
     def set_result(self, result):
         if self._done:
             raise RuntimeError()  # 不允许的操作
         self._result = result
         self._done = True
-    
+
     @property
     def result(self):
         if self._done:
@@ -1214,7 +1187,7 @@ class Future:
     def __await__(self):
         yield self
         return self.result  # result = await fut 会获取这个值
-    
+
 class Task:
     def __init__(self, _task):
         self.coro = _task
@@ -1427,4 +1400,3 @@ loop.run_forever()
 print(time.time() - t1, blocked)
 
 ```
-

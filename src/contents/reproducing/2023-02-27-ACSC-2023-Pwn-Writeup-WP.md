@@ -1,7 +1,7 @@
 ---
 title: 「PWN」【ACSC 2023】Writeup WP 复现
 authors: [nova]
-tags: ['CTF', 'Pwn', 'writeup', 'wp']
+tags: ["CTF", "Pwn", "writeup", "wp"]
 ---
 
 This is an individual competition, but I have already forgot things for Web or Rev, let along Crypto. Meanwhile, we can not solve the hard challenges, so uh-hum, let's just say I'm not participate for the sake of the ranks LOL
@@ -10,9 +10,9 @@ This is an individual competition, but I have already forgot things for Web or R
 
 ## Vaccine
 
-The program uses a `scanf` to receive our input, therefore we have no length limit, and we can just modify *s* to be the same as *s2*.
+The program uses a `scanf` to receive our input, therefore we have no length limit, and we can just modify _s_ to be the same as _s2_.
 
-![image-20230227192106762](https://cdn.ova.moe/img/image-20230227192106762.png)
+![image-20230227192106762](https://oss.nova.gal/img/image-20230227192106762.png)
 
 Then, we'll be able to leak the libc_address and ret2libc by simply doing a stack overflow and changing the return address.
 
@@ -62,8 +62,6 @@ sh.sendline(asm(shellcraft.sh()))
 sh.interactive()
 ```
 
-
-
 ## Evalbox
 
 This is a really interesting challenge.
@@ -85,8 +83,6 @@ In `Dockerfile`, we know that we should first get the filename of the flag.
 
 At first I though it might be some differences between `seccomp.so` and [seccomp.pyx](https://github.com/seccomp/libseccomp/blob/main/src/python/seccomp.pyx). So I tried to compile this `.pyx` file and try using bindiff between this two files, but I failed :(
 
-
-
 But there's actually many ways to bypass this jail.
 
 ### solve 1
@@ -101,8 +97,6 @@ let's just shorten it with only one line.
 print(os:=__import__('os'), d:=os.scandir(os.open(".", 0)), f:=open(next(filter(lambda x: x.name.startswith("flag"), d))), f.read(), sep='\n\n')
 ```
 
-
-
 ### solve2
 
 we can open `/proc/self/mem` and write shellcode on `.text` segment.
@@ -110,4 +104,3 @@ we can open `/proc/self/mem` and write shellcode on `.text` segment.
 ```
 print(os:=__import__('os'), f:=open('flag-31540753807ba7099ea27997ca43e280.txt', 'r'), f.read())
 ```
-

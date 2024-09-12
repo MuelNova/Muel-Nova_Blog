@@ -28,15 +28,15 @@ Press win+r and enter `virtmgmt.msc` to open the `Hyper-V Manager`, Microsoft re
 
 Follow these steps to create an external virtual switch:
 
-![image-20230603224458330](https://cdn.ova.moe/img/image-20230603224458330.png)
+![image-20230603224458330](https://oss.nova.gal/img/image-20230603224458330.png)
 
-![image-20230603225101822](https://cdn.ova.moe/img/image-20230603225101822.png)
+![image-20230603225101822](https://oss.nova.gal/img/image-20230603225101822.png)
 
 ## Modify WSL2 Configuration File
 
 I usually use the configuration file under `%USERPROFILE%`, but you can choose your own location. Here is what I do:
 
-![image-20230603224655913](https://cdn.ova.moe/img/image-20230603224655913.png)
+![image-20230603224655913](https://oss.nova.gal/img/image-20230603224655913.png)
 
 Add the following lines under `[wsl2]` in the `.wslconfig` file:
 
@@ -56,7 +56,7 @@ wsl --shutdown && wsl
 
 If everything goes well, you should now have WSL2 with a bridged network.
 
-![image-20230603230219190](https://cdn.ova.moe/img/image-20230603230219190.png)
+![image-20230603230219190](https://oss.nova.gal/img/image-20230603230219190.png)
 
 ## Some Issues
 

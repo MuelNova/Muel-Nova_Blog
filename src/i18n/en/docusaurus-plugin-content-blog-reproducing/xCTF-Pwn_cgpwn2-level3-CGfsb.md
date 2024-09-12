@@ -1,7 +1,7 @@
 ---
-title: "Pwn - cgpwn2 | level3 | CGfsb WriteUps" 
+title: "Pwn - cgpwn2 | level3 | CGfsb WriteUps"
 date: 2021-12-30
-tags: ['CTF', 'Pwn', 'writeup', 'wp']
+tags: ["CTF", "Pwn", "writeup", "wp"]
 authors: [nova]
 ---
 
@@ -21,11 +21,11 @@ Initially, I intended to write a detailed write-up for each question, but it see
 
 Directly check with checksec/ida.
 
-![https://cdn.ova.moe/img/image-20211112104246870.png](https://cdn.ova.moe/img/image-20211112104246870.png)
+![https://oss.nova.gal/img/image-20211112104246870.png](https://oss.nova.gal/img/image-20211112104246870.png)
 
-![https://cdn.ova.moe/img/image-20211112105108027.png](https://cdn.ova.moe/img/image-20211112105108027.png)
+![https://oss.nova.gal/img/image-20211112105108027.png](https://oss.nova.gal/img/image-20211112105108027.png)
 
-![https://cdn.ova.moe/img/image-20211112112126099.png](https://cdn.ova.moe/img/image-20211112112126099.png)
+![https://oss.nova.gal/img/image-20211112112126099.png](https://oss.nova.gal/img/image-20211112112126099.png)
 
 The intention of this challenge is quite clear: input the command ("/bin/sh") through the first `gets`, cause overflow in the second `gets`, and then call the `system` function.
 
@@ -66,9 +66,9 @@ After downloading, there is a gzipped file which contains both a `.so` file and 
 
 As usual, let's check with checksec (for some reason, symbolic links don't seem to work, it's frustrating me).
 
-![https://cdn.ova.moe/img/image-20211112114145579.png](https://cdn.ova.moe/img/image-20211112114145579.png)
+![https://oss.nova.gal/img/image-20211112114145579.png](https://oss.nova.gal/img/image-20211112114145579.png)
 
-![https://cdn.ova.moe/img/image-20211112140131570.png](https://cdn.ova.moe/img/image-20211112140131570.png)
+![https://oss.nova.gal/img/image-20211112140131570.png](https://oss.nova.gal/img/image-20211112140131570.png)
 
 First, the exploit:
 
@@ -133,7 +133,7 @@ The program runs to the `read()` function again, making it easy to overwrite a `
 
 ### **CGfsb**
 
-![https://cdn.ova.moe/img/image-20211112141233440.png](https://cdn.ova.moe/img/image-20211112141233440.png)
+![https://oss.nova.gal/img/image-20211112141233440.png](https://oss.nova.gal/img/image-20211112141233440.png)
 
 Clearly a FormatString challenge.
 
@@ -154,7 +154,7 @@ r.recvuntil("is:\\n")
 print(r.recv())
 ```
 
-![https://cdn.ova.moe/img/image-20211112142129570.png](https://cdn.ova.moe/img/image-20211112142129570.png)
+![https://oss.nova.gal/img/image-20211112142129570.png](https://oss.nova.gal/img/image-20211112142129570.png)
 
 We can see `41414141` is at the tenth argument position. So, we just need to write the address of `pwnme` and use `%n` to write 8 to it.
 

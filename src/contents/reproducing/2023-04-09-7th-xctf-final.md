@@ -1,8 +1,7 @@
 ---
 title: 「PWN」【XCTF-final 7th】 Pwn Writeup WP 复现
 authors: [nova]
-tags: ['CTF', 'Pwn', 'writeup', 'wp']
-
+tags: ["CTF", "Pwn", "writeup", "wp"]
 ---
 
 import Link from '@docusaurus/Link';
@@ -24,32 +23,32 @@ Misc Pwn，在 Misc 分支里，有 6 解。
 
 ### 程序分析
 
-![image-20230409233807386](https://cdn.ova.moe/img/image-20230409233807386.png)
+![image-20230409233807386](https://oss.nova.gal/img/image-20230409233807386.png)
 
 首先可以分析一下逻辑：将 0~0x1000 这个内存权限改为 RWX，之后运行了这个内存的代码，所以推测要写 shellcode
 
-![image-20230409234142546](https://cdn.ova.moe/img/image-20230409234142546.png)
+![image-20230409234142546](https://oss.nova.gal/img/image-20230409234142546.png)
 
 在 `init_env` 里，将 name 填充了 160 个随机数，并且输出了前十个随机数。注意到 `seed` 只有 256，所以其实我们可以爆破出初始 seed，然后将 160 位 name 全部补齐
 
-![image-20230409234335295](https://cdn.ova.moe/img/image-20230409234335295.png)
+![image-20230409234335295](https://oss.nova.gal/img/image-20230409234335295.png)
 
-![image-20230409234421662](https://cdn.ova.moe/img/image-20230409234421662.png)
+![image-20230409234421662](https://oss.nova.gal/img/image-20230409234421662.png)
 
 观察 `getnumber` 函数，可以看到往 `buffer` 上读入了 0x14 个字节的内容，然而 `buffer` 大小为 0x10，正好可以溢出覆盖后面的 `seed`，但是有什么作用暂时不清楚。
 
-![image-20230409234626691](https://cdn.ova.moe/img/image-20230409234626691.png)
+![image-20230409234626691](https://oss.nova.gal/img/image-20230409234626691.png)
 
 在 `playgame` 函数里，又重设了随机数种子，这样的话在 `getnumber` 里就可以直接设置随机数种子，从而一定程度上可控。
 
-继续看  `playgame`，它改变了 name[i] 以及 name[i-1]、name[i+1] 三位，因此，我们可以思考这样的操作：
+继续看 `playgame`，它改变了 name[i] 以及 name[i-1]、name[i+1] 三位，因此，我们可以思考这样的操作：
 
 - 已知 name[i] = y，如果想要设置 name[i] 为特定值 x，我们可以通过指定 name[i+1]，设置特定的随机数种子，使其 `rand()%256` 为 `x-y`
 - 此时，name[i+1] 也会自增上另一个 `rand() % 256`， name[i+2] 也会自增。
 - 之后，我们可以如法炮制，指定 name[i+2] 来设置 name[i+1] 为特定值。
 - 最后，利用 n+1 个 name，我们可以控制 name[0, 1, ..., n] 的值，注意此时 n+2 也会改变。
 
-![image-20230409235536471](https://cdn.ova.moe/img/image-20230409235536471.png)
+![image-20230409235536471](https://oss.nova.gal/img/image-20230409235536471.png)
 
 让我们看它接下来的条件。首先，他要保证 name[i] 位于 47 和 122 之间，也就是说我们的 name 是需要可见的。当然，我们可以通过将 name[n] 设置为 0，来绕过它对后文的检查。
 
@@ -61,7 +60,7 @@ Misc Pwn，在 Misc 分支里，有 6 解。
 -----------------------------------------------------
 ```
 
-![image-20230410000029657](https://cdn.ova.moe/img/image-20230410000029657.png)
+![image-20230410000029657](https://oss.nova.gal/img/image-20230410000029657.png)
 
 最后就是 messstr()，估计很多队伍都卡在这里。简单来说它通过程序的 pid 作为随机数种子对 name 进行了置换。
 
@@ -71,11 +70,9 @@ Misc Pwn，在 Misc 分支里，有 6 解。
 
 问题就是：一般来说，当我们开启一个程序后，它的 PID 一般是变化的，如果要打的话，我们只能先获得一个 PID 的置换规则，然后通过爆破的方法，直到程序 PID 为我们设置的那个值，这样的爆破空间是非常大的，估计很多队伍也在这里犯了难。
 
-
-
 在编写 exp 爆破之前，我们恰巧查看了 Dockerfile
 
-![image-20230410000627857](https://cdn.ova.moe/img/image-20230410000627857.png)
+![image-20230410000627857](https://oss.nova.gal/img/image-20230410000627857.png)
 
 注意到它使用了 pwn.red/jail 这个镜像，在查阅后发现它是一个完全隔离的沙箱环境。此时我们开始思考：如果它是类似于开启子进程的方法，会不会 getpid() 获取的是他的父进程 pid 呢？这样在重复开启进程时，由于父进程没有被杀死，所以 pid 是不会变的。
 
@@ -96,19 +93,15 @@ int main(int argc, char const *argv[])
 
 在测试后，我们发现这个函数返回的值一直是 1，这样爆破的问题就迎刃而解了。
 
-
-
 最后的问题就是如何编写可见 shellcode。
 
-由于我们只有 157（最后三位要用于 0 绕过）个字节长，所以利用现成的可见 shellcode 拿 shell 是不成立的（它有 160+ 字节长）。所以我们的思路是，根据 [Alphanumeric shellcode - NetSec](https://nets.ec/Alphanumeric_shellcode)，生成一个 read 的 shellcode 读入大量字节（推测可能 rdx 不用设置，rax 也有可能不需要设置，所以会简化很多，但是后面发现其实都要设置haha）从而通过 nop 滑板滑到 getshell 的 shellcode 上去。
+由于我们只有 157（最后三位要用于 0 绕过）个字节长，所以利用现成的可见 shellcode 拿 shell 是不成立的（它有 160+ 字节长）。所以我们的思路是，根据 [Alphanumeric shellcode - NetSec](https://nets.ec/Alphanumeric_shellcode)，生成一个 read 的 shellcode 读入大量字节（推测可能 rdx 不用设置，rax 也有可能不需要设置，所以会简化很多，但是后面发现其实都要设置 haha）从而通过 nop 滑板滑到 getshell 的 shellcode 上去。
 
 :::info
 
 其实我们并没有手动编写 shellcode，而是利用[veritas501/ae64: basic amd64 alphanumeric shellcode encoder (github.com)](https://github.com/veritas501/ae64) 直接生成了 shellcode。感觉手写还是会很麻烦，但是有可能会更短一些？
 
 :::
-
-
 
 ### 脚本编写
 
@@ -117,8 +110,6 @@ int main(int argc, char const *argv[])
 在拿到 `gift` 之后，通过爆破 `0~255` 的随机数种子确定随机数，然后获取完整 name 保存备用。
 
 之后就是 name 的设置，这个当时写的比较丑陋，也没有优化，就将就着看吧（笑
-
-
 
 整体 exp 写的不是很满意，因为 name 涉及到数据类型，python 处理的并不是很好，用了 numpy 的 np.int8，但是没用太明白，效率有点低。
 
@@ -459,7 +450,7 @@ def generate_payload(wanted_payload: bytes, init_list: list) -> dict:
         print(i, payload)
     print(payload)
     return action_dict
-    
+
 
 def send_payload(payload: dict):
     for k, v in payload.items():
@@ -514,4 +505,3 @@ p.interactive()
 # print(len(k))
 # print(k)
 ```
-

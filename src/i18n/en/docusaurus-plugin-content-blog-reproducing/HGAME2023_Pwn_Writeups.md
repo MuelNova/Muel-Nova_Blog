@@ -34,15 +34,13 @@ Shellcode ORW, the program runs `mmap((void *)0xCAFE0000LL, 0x1000uLL, 7, 33, -1
 
 [exp](https://github.com/MuelNova/NovaNo1r-pwn-challenges/blob/main/HGame2023/week1/pwn/simple_shellcode/exp.py)
 
-
-
 ## Week 2
 
 ### YukkuriSay
 
 An interesting format string question with the format string on bss. Can leak stack address when Saying.
 
-![image-20230203153007716](https://cdn.ova.moe/img/image-20230203153007716.png)
+![image-20230203153007716](https://oss.nova.gal/img/image-20230203153007716.png)
 
 Then use the below format string to leak canary and libc base, change return address to `vuln` function, but without using the canary.
 
@@ -67,7 +65,7 @@ for i in payload_padding:
 
 print(hex(payload))
 # Can anyone really understand this, but can be reused, written quite well (laughs)
-``` 
+```
 
 ### editable_note
 
@@ -97,25 +95,23 @@ Utilize the concept of heap chunk overlap to modify tcache fd to `__free_hook`.
 
 > We first fill the 7 bin size 0x90
 >
-> | idx  | size | type            |
-> | ---- | ---- | --------------- |
-> | ...  | 0x90 | tcache_bin      |
-> | 7    | 0x90 | allocated_chunk |
-> | 8    | 0x90 | unsorted_bin    |
+> | idx | size | type            |
+> | --- | ---- | --------------- |
+> | ... | 0x90 | tcache_bin      |
+> | 7   | 0x90 | allocated_chunk |
+> | 8   | 0x90 | unsorted_bin    |
 >
-> At this point, when we free *7*, it will merge with *8* to form a new unsorted_bin
+> At this point, when we free _7_, it will merge with _8_ to form a new unsorted_bin
 >
 > If we take out a chunk of the same size again, it will take from the linked list of 0x90 tcache.
 >
-> Now, if we free *8* again, it will link to the 0x90 tcache list.
+> Now, if we free _8_ again, it will link to the 0x90 tcache list.
 >
-> Finally, when we take out a chunk >= 0xB0, it will start from the address of *7*, including what we need, which naturally includes parts of *8* such as `prev_size`, `size`, `fd`, `bk`, etc.
+> Finally, when we take out a chunk >= 0xB0, it will start from the address of _7_, including what we need, which naturally includes parts of _8_ such as `prev_size`, `size`, `fd`, `bk`, etc.
 
 I actually overcomplicated this (I thought it would still check if `notes[i]` exists like before, but after calculating I found it's not enough). Simply create a double_free in fastbin, then clear tcache to put fastbin into tcache and directly retrieve it.
 
 [exp](https://github.com/MuelNova/NovaNo1r-pwn-challenges/blob/main/HGame2023/week2/pwn/new_fast_note/exp.py)
-
-
 
 ## Week3
 
@@ -147,15 +143,13 @@ Similar to `global_max_fast`, once changed, proceed with the same steps as safe_
 
 Since `setcontext` now uses the rdx register, utilize a magic_gadget as well.
 
-``` assembly
+```assembly
 mov rdx, qword ptr [rdi + 8]
 mov qword ptr [rsp], rax
 call qword ptr [rdx + 0x20];
 ```
 
 [exp](https://github.com/MuelNova/NovaNo1r-pwn-challenges/blob/main/HGame2023/week3/pwn/note_context/exp.py)
-
-
 
 ## Week4
 

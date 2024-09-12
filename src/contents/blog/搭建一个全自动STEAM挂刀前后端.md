@@ -1,16 +1,15 @@
 ---
 title: 搭建一个全自动STEAM挂刀前后端
 date: 2022-12-30
-tags: [steam,investigate]
+tags: [steam, investigate]
 math: true
 authors: [nova]
-
 ---
 
 # Aims
 
 - [ ] 能够实时对饰品售出比例、求购比例做监控
-- [ ] 能够自动更改价格（涉及到STEAM令牌生成、交易确认等过程）
+- [ ] 能够自动更改价格（涉及到 STEAM 令牌生成、交易确认等过程）
 - [ ] 能够爬取低比例饰品
 - [ ] 能够对饰品做可视化管理
 - [ ] 能够对不同账户进行管理
@@ -18,7 +17,6 @@ authors: [nova]
 - [ ] ...
 
 <!--truncate-->
-
 
 # 后端
 
@@ -45,32 +43,31 @@ if __name__ == "__main__":
 
 ```
 
-## STEAM相关
+## STEAM 相关
 
 ### 登录
 
-~~作为初版，我打算直接使用cookie作为para进行登录操作，在后面的版本中可能会考虑迭代为账密形式~~
+~~作为初版，我打算直接使用 cookie 作为 para 进行登录操作，在后面的版本中可能会考虑迭代为账密形式~~
 
-要想实现steam的登录，首先就要抓相关请求。
+要想实现 steam 的登录，首先就要抓相关请求。
 
 #### 原理
 
-![抓没咯](https://cdn.ova.moe/img/image-20220307220607534.png)
+![抓没咯](https://oss.nova.gal/img/image-20220307220607534.png)
 
 1. 通过`getrsakey/`拿到了账户的`public_key`，`payload`里是`donotcache`项和`username`项
 
-
 其中，`donotcache`是`timestamp*1000`并舍弃小数部分，`username`就是明文的`Steam 账户名称`
 
-返回的json是形如
+返回的 json 是形如
 
 ```json
 {
-    "success":true,
-    "publickey_mod":"deadbeef0deadbeef0deadbeef",
-    "publickey_exp":"010001",
-    "timestamp":"216071450000",
-    "token_gid":"deadbeef0deadbee"
+  "success": true,
+  "publickey_mod": "deadbeef0deadbeef0deadbeef",
+  "publickey_exp": "010001",
+  "timestamp": "216071450000",
+  "token_gid": "deadbeef0deadbee"
 }
 ```
 
@@ -79,6 +76,7 @@ if __name__ == "__main__":
 给出了`modulus`和`exponent`，需要我们自己生成公钥并加密密码
 
 即
+
 $$
 c = m^e \pmod m
 $$
@@ -89,37 +87,35 @@ $$
 
 ```json
 {
-    "donotcache": 1646663656289,// 同上文时间戳
-	"password": "base64_encoded_encrypted_password", // 经过base64之后的rsa公钥加密的二进制数据
-	"username": "username", // 用户名
-	"twofactorcode": "Guard_Code", // 手机令牌
-	"emailauth": "", // 邮箱验证码
-	"captchagid": 4210307962151791925, // CaptchaGID, 由`do_login/`返回值 获取, 并在`https://steamcommunity.com/login/rendercaptcha/?gid=%captchagid%`处获取Captcha图片
-	"captcha_text": "th37yr", // Captcha验证码, 如果需要的话，与上项应同时存在
-	"rsatimestamp": 216071450000, // RSA过期时间，在`getrsakey/`中可以获取
-	"remember_login": true, // 保存登录信息（虽然我们不需要）
+  "donotcache": 1646663656289, // 同上文时间戳
+  "password": "base64_encoded_encrypted_password", // 经过base64之后的rsa公钥加密的二进制数据
+  "username": "username", // 用户名
+  "twofactorcode": "Guard_Code", // 手机令牌
+  "emailauth": "", // 邮箱验证码
+  "captchagid": 4210307962151791925, // CaptchaGID, 由`do_login/`返回值 获取, 并在`https://steamcommunity.com/login/rendercaptcha/?gid=%captchagid%`处获取Captcha图片
+  "captcha_text": "th37yr", // Captcha验证码, 如果需要的话，与上项应同时存在
+  "rsatimestamp": 216071450000, // RSA过期时间，在`getrsakey/`中可以获取
+  "remember_login": true // 保存登录信息（虽然我们不需要）
 }
 ```
-
-
 
 结果通过不同的返回值告知，例如:
 
 ```json
 {
-    "success":false,
-    "requires_twofactor":true,
-    "message":""
+  "success": false,
+  "requires_twofactor": true,
+  "message": ""
 }
 ```
 
 ```json
 {
-    "success":false,
-    "message":"请重新输入下方验证码中的字符来验证此为人工操作。", 
-    "requires_twofactor":false,
-    "captcha_needed":true,
-    "captcha_gid":"4209182061243079173"
+  "success": false,
+  "message": "请重新输入下方验证码中的字符来验证此为人工操作。",
+  "requires_twofactor": false,
+  "captcha_needed": true,
+  "captcha_gid": "4209182061243079173"
 }
 ```
 
@@ -170,7 +166,7 @@ async def do_login(username: str,
     :param headers: optional, custom headers
     :param cookies: optional, custom cookies
     :param kwargs: optional, args for ClientSession
-    :return: 
+    :return:
     """
     if headers is None:
         headers = {"X-Requested-With": "com.valvesoftware.android.steam.community",
@@ -231,9 +227,7 @@ async def do_login(username: str,
 
 值得注意的是当登陆成功时我传入了一个`cookie`和一个`cookie_object`(`Simplecookie对象`)，方便后续的使用。
 
-> TODO: raise的是`ConnectionError`，后续可能会自己创建几个异常专门处理。
-
-
+> TODO: raise 的是`ConnectionError`，后续可能会自己创建几个异常专门处理。
 
 ### 令牌
 
@@ -241,17 +235,17 @@ async def do_login(username: str,
 
 #### 实现原理
 
-首先明确的是，STEAM令牌的生成算法是一种称为[Time-based One-time Password(TOTP)](https://en.wikipedia.org/wiki/Time-based_one-time_password)的算法
+首先明确的是，STEAM 令牌的生成算法是一种称为[Time-based One-time Password(TOTP)](https://en.wikipedia.org/wiki/Time-based_one-time_password)的算法
 
-根据steam令牌生成所使用的`RFC-6238`标准，在这种算法的实现过程中，`Client`和`Server`需要协商一个共同的`Secret`作为密钥——也就是在令牌详细数据里的`shared_secret`项
+根据 steam 令牌生成所使用的`RFC-6238`标准，在这种算法的实现过程中，`Client`和`Server`需要协商一个共同的`Secret`作为密钥——也就是在令牌详细数据里的`shared_secret`项
 
 此时，由默认的`T0`(Unix Time)和`T1`(30s)以及当前的时间戳计算出将要发送的消息`C`（计数，即从`T0`到现在经过了多少个`T1`），并使用`Secret`作为密钥，通过默认的加密算法`SHA-1`计算出`HMAC`值
 
-取`HMAC`的最低4位有效位作为`byte offset`并丢弃
+取`HMAC`的最低 4 位有效位作为`byte offset`并丢弃
 
-丢弃这4位之后，从`byte offset`的`MSB`开始，丢弃最高有效位（为了避免它作为符号位），并取出31位，密码便是它们作为以10为基数的数字。
+丢弃这 4 位之后，从`byte offset`的`MSB`开始，丢弃最高有效位（为了避免它作为符号位），并取出 31 位，密码便是它们作为以 10 为基数的数字。
 
-STEAM在这个基础上，对数字进行了`CODE_CHARSET`的对应。具体方法是将密码所对应的10进制数除以`CODE_CHARSET`的长度，余数作为`CODE_CHARSET`的下标，商作为新的10进制数继续进行以上运算，直到取出5个数为止。
+STEAM 在这个基础上，对数字进行了`CODE_CHARSET`的对应。具体方法是将密码所对应的 10 进制数除以`CODE_CHARSET`的长度，余数作为`CODE_CHARSET`的下标，商作为新的 10 进制数继续进行以上运算，直到取出 5 个数为止。
 
 > 此处的`CODE_CHARSET`及对应算法未找到相关来源，推测应该是反编译了`STEAM客户端`or 高手的尝试
 
@@ -259,7 +253,7 @@ STEAM在这个基础上，对数字进行了`CODE_CHARSET`的对应。具体方�
 
 ~~重复造轮子是有罪的。本着既然都是自己用那多安几个库也无所谓的想法，我选择了`pyotp`库作为一键`TOTP`生成工具。~~
 
-~~然而失败了，不知道什么原因base32的secret生成出来不正确~~
+~~然而失败了，不知道什么原因 base32 的 secret 生成出来不正确~~
 
 本着既然已经研究透彻了实现原理的心态，我决定手动实现一次这个算法，同时，不使用现成的库也可以精简一下项目。
 
@@ -297,11 +291,11 @@ def gen_guard_code(shared_secret: str) -> str:
 
 ```
 
-![成功生成了令牌](https://cdn.ova.moe/img/image-20220306231115470.png)
+![成功生成了令牌](https://oss.nova.gal/img/image-20220306231115470.png)
 
 ### 交易确认
 
-交易应该算是STEAM相关的最麻烦的东西了。需要`identity_secret`和`device_id`作为参数。
+交易应该算是 STEAM 相关的最麻烦的东西了。需要`identity_secret`和`device_id`作为参数。
 
 #### 确认列表
 
@@ -311,16 +305,14 @@ def gen_guard_code(shared_secret: str) -> str:
 
 需要的参数有
 
-| Param | Description                                                  |
-| ----- | ------------------------------------------------------------ |
-| p     | `device_id`                                                  |
-| a     | `steam_id`                                                   |
-| t     | 时间戳                                                       |
-| m     | 设备（`Android`/`IOS`)                                       |
-| tag   | 标签，唯一值`conf`（待确定）                                 |
-| k     | `timehash`，由`time_stamp`和`tag`作为参数，由`identity_secret`作为密钥生成的Base64编码的`HMAC`码 |
-
-
+| Param | Description                                                                                        |
+| ----- | -------------------------------------------------------------------------------------------------- |
+| p     | `device_id`                                                                                        |
+| a     | `steam_id`                                                                                         |
+| t     | 时间戳                                                                                             |
+| m     | 设备（`Android`/`IOS`)                                                                             |
+| tag   | 标签，唯一值`conf`（待确定）                                                                       |
+| k     | `timehash`，由`time_stamp`和`tag`作为参数，由`identity_secret`作为密钥生成的 Base64 编码的`HMAC`码 |
 
 首先写出`timehash`的生成
 
@@ -447,16 +439,16 @@ def steam_confirmation_parser(html: str):
 
 `payload`的参数如下
 
-| Param | Description                                                  |
-| ----- | ------------------------------------------------------------ |
-| p     | `device_id`                                                  |
-| a     | `steam_id`                                                   |
-| t     | 时间戳                                                       |
-| m     | 设备（`Android`/`IOS`)                                       |
-| op    | 动作，有`cancel`和`allow`                                    |
-| k     | `timehash`，由`time_stamp`和`op`作为参数，由`identity_secret`作为密钥生成的Base64编码的`HMAC`码 |
-| cid   | `data-confid`，在`class`为`mobileconf_list_entry`的`<div>`标签中给出 |
-| ck    | `data-key`，在`class`为`mobileconf_list_entry`的`<div>`标签中给出 |
+| Param | Description                                                                                       |
+| ----- | ------------------------------------------------------------------------------------------------- |
+| p     | `device_id`                                                                                       |
+| a     | `steam_id`                                                                                        |
+| t     | 时间戳                                                                                            |
+| m     | 设备（`Android`/`IOS`)                                                                            |
+| op    | 动作，有`cancel`和`allow`                                                                         |
+| k     | `timehash`，由`time_stamp`和`op`作为参数，由`identity_secret`作为密钥生成的 Base64 编码的`HMAC`码 |
+| cid   | `data-confid`，在`class`为`mobileconf_list_entry`的`<div>`标签中给出                              |
+| ck    | `data-key`，在`class`为`mobileconf_list_entry`的`<div>`标签中给出                                 |
 
 ```python
 AJAX_POST_URL = "/mobileconf/ajaxop"
@@ -510,16 +502,16 @@ async def send_confirmation_ajax(cookies: Union[Dict, SimpleCookie],
 
 #### 详情
 
-物品详情也有一个api，不过我暂时没有想好怎么用，总之先把它写出来了
+物品详情也有一个 api，不过我暂时没有想好怎么用，总之先把它写出来了
 
-| Param | Description                                                  |
-| ----- | ------------------------------------------------------------ |
-| p     | `device_id`                                                  |
-| a     | `steam_id`                                                   |
-| t     | 时间戳                                                       |
-| m     | 设备（`Android`/`IOS`)                                       |
-| tag   | 标签，`details%id%`，`id`为`data-confid`，在`class`为`mobileconf_list_entry`的`<div>`标签中给出 |
-| k     | `timehash`，由`time_stamp`和`tag`作为参数，由`identity_secret`作为密钥生成的Base64编码的`HMAC`码 |
+| Param | Description                                                                                        |
+| ----- | -------------------------------------------------------------------------------------------------- |
+| p     | `device_id`                                                                                        |
+| a     | `steam_id`                                                                                         |
+| t     | 时间戳                                                                                             |
+| m     | 设备（`Android`/`IOS`)                                                                             |
+| tag   | 标签，`details%id%`，`id`为`data-confid`，在`class`为`mobileconf_list_entry`的`<div>`标签中给出    |
+| k     | `timehash`，由`time_stamp`和`tag`作为参数，由`identity_secret`作为密钥生成的 Base64 编码的`HMAC`码 |
 
 > TODO
 
@@ -566,4 +558,3 @@ async def fetch_confirmation_details(cookies: Union[Dict, SimpleCookie],
             else:
                 raise ConnectionError(f"Fetch Confirmation Details Error! Error Code: {resp.status}")
 ```
-

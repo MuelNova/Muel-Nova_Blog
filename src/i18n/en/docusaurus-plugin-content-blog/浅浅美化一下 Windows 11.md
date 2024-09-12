@@ -4,13 +4,12 @@ date: 2023-02-01
 description: There are indeed many things about the second dimension.
 tags: [Windows, cheatsheet]
 authors: [nova]
-
-
 ---
 
 # A Light Customization of Windows 11
 
 Having nothing better to do, I made some casual changes. Actually, I had already done some customization to the system before (like transparent taskbar, frosted glass, and such), but suddenly felt the lack of density of the second dimension, so I decided to make some more changes.
+
 <!--truncate-->
 
 ## BIOS
@@ -41,57 +40,53 @@ In fact, using UEFITool to modify the BIOS logo is a bit overkill. In most cases
 
 For convenience, I extracted everything together.
 
-![image-20230128115232640](https://cdn.ova.moe/img/image-20230128115232640.png)
+![image-20230128115232640](https://oss.nova.gal/img/image-20230128115232640.png)
 
 Open UEFITool, press Ctrl+F and enter `7BB28B99-61BB-11D5-9A5D-0090273FC14D` in the `GUID` field. This File GUID is fixed. Double-click on the search result at the bottom of the software to jump to the location of the LOGO.
 
-![image-20230128115739129](https://cdn.ova.moe/img/image-20230128115739129.png)
+![image-20230128115739129](https://oss.nova.gal/img/image-20230128115739129.png)
 
 Expand `Logo` until you can see `Raw section` to determine where to replace the logo.
 
 In my BIOS, there is only one `Raw section`. Different BIOS versions may have multiple `Raw sections`, in that case, you'll need to determine which file to replace one by one. You can right-click and `Extract body` to save it as a `.bmp` file for preview (or you can visually identify the bytes through `Body hex view`).
 
-![image-20230128120347864](https://cdn.ova.moe/img/image-20230128120347864.png)
+![image-20230128120347864](https://oss.nova.gal/img/image-20230128120347864.png)
 
 Next, prepare the `Logo` file you want to replace, and click `Replace body...`
 
 :::tip
 
-While there aren't specific requirements for the `Logo` file, it is still recommended to use the `bmp` format. The file size should preferably be *less than or equal to* the size of the original `Logo.bmp` file (even though my Tianxuan Ji file size is much larger than the original `Logo.bmp`, it's better to be safe in case the motherboard doesn't support it)
+While there aren't specific requirements for the `Logo` file, it is still recommended to use the `bmp` format. The file size should preferably be _less than or equal to_ the size of the original `Logo.bmp` file (even though my Tianxuan Ji file size is much larger than the original `Logo.bmp`, it's better to be safe in case the motherboard doesn't support it)
 
 :::
 
 If the replacement is successful, you should see a `Remove` and a `Replace` option in the original `Raw section`. Save this BIOS and flash it in. The flashing process varies for different BIOS versions, so I won't go into detail. ~~Actually, it's just not convenient to take screenshots, and using a phone camera on the screen is too dirty~~
 
-![image-20230128124020832](https://cdn.ova.moe/img/image-20230128124020832.png)
+![image-20230128124020832](https://oss.nova.gal/img/image-20230128124020832.png)
 
 For the result, ~~I simulated it with `Paint`~~ okay, `Paint` is not understandable, let's use `Photoshop` instead
 
-![image-20230128125530928](https://cdn.ova.moe/img/image-20230128125530928.png)
-
-
+![image-20230128125530928](https://oss.nova.gal/img/image-20230128125530928.png)
 
 ## Taskbar
 
 I won't redo it here, the `Taskbar` settings are as shown in the image below.
 
-![image-20230128125621445](https://cdn.ova.moe/img/image-20230128125621445.png)
+![image-20230128125621445](https://oss.nova.gal/img/image-20230128125621445.png)
 
 Combined with [Start11](https://store.steampowered.com/app/1811010/Start11/), I created a transparent bottom bar and changed the Start menu icon, that's pretty much it.
 
-![image-20230128131119243](https://cdn.ova.moe/img/image-20230128131119243.png)
+![image-20230128131119243](https://oss.nova.gal/img/image-20230128131119243.png)
 
-![image-20230128131447072](https://cdn.ova.moe/img/image-20230128131447072.png)
+![image-20230128131447072](https://oss.nova.gal/img/image-20230128131447072.png)
 
 ## Start Menu
 
 Still using [Start11](https://store.steampowered.com/app/1811010/Start11/), I created a frosted glass effect with a second dimension background.
 
-![image-20230128132019936](https://cdn.ova.moe/img/image-20230128132019936.png)
+![image-20230128132019936](https://oss.nova.gal/img/image-20230128132019936.png)
 
-![image-20230128132329849](https://cdn.ova.moe/img/image-20230128132329849.png)
-
-
+![image-20230128132329849](https://oss.nova.gal/img/image-20230128132329849.png)
 
 ## Context Menu
 
@@ -99,7 +94,7 @@ Still using [Start11](https://store.steampowered.com/app/1811010/Start11/), I cr
 
 Alright, I disabled Windows 11's context menu using [ExplorerPatcher](https://github.com/valinet/ExplorerPatcher), then because of compatibility issues with `Start11`, I uninstalled `ExplorerPatcher`, but the strategy of disabling the context menu is still effective, great. Now I can use this software.
 
-![image-20230128141052232](https://cdn.ova.moe/img/image-20230128141052232.png)
+![image-20230128141052232](https://oss.nova.gal/img/image-20230128141052232.png)
 
 ## File Explorer
 
@@ -111,27 +106,21 @@ I threw in a few second dimension images. ~~(But actually, I think it's better t
 
 It also supports a frosted glass effect, but there seems to be a BUG. When in full screen, the background color blend I set doesn't work, causing a glaring white effect.
 
-![image-20230128141826265](https://cdn.ova.moe/img/image-20230128141826265.png)
+![image-20230128141826265](https://oss.nova.gal/img/image-20230128141826265.png)
 
-![image-20230128141859779](https://cdn.ova.moe/img/image-20230128141859779.png)
+![image-20230128141859779](https://oss.nova.gal/img/image-20230128141859779.png)
 
-![image-20230128140324894](https://cdn.ova.moe/img/image-20230128140324894.png)
-
-
+![image-20230128140324894](https://oss.nova.gal/img/image-20230128140324894.png)
 
 ## Miscellaneous
 
 Things like sound effects can be set directly, so I won't go into detail.
-
-
 
 ## Afterword
 
 Except for the BIOS, it seems like there's not much technical content; it's all about using software to customize directly.
 
 I'm silly for writing this.
-
-
 
 :::info
 This Content is generated by ChatGPT and might be wrong / incomplete, refer to Chinese version if you find something wrong.

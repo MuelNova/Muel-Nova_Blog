@@ -1,7 +1,7 @@
 ---
 title: 「PWN」HEAP - Fastbin - Double Free
 date: 2022-03-21 11:40:08
-tags: ['CTF', 'Pwn']
+tags: ["CTF", "Pwn"]
 authors: [nova]
 ---
 
@@ -29,31 +29,31 @@ gcc -g -m64 -no-pie fastbin_dup.c -o fastbin_dup
 
 In this example, the tcache is prefilled to facilitate operations in the fastbin.
 
-![prefill of tcache](https://cdn.ova.moe/img/image-20220321115447065.png)
+![prefill of tcache](https://oss.nova.gal/img/image-20220321115447065.png)
 
 Set a breakpoint at `line 20` and step through the execution to observe the process.
 
-![image-20220321140323823](https://cdn.ova.moe/img/image-20220321140323823.png)
+![image-20220321140323823](https://oss.nova.gal/img/image-20220321140323823.png)
 
 Initially, it allocates three chunks and frees the first one. You can see that the first chunk `a` is now in the fastbins.
 
-![image-20220321141109457](https://cdn.ova.moe/img/image-20220321141109457.png)
+![image-20220321141109457](https://oss.nova.gal/img/image-20220321141109457.png)
 
 When we free `a` again at this point, the program crashes because the fastbin check verifies if the head matches the chunk being freed.
 
 The bypass method is straightforward - free another chunk before freeing `a`. Jump to `line 40` to observe the operation.
 
-![image-20220321141752410](https://cdn.ova.moe/img/image-20220321141752410.png)
+![image-20220321141752410](https://oss.nova.gal/img/image-20220321141752410.png)
 
-The current linked list structure can be referred to in `ctf-wiki` ![img](https://cdn.ova.moe/img/fastbin_free_chunk3.png)
+The current linked list structure can be referred to in `ctf-wiki` ![img](https://oss.nova.gal/img/fastbin_free_chunk3.png)
 
 Next, we allocate again. Based on the allocation mechanism, we know that it will first allocate from the head of the fastbin.
 
-![image-20220321142120620](https://cdn.ova.moe/img/image-20220321142120620.png)
+![image-20220321142120620](https://oss.nova.gal/img/image-20220321142120620.png)
 
-![image-20220321142135871](https://cdn.ova.moe/img/image-20220321142135871.png)
+![image-20220321142135871](https://oss.nova.gal/img/image-20220321142135871.png)
 
-![image-20220321142159911](https://cdn.ova.moe/img/image-20220321142159911.png)
+![image-20220321142159911](https://oss.nova.gal/img/image-20220321142159911.png)
 
 You can see that `a` and `c` now point to the same chunk.
 
@@ -83,11 +83,11 @@ Note the following code snippet:
 
 Setting `stack_var` to `0x20` is to forge a `fake_chunk`, as the size consistency is required during checks.
 
-![image-20220321144456020](https://cdn.ova.moe/img/image-20220321144456020.png)
+![image-20220321144456020](https://oss.nova.gal/img/image-20220321144456020.png)
 
 The line `*d = (unsigned long long) (((char*)&stack_var) - sizeof(d));` modifies the contents of `d` to point to `&stack_var - 8`. This effectively changes the chunk that `d` represents to still be in the fastbin, with the data in that location representing `fd`.
 
-![image-20220321143928311](https://cdn.ova.moe/img/image-20220321143928311.png)
+![image-20220321143928311](https://oss.nova.gal/img/image-20220321143928311.png)
 
 It changes the content of `d` to `&stack_var - 8`, pointing to an address on the stack represented by the `fd` at `0x40500`.
 
@@ -105,13 +105,13 @@ First, make necessary preparations.
 patchelf --set-rpath /home/nova/Desktop/CTF/glibc-all-in-one/libs/2.23-0ubuntu11.3_amd64/ --set-interpreter /home/nova/Desktop/CTF/glibc-all-in-one/libs/2.23-0ubuntu11.3_amd64/ld-2.23.so samsara
 ```
 
-![image-20220321150904705](https://cdn.ova.moe/img/image-20220321150904705.png)
+![image-20220321150904705](https://oss.nova.gal/img/image-20220321150904705.png)
 
 By analyzing, we can understand the functions `add`, `delete`, and `edit`. Pay attention to `lair` and `kingdom`.
 
 Observing the menu, we can see that `lair` is very close to `pwn`.
 
-![image-20220321151231353](https://cdn.ova.moe/img/image-20220321151231353.png)
+![image-20220321151231353](https://oss.nova.gal/img/image-20220321151231353.png)
 
 By obtaining the address of `lair`, we can also naturally get the address of `pwn`.
 
@@ -123,7 +123,7 @@ Slightly more complex, with ASLR fully enabled.
 
 Observing the vulnerability during `delete`, the program fails to zero out the pointers when freeing, only zeroing the size location.
 
-![image-20220321160539186](https://cdn.ova.moe/img/image-20220321160539186.png)
+![image-20220321160539186](https://oss.nova.gal/img/image-20220321160539186.png)
 
 Based on the `show` and `edit` functions, if we can modify `array[4 * idx + 2]`, we can achieve arbitrary read/write operations.
 
@@ -149,7 +149,7 @@ This sets up a `fake_chunk` at `0x602060-0x08`. Now, the chunk size at `0x602060
 
 Continue with the alloc and free operations to create a `fake chunk`.
 
-![image-20220321165333289](https://cdn.ova.moe/img/image-20220321165333289.png)
+![image-20220321165333289](https://oss.nova.gal/img/image-20220321165333289.png)
 
 Arbitrary reads and writes are now possible. Retrieve the `libc_base` value next.
 
@@ -165,7 +165,7 @@ With the `libc_base` obtained, consider how to call `system`. Due to the `FULL R
 
 Update the `6` content to point to `__free_hook()`, and modify the `0` content to `system()` to achieve the modification.
 
-![__free_hook() has write permissions](https://cdn.ova.moe/img/image-20220321173758716.png)
+![__free_hook() has write permissions](https://oss.nova.gal/img/image-20220321173758716.png)
 
 ```python
 system = libc_base + libc.sym['system']

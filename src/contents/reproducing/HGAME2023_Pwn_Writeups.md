@@ -1,7 +1,6 @@
 ---
-
 title: 「PWN」【HGAME2023】Writeup WP 复现
-tags: ['CTF', 'Pwn', 'writeup', 'wp']
+tags: ["CTF", "Pwn", "writeup", "wp"]
 authors: [nova]
 ---
 
@@ -47,15 +46,13 @@ shellcode ORW，程序运行了 `mmap((void *)0xCAFE0000LL, 0x1000uLL, 7, 33, -1
 
 [exp](https://github.com/MuelNova/NovaNo1r-pwn-challenges/blob/main/HGame2023/week1/pwn/simple_shellcode/exp.py)
 
-
-
 ## Week 2
 
 ### YukkuriSay
 
 挺有意思的格式化字符串题，格式化字符串在 bss 上。在 Say 的时候可以泄露栈的地址。
 
-![image-20230203153007716](https://cdn.ova.moe/img/image-20230203153007716.png)
+![image-20230203153007716](https://oss.nova.gal/img/image-20230203153007716.png)
 
 然后下面格式化字符串用于泄露 canary 和 libc 基址，修改返回地址到 `vuln` 函数，不过没用上 canary 就是了。
 
@@ -86,7 +83,7 @@ print(hex(payload))
 
 接下来的堆题就全是模板题了，没清指针，UAF。
 
-填满 tcache 顺手造个 unsorted_bin 泄露 libc，然后直接改 fd 连到 __free_hook 上改 system 拿 shell
+填满 tcache 顺手造个 unsorted_bin 泄露 libc，然后直接改 fd 连到 \_\_free_hook 上改 system 拿 shell
 
 [exp](https://github.com/MuelNova/NovaNo1r-pwn-challenges/blob/main/HGame2023/week2/pwn/editable_note/exp.py)
 
@@ -94,9 +91,9 @@ print(hex(payload))
 
 libc 2.23
 
-Fastbin attack Double Free，在 `__malloc_hook-0x23` 的地方布置 fake chunk，在 __malloc_hook 处填充 one_gadget。
+Fastbin attack Double Free，在 `__malloc_hook-0x23` 的地方布置 fake chunk，在 \_\_malloc_hook 处填充 one_gadget。
 
-测试之后发现不满足 og 的条件，修改 __malloc_hook 为 realloc 调整寄存器，修改 \_\_realloc_hook 为 one_gadget
+测试之后发现不满足 og 的条件，修改 \_\_malloc_hook 为 realloc 调整寄存器，修改 \_\_realloc_hook 为 one_gadget
 
 [exp](https://github.com/MuelNova/NovaNo1r-pwn-challenges/blob/main/HGame2023/week2/pwn/fast_note/exp.py)
 
@@ -106,31 +103,27 @@ libc 2.31
 
 填满 tcache 之后利用 unsorted_bin 泄露 libc。
 
-利用堆块重叠的思想，修改 tcache 的 fd 为 __free_hook。
+利用堆块重叠的思想，修改 tcache 的 fd 为 \_\_free_hook。
 
 > 我们首先填充 0~6 这 7 个 0x90 大小的 tcache
 >
-> | idx  | size | type            |
-> | ---- | ---- | --------------- |
-> | ...  | 0x90 | tcache_bin      |
-> | 7    | 0x90 | allocated_chunk |
-> | 8    | 0x90 | unsorted_bin    |
+> | idx | size | type            |
+> | --- | ---- | --------------- |
+> | ... | 0x90 | tcache_bin      |
+> | 7   | 0x90 | allocated_chunk |
+> | 8   | 0x90 | unsorted_bin    |
 >
-> 此时我们将 *7* free 掉，它会与 *8* 一起合并成新的 unsorted_bin
+> 此时我们将 _7_ free 掉，它会与 _8_ 一起合并成新的 unsorted_bin
 >
 > 我们再取出一个相同大小的 chunk，则会从 0x90 大小的 tcache 链表上取出一个。
 >
-> 此时，如果我们再 free 一次 *8*，则它会链入 0x90 大小的 tcache 上
+> 此时，如果我们再 free 一次 _8_，则它会链入 0x90 大小的 tcache 上
 >
-> 我们再取出一个 >= 0xB0 大小的 chunk，它会从 *7* 所在的地址开始，取出我们所要的大小，其中自然也包括了 *8* 的 `prev_size`、`size`、`fd`、`bk` 等
-
-
+> 我们再取出一个 >= 0xB0 大小的 chunk，它会从 _7_ 所在的地址开始，取出我们所要的大小，其中自然也包括了 _8_ 的 `prev_size`、`size`、`fd`、`bk` 等
 
 当然，这里其实是我想复杂了（我以为还是像前面一样在 add 的时候会检查 `notes[i]` 存不存在，一算发现不够）。直接在 fastbin 里造个 double_free 然后清空 tcache 即可将 fastbin 放入 tcache，直接拿就好了。
 
 [exp](https://github.com/MuelNova/NovaNo1r-pwn-challenges/blob/main/HGame2023/week2/pwn/new_fast_note/exp.py)
-
-
 
 ## Week3
 
@@ -162,15 +155,13 @@ libc 2.31
 
 因为现在 `setcontext` 用的是 rdx 寄存器，所以还利用了一个 magic_gadget
 
-``` assembly
+```assembly
 mov rdx, qword ptr [rdi + 8]
 mov qword ptr [rsp], rax
 call qword ptr [rdx + 0x20];
 ```
 
 [exp](https://github.com/MuelNova/NovaNo1r-pwn-challenges/blob/main/HGame2023/week3/pwn/note_context/exp.py)
-
-
 
 ## Week4
 

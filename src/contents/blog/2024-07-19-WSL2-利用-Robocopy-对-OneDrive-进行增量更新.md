@@ -14,8 +14,6 @@ WSL2 ext4 和 NTFS 这类跨文件系统的 IO 实在是太慢了，一些 venv,
 
 考虑到项目一般具有文件数量大，且绝大部分为小文件的特点，我决定将一些特定的文件夹迁移到 wsl2 中，利用 Robocopy，将 OneDrive 与 WSL2 中的内容进行双向同步，通过空间来换效率。
 
-
-
 这篇文章将针对我的使用情况进行个性化定制，如果你只是需要备份 WSL2 的东西到 OneDrive，推荐参考 [这篇文章](https://tonym.us/wsl2-backup-to-onedrive-cloud.html)
 
 <!--truncate-->
@@ -42,15 +40,11 @@ WSL2 ext4 和 NTFS 这类跨文件系统的 IO 实在是太慢了，一些 venv,
 
   一个经典的例子就是 node_modules，我们不希望将冗长繁杂的 node_modules 也传输到 OneDrive，使得上传队列被这些可复现的冗余文件占满。
 
-
-
 ## Definations
 
 为了简化下文，在这里我们对一些术语 / 习惯做一些约定。
 
 - **OneDrive 路径**：以 `D:\OneDrive\` 作为 OneDrive 的路径，它在 wsl2 里对应于 `/mnt/d/OneDrive/`
-
-
 
 ## Previous Solution
 
@@ -96,8 +90,6 @@ WSL2 ext4 和 NTFS 这类跨文件系统的 IO 实在是太慢了，一些 venv,
 
 OneDrive 拉下来似乎是 0777 的权限，反正对于其他的也无所谓了。对于 git 管理的，我就直接 `git restore --staged .` 修，有没提交的那就 `chmod 755` 或者 `chmod 644` 大致的改一下。
 
-
-
 ### 原解决方案缺陷
 
 - **IO 过慢**
@@ -106,7 +98,7 @@ OneDrive 拉下来似乎是 0777 的权限，反正对于其他的也无所谓�
 
 - 存在几个无法上传的文件，强迫症
 
-![image-20240719162224812](https://cdn.ova.moe/img/image-20240719162224812.png)
+![image-20240719162224812](https://oss.nova.gal/img/image-20240719162224812.png)
 
 ## ~~Implementation~~
 
@@ -116,7 +108,7 @@ OneDrive 拉下来似乎是 0777 的权限，反正对于其他的也无所谓�
 
 见 [2wsync](https://github.com/MuelNova/2wsync)
 
-![image-20240719234343397](https://cdn.ova.moe/img/image-20240719234343397.png)
+![image-20240719234343397](https://oss.nova.gal/img/image-20240719234343397.png)
 
 ## Implementation
 

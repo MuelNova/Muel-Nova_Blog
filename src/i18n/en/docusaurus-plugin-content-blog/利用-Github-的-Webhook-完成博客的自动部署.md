@@ -2,7 +2,6 @@
 title: Automatic Blog Deployment Using Github Webhook
 authors: [nova]
 tags: [cheatsheet, tips]
-
 ---
 
 Feeling tired of typing `ssh`, `git pull`, and `npm run build` every time to deploy your blog? Well, I thought about using a webhook.
@@ -17,9 +16,9 @@ But still need to manually resolve the conflicts in `package-lock.json`, wonderi
 
 Just take a look at this, go to REPO->Settings->Webhooks->Add webhook to add a new webhook.
 
-![image-20230511190219973](https://cdn.ova.moe/img/image-20230511190219973.png)
+![image-20230511190219973](https://oss.nova.gal/img/image-20230511190219973.png)
 
-![image-20230511190315524](https://cdn.ova.moe/img/image-20230511190315524.png)
+![image-20230511190315524](https://oss.nova.gal/img/image-20230511190315524.png)
 
 Simply fill in the URL with the public IP, I chose json as content type.
 

@@ -98,7 +98,7 @@ OneDrive seems to download files with 0777 permissions, which doesn't matter for
 
 - There are several files that cannot be uploaded, which is a bit of a compulsion.
 
-![image-20240719162224812](https://cdn.ova.moe/img/image-20240719162224812.png)
+![image-20240719162224812](https://oss.nova.gal/img/image-20240719162224812.png)
 
 ## ~~Implementation~~
 
@@ -108,7 +108,7 @@ But I ended up writing a bunch of custom stuff that I don't think I'll ever use.
 
 See [2wsync](https://github.com/MuelNova/2wsync).
 
-![image-20240719234343397](https://cdn.ova.moe/img/image-20240719234343397.png)
+![image-20240719234343397](https://oss.nova.gal/img/image-20240719234343397.png)
 
 ## Implementation
 

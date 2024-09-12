@@ -4,17 +4,25 @@ date: 2024-02-01
 tags: [reverse, investigate]
 authors: [nova]
 ---
-前几天学着 [DIYGOD](https://diygod.cc) 搞了一套生活管理系统。在各种插件的加持下算是做到了半自动化，然而，睡眠时间和步数，以及可能的心率血压等数据仍然需要手动记录手动填写实在是不算 Geek。搜索之后得知其实 Zepp(原 Huami) 存在有逆向后的 API 接口且明文存储步数等信息，于是便脑子一热入了 ***小米手环 8 Pro 原神联名版***。拿到手后，才惊讶地发现 小米手环 8 已经不再支持 Zepp，小米手环 7 虽然表面上不支持，但也能使用修改 QRCode 和 Zepp 安装包的方式，然而小米手环 8 已经是彻底把 Zepp 给 Deprecated 了。
+
+前几天学着 [DIYGOD](https://diygod.cc) 搞了一套生活管理系统。在各种插件的加持下算是做到了半自动化，然而，睡眠时间和步数，以及可能的心率血压等数据仍然需要手动记录手动填写实在是不算 Geek。搜索之后得知其实 Zepp(原 Huami) 存在有逆向后的 API 接口且明文存储步数等信息，于是便脑子一热入了 **_小米手环 8 Pro 原神联名版_**。拿到手后，才惊讶地发现 小米手环 8 已经不再支持 Zepp，小米手环 7 虽然表面上不支持，但也能使用修改 QRCode 和 Zepp 安装包的方式，然而小米手环 8 已经是彻底把 Zepp 给 Deprecated 了。
+
 <!--truncate-->
 
 ## 初探 —— 抓包
+
 首先，当然是看抓包有没有什么有用的信息了。我原来用 proxifier 做抓包，但是效果并不好，原因是有一些软件存在 SSLPinning，所以这次，采用了 mitmproxy + 系统级证书的方法。
+
 ### 工具链
+
 - [mitmproxy - an interactive HTTPS proxy](https://mitmproxy.org/)
 - [nccgroup/ConscryptTrustUserCerts](https://github.com/nccgroup/ConscryptTrustUserCerts)
 - [shockeyzhang/magisk-delta](https://github.com/shockeyzhang/magisk-delta)
+
 ### 测试方法
+
 长话短说，首先在 PC 上安装 mitmproxy，然后在 `$HOME/.mitmproxy` 目录下拿到 `mitmproxy-ca-cert.cer` 文件，按照正常的工作流安装在 Android 设备上。
+
 > 在我的案例中，我在搜索中搜索 `cred` 相关字样，就找到了 `Credential storage`，并且有 `Install certificates from storage`，这就是我的正常工作流。不同的设备可能有不同的工作流
 
 在 Magisk 中安装 `ConscryptTrustUserCerts`，重启，即可在 boot 阶段将 用户级证书 mount 到 系统级证书 目录下，这就完成了准备工作。
@@ -22,11 +30,15 @@ authors: [nova]
 在 PC 上打开 mitmweb，手机 Wi-Fi 设置代理为 `<my-pc-ip>:8080`，测试，成功抓取 HTTPS 请求。
 
 ### 结论
+
 没啥用。所有的请求都是经过加密的，也有 signature 和 hash、nounce 等来确保安全性。我实在是不想逆 apk，遂作罢。
 
 ## 窥见光明 —— BLE 连接
+
 既然抓包行不通，那么我直接做一个 BLE 客户端，连接手环并且获取数据，这显然是非常合理的事情。而且这种方式也不需要我手机上做什么操作，Obsidian 运行一个脚本，一连接，一获取，似乎非常自动化
+
 ### 实现
+
 代码主要参考了 [wuhan005/mebeats: 💓 小米手环实时心率数据采集 - Your Soul, Your Beats!](https://github.com/wuhan005/mebeats)。不过他的工具链是 MacOS，我没有，就找 GPT 问着改了改。
 
 ~~代码中有一个 `auth_key`，需要官方 APP 来获取。倒是可以直接使用 [这个网站](https://freemyband.com) 来获取，但是本着信不过第三方的原则，我们还是手动获取。~~
@@ -36,61 +48,64 @@ authors: [nova]
 
 ```java
 public final void bindDeviceToServer(lg1 lg1Var) {
-  
+
         Logger.i(getTAG(), "bindDeviceToServer start");
-  
+
         HuaMiInternalApiCaller huaMiDevice = HuaMiDeviceTool.Companion.getInstance().getHuaMiDevice(this.mac);
-  
+
         if (huaMiDevice == null) {
-  
+
             String tag = getTAG();
-  
+
             Logger.i(tag + "bindDeviceToServer huaMiDevice == null", new Object[0]);
-  
+
             if (lg1Var != null) {
-  
+
                 lg1Var.onConnectFailure(4);
-  
+
             }
-  
+
         } else if (needCheckLockRegion() && isParallel(huaMiDevice)) {
-  
+
             unbindHuaMiDevice(huaMiDevice, lg1Var);
-  
+
         } else {
-  
+
             DeviceInfoExt deviceInfo = huaMiDevice.getDeviceInfo();
-  
+
             if (deviceInfo == null) {
-  
+
                 String tag2 = getTAG();
-  
+
                 Logger.i(tag2 + "bindDeviceToServer deviceInfo == null", new Object[0]);
-  
+
                 return;
-  
+
             }
-  
+
             String sn = deviceInfo.getSn();
-  
+
             setMDid("huami." + sn);
-  
+
             setSn(deviceInfo.getSn());
-  
+
             BindRequestData create = BindRequestData.Companion.create(deviceInfo.getSn(), this.mac, deviceInfo.getDeviceId(), deviceInfo.getDeviceType(), deviceInfo.getDeviceSource(), deviceInfo.getAuthKey(), deviceInfo.getFirmwareVersion(), deviceInfo.getSoftwareVersion(), deviceInfo.getSystemVersion(), deviceInfo.getSystemModel(), deviceInfo.getHardwareVersion());
-  
+
             String tag3 = getTAG();
-  
+
             Logger.d(tag3 + create, new Object[0]);
-  
+
             getMHuaMiRequest().bindDevice(create, new HuaMiDeviceBinder$bindDeviceToServer$1(this, lg1Var), new HuaMiDeviceBinder$bindDeviceToServer$2(lg1Var, this));
-  
+
         }
-  
+
     }
 ```
+
 可以看到是从 `deviceInfo` 拿的，而它又来自于 `huamiDevice`。然后稍微溯下源，可以知道这个是由 mac 算出来的，但是具体的不会看了，感兴趣的可以看 `com.xiaomi.wearable.wear.connection` 这个包
+
 ## 大道至简 —— Frida Hook
+
 到这里，其实我已经想好最终的思路了，开逆呗。既然最终发出去是加密的，那肯定有没加密的数据处理的过程。逆出来，hook 一下，写个 XPosed 插件监听着就好了。
 在这里，由于时间晚了，我不想再花过多的精力写如何安装 [frida](https://frida.rs)。
 
@@ -99,54 +114,91 @@ public final void bindDeviceToServer(lg1 lg1Var) {
 1. 首先，在 `/data/data/com.mi.health/databases` 文件夹下看到了用户所对应的文件夹，里面有 `fitness_summary` 这个数据库，读取发现存在有想要的数据。因此初步的搜索关键词 `fitness_summary` 进行交叉引用，溯源到了 `com.xiaomi.fit.fitness.persist.db.internal` 这个类
 2. 看到了 `update、insert` 等函数，不断地进行尝试，但是始终没有办法看到输出，但是最终找到了 `com.xiaomi.fit.fitness.persist.db.internal.h.getDailyRecord` 这个函数可以在每次刷新时都有输出，但只有 `sid、time` 等值，不包含 `value`
 3. 继续溯源，利用下面的代码片段来看重载以及参数类型。
+
 ```javascript
 var insertMethodOverloads = hClass.updateAll.overloads;
 
 for (var i = 0; i < insertMethodOverloads.length; i++) {
-	var overload = insertMethodOverloads[i];
-	console.log("Overload #" + i + " has " + overload.argumentTypes.length + " arguments.");
-	for (var j = 0; j < overload.argumentTypes.length; j++) {
-		console.log(" - Argument " + j + ": " + overload.argumentTypes[j].className);
-	}
+  var overload = insertMethodOverloads[i];
+  console.log(
+    "Overload #" + i + " has " + overload.argumentTypes.length + " arguments."
+  );
+  for (var j = 0; j < overload.argumentTypes.length; j++) {
+    console.log(
+      " - Argument " + j + ": " + overload.argumentTypes[j].className
+    );
+  }
 }
 ```
+
 4. 突然想到可以利用异常来查看函数调用栈，此时属于是守得云开见月明了。
+
 ```javascript
-var callerMethodName = Java.use("android.util.Log").getStackTraceString(Java.use("java.lang.Exception").$new());
+var callerMethodName = Java.use("android.util.Log").getStackTraceString(
+  Java.use("java.lang.Exception").$new()
+);
 console.log("getTheOneDailyRecord called by: " + callerMethodName);
 ```
+
 5. 一层一层的，找到了 `com.xiaomi.fit.fitness.export.data.aggregation.DailyBasicReport` 这个类，完美满足了我的需求。
+
 ```javascript
-    dbutilsClass.getAllDailyRecord.overload('com.xiaomi.fit.fitness.export.data.annotation.HomeDataType', 'java.lang.String', 'long', 'long', 'int').implementation = function (homeDataType, str, j, j2, i) {
-        console.log("getAllDailyRecord called with args: " + homeDataType + ", " + str + ", " + j + ", " + j2 + ", " + i);
-        var result = this.getAllDailyRecord(homeDataType, str, j, j2, i);
-        var entrySet = result.entrySet();
-        var iterator = entrySet.iterator();
-        while (iterator.hasNext()) {
-            var entry = iterator.next();
-            console.log("entry: " + entry);
-        }
-        var callerMethodName = Java.use("android.util.Log").getStackTraceString(Java.use("java.lang.Exception").$new());
-        console.log("getTheOneDailyRecord called by: " + callerMethodName);
-        return result; 
-    }
+dbutilsClass.getAllDailyRecord.overload(
+  "com.xiaomi.fit.fitness.export.data.annotation.HomeDataType",
+  "java.lang.String",
+  "long",
+  "long",
+  "int"
+).implementation = function (homeDataType, str, j, j2, i) {
+  console.log(
+    "getAllDailyRecord called with args: " +
+      homeDataType +
+      ", " +
+      str +
+      ", " +
+      j +
+      ", " +
+      j2 +
+      ", " +
+      i
+  );
+  var result = this.getAllDailyRecord(homeDataType, str, j, j2, i);
+  var entrySet = result.entrySet();
+  var iterator = entrySet.iterator();
+  while (iterator.hasNext()) {
+    var entry = iterator.next();
+    console.log("entry: " + entry);
+  }
+  var callerMethodName = Java.use("android.util.Log").getStackTraceString(
+    Java.use("java.lang.Exception").$new()
+  );
+  console.log("getTheOneDailyRecord called by: " + callerMethodName);
+  return result;
+};
 // DailyStepReport(time=1706745600, time = 2024-02-01 08:00:00, tag='days', steps=110, distance=66, calories=3, minStartTime=1706809500, maxEndTime=1706809560, avgStep=110, avgDis=66, active=[], stepRecords=[StepRecord{time = 2024-02-02 01:30:00, steps = 110, distance = 66, calories = 3}])
 ```
+
 6. 犯了难，因为这个 `steps` 是 `private` 属性，虽然 `jadx-gui` 中写出了复数个可以获取它的接口 `getSteps()`、`getSourceData()` 却没有一个能用，都提示 `not a function`。这里猜测还是 kotlin 和 java 的处理方式不同吧。最终是用反射的方式解决了。
-至此最终 `frida` 代码如下，可以获取当天的 `steps` 数据，修改 `HomeDataType` 即可获取其他数据。
+   至此最终 `frida` 代码如下，可以获取当天的 `steps` 数据，修改 `HomeDataType` 即可获取其他数据。
+
 ```javascript
-var CommonSummaryUpdaterCompanion = Java.use("com.xiaomi.fitness.aggregation.health.updater.CommonSummaryUpdater$Companion");
-var HomeDataType = Java.use("com.xiaomi.fit.fitness.export.data.annotation.HomeDataType");
+var CommonSummaryUpdaterCompanion = Java.use(
+  "com.xiaomi.fitness.aggregation.health.updater.CommonSummaryUpdater$Companion"
+);
+var HomeDataType = Java.use(
+  "com.xiaomi.fit.fitness.export.data.annotation.HomeDataType"
+);
 var instance = CommonSummaryUpdaterCompanion.$new().getInstance();
 console.log("instance: " + instance);
 
 var step = HomeDataType.STEP;
-var DailyStepReport = Java.use("com.xiaomi.fit.fitness.export.data.aggregation.DailyStepReport");
+var DailyStepReport = Java.use(
+  "com.xiaomi.fit.fitness.export.data.aggregation.DailyStepReport"
+);
 
 var result = instance.getReportList(step.value, 1706745600, 1706832000);
 var report = result.get(0);
 console.log("report: " + report + report.getClass());
-
 
 var stepsField = DailyStepReport.class.getDeclaredField("steps");
 stepsField.setAccessible(true);
@@ -156,6 +208,7 @@ console.log("Steps: " + steps);
 ```
 
 ## 最终 —— XPosed 插件
+
 目前思路就是 XPosed 监听一个地址，然后再稍微的做一些~~保护防止明文传输~~鸽了，先用着。因为这个应用是一直开启的，所以我觉得可行。现在的问题就是我不会写 kotlin，更不会写 XPosed。
 
 好在 kotlin 的编译器提示足够强大，以及 XPosed 本身除了配置的搭建之外并不需要什么额外的知识，加上强大的 GPT，琢磨了一两个小时就弄好了基本的环境（难评 gradle，不开代理下的慢，开了代理下不了）
@@ -235,19 +288,13 @@ dependencies {
 </resources>
 ```
 
-
-
 然后，还需要在 `app/src/main/` 下面新建一个 `assets/xposed_init` 文件，内容填写你的入口类
 
 ```
 sh.ouo.miband.uploader.MainHook
 ```
 
-
-
 至此，编译一下就可以在 LSPosed Manager 里看到你的插件了
-
-
 
 ### 思路
 
@@ -256,8 +303,6 @@ sh.ouo.miband.uploader.MainHook
 我们思考，既然需要在后台启动，而小米健康本身就有一些保活和自启的机制，因此我们完全没必要 hook MainActivity 的 onCreate 方法，而是找一个自启的方法即可。
 
 Android 自启的方法，经过一点搜索，可能有 `BOOT_COMPLETED` 广播监听、`AlarmManager ` 定时任务、`JobScheduler ` 工作以及 `Service` 等。在 jadx-gui 中搜索，我们找到了 `com.xiaomi.fitness.keep_alive.KeepAliveHelper` 这个类的 `startService` 方法。经过测试，确实可以使用。
-
-
 
 在这里我们主要利用单例，让它不要重复注册。其中主要的函数就是 `handleLoadPackage` 来获取对应的 `LoadPackageParam`，之后对于想要 HOOK 的函数，继承 `XC_MethodHook` 即可。
 
@@ -520,7 +565,7 @@ return Json.encodeToJsonElement(SerializableDailyStepReport.serializer(), conver
    ```
    service.adb.tls.port=38420
    service.adb.tcp.port=38420
-   
+
    persist.adb.tls_server.enable=1
    ```
 
@@ -534,11 +579,9 @@ return Json.encodeToJsonElement(SerializableDailyStepReport.serializer(), conver
 
 于是放弃了，然后，我又开始思考 HTTP Restful API。我利用 Ktor 很快的实现了一个（利用 GPT）。
 
-![image-20240203140011022](https://cdn.ova.moe/img/image-20240203140011022.png)
+![image-20240203140011022](https://oss.nova.gal/img/image-20240203140011022.png)
 
 但是此时又有一个问题：我们这个数据的获取频次是非常低的，却有这么一个特点：时间不固定。因此，为了稳定性，我们必须时刻保持 HTTP 服务器的开启，而 HTTP 服务器因为要维护的东西非常多，所以耗电量是非常可观的（虽然我没有测试）
-
-
 
 于是又转向了 SOCKET 的怀抱。倒是反正也差不多。
 
@@ -564,8 +607,6 @@ class MySocketServer(
         }.start()
     }
 ```
-
-
 
 然后又突然意识到了一个尴尬的问题。我需要在 Obsidian 中使用 Templater 来获取每日的信息，也就是用 JavaScript，而 Obsidian 又是类似于沙箱的环境，所以我也没有办法运行外部脚本。JavaScript 没有办法上套接字啊？得，手搓 HTTP 协议了。安全性就算了，评价是能用就行。
 
@@ -665,7 +706,7 @@ override fun run() {
             Content-Type: application/json
             Connection: close
             Content-Length: ${jsonResponse.toByteArray().size}
-            
+
             $jsonResponse
         """.trimIndent()
         outputStream.println(response)
@@ -673,8 +714,6 @@ override fun run() {
     }
 ```
 
-![非常健康的睡眠状态](https://cdn.ova.moe/img/image-20240203141224260.png)
-
-
+![非常健康的睡眠状态](https://oss.nova.gal/img/image-20240203141224260.png)
 
 源码后面再上传吧，现在纯半成品，评价是随便偷我的睡眠数据。

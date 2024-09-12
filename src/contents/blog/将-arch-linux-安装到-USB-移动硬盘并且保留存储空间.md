@@ -19,7 +19,7 @@ authors: nova
 
 在虚拟机上添加 arch linux 镜像，一切默认即可。开启虚拟机后，把 USB 连接。
 
-![image-20240328154735717](https://cdn.ova.moe/img/image-20240328154735717.png)
+![image-20240328154735717](https://oss.nova.gal/img/image-20240328154735717.png)
 
 ### 分区
 
@@ -62,8 +62,8 @@ Command (m for help): n  # 创建新分区
   		# 分区号
    		# 扇区，默认即可
    		# 大小，直接默认用完
-   		
- 
+
+
 ```
 
 之后，设置分区类型，每个对应的类型都可以通过 `t` 之后 `L` 查看。
@@ -87,7 +87,7 @@ Command (m for help): t  # 修改分区类型
 
 使用 `p` 打印分区表，应该是如下的情况
 
-![image-20240328155834271](https://cdn.ova.moe/img/image-20240328155834271.png)
+![image-20240328155834271](https://oss.nova.gal/img/image-20240328155834271.png)
 
 使用 `w` 保存退出
 
@@ -98,8 +98,6 @@ mkfs.ext4 -O "^has_journal" /dev/sdb2  # root
 mkfs.fat -F32 /dev/sdb1  # EFI
 mkfs.fat -F32 /dev/sdb4  # USBDisk，由于我们主要在 Windows 设备之间传输，因此还是使用 FAT32 文件系统。
 ```
-
-
 
 ## 安装
 
@@ -116,8 +114,6 @@ mount /dev/sdb1 /mnt/boot/efi --mkdir
 pacstrap /mnt base linux linux-firmware base-devel vim dhcpcd iwd intel-ucode amd-ucode
 ```
 
-
-
 ## 配置系统
 
 ### 生成 fstab 文件
@@ -128,15 +124,11 @@ genfstab -U /mnt >> /mnt/etc/fstab
 
 检查文件内容是否正确
 
-![image-20240328160656125](https://cdn.ova.moe/img/image-20240328160656125.png)
-
-
+![image-20240328160656125](https://oss.nova.gal/img/image-20240328160656125.png)
 
 ### 设置密码以及配置新用户
 
 不再介绍，自行查询其他教程。
-
-
 
 ### 配置 Secure Boot
 
@@ -169,7 +161,7 @@ cp /usr/share/shim-signed/mmx64.efi /boot/efi/EFI/BOOT/
 
 ```bash
 cd /boot/efi
-openssl req -newkey rsa:4096 -nodes -keyout MOK.key -new -x509 -sha256 -subj "/CN=Machine Owner Key/" -out MOK.crt 
+openssl req -newkey rsa:4096 -nodes -keyout MOK.key -new -x509 -sha256 -subj "/CN=Machine Owner Key/" -out MOK.crt
 openssl x509 -outform DER -in MOK.crt -out MOK.c
 ```
 
@@ -201,9 +193,7 @@ grub-install --target=x86_64-efi --efi-directory=/boot --removable --modules="no
 grub-mkconfig -o /boot/grub/grub.cfg
 ```
 
-
-
-### mkinitcpio  post hook
+### mkinitcpio post hook
 
 ```bash
 vim /etc/initcpio/post/kernel-sbsign
@@ -232,13 +222,9 @@ done
 chmod +x /etc/initcpio/post/kernel-sbsign
 ```
 
-
-
-
-
 ### 修改区域设置
 
-切换到 /mnt 下进行操作（在未明确标识的情况下，下文都在 `arch-chroot /mnt` 后的文件系统中进行。 
+切换到 /mnt 下进行操作（在未明确标识的情况下，下文都在 `arch-chroot /mnt` 后的文件系统中进行。
 
 ```bash
  arch-chroot /mnt
@@ -258,7 +244,7 @@ vim /etc/locale.gen
 locale-gen
 ```
 
-![image-20240328161233665](https://cdn.ova.moe/img/image-20240328161233665.png)
+![image-20240328161233665](https://oss.nova.gal/img/image-20240328161233665.png)
 
 设置 local.conf 到 `en_SG.UTF-8`
 
@@ -278,15 +264,11 @@ locale-gen
 echo "LANG=en_SG.UTF-8" > /etc/locale.conf
 ```
 
-
-
 ### 设置主机名
 
 ```bash
 echo "MuelNova-Arch" > etc/hostname
 ```
-
-
 
 ### 设置 hosts
 
@@ -300,19 +282,15 @@ vim /etc/hosts
 # ::1		    localhost
 ```
 
-![image-20240328162059643](https://cdn.ova.moe/img/image-20240328162059643.png)
-
-
+![image-20240328162059643](https://oss.nova.gal/img/image-20240328162059643.png)
 
 ### 配置 initramfs
 
 默认的 initramfs 可能存在不同系统块设备和键盘支持的问题
 
-
-
 :::info
 
-这是由于 `autodetect` hook 所导致的。`autodetect` hook 试图仅包含引导当前系统所必需的模块。这对于大多数内置系统是有效的，因为启动时连接的硬件通常不会改变。然而，对于 USB 驱动器来说，它可能在不同的硬件之间移动，如果依赖 `autodetect` 来识别硬件，可能无法找到USB驱动器上的必要模块，尤其是在不同于安装时的硬件上。
+这是由于 `autodetect` hook 所导致的。`autodetect` hook 试图仅包含引导当前系统所必需的模块。这对于大多数内置系统是有效的，因为启动时连接的硬件通常不会改变。然而，对于 USB 驱动器来说，它可能在不同的硬件之间移动，如果依赖 `autodetect` 来识别硬件，可能无法找到 USB 驱动器上的必要模块，尤其是在不同于安装时的硬件上。
 
 因此，我们把 `block` 和 `keyboard` 两个 hook 放到 `autodetect` 之前，确保它们永远会被加载。
 
@@ -326,8 +304,6 @@ vim /etc/mkinitcpio.conf
 
 mkinitcpio -P  # 重新生成 initramfs
 ```
-
-
 
 ## 参考资料
 

@@ -10,25 +10,21 @@ tags: [cheatsheet, 小技巧]
 
 <!--truncate-->
 
-
-
 ## Webhook 配置
 
 [关于 web 挂钩 - GitHub 文档](https://docs.github.com/zh/webhooks-and-events/webhooks/about-webhooks)
 
 直接看这个就完事了，在 REPO->Settings->Webhooks->Add webhook 处添加一个新的 Webhook
 
-![image-20230511190219973](https://cdn.ova.moe/img/image-20230511190219973.png)
+![image-20230511190219973](https://oss.nova.gal/img/image-20230511190219973.png)
 
-![image-20230511190315524](https://cdn.ova.moe/img/image-20230511190315524.png)
+![image-20230511190315524](https://oss.nova.gal/img/image-20230511190315524.png)
 
 URL 就直接填公网 IP 就行，content type 我选了 json。
 
 注意 Secret，这个就是用来生成 HMAC 的密钥，尽量填个随机一点的，后端倒时候也要用。
 
 成功之后它会发送一个 ping，所以可以先不完成添加。
-
-
 
 ## 后端
 
@@ -42,13 +38,8 @@ URL 就直接填公网 IP 就行，content type 我选了 json。
 
 一开始写完测试的时候一直 timed out，还以为是什么问题。
 
-
-
 没错这篇纯水，只是因为我想测试一下它的效果（笑
-
-
 
 ## 构思
 
 因为 github 提供的消息挺全面的，所以后面估计会稍微的让他更自定义一点？或者添加一个推送啥的给 QQ 机器人，让我知道是什么时候编译完成了
-

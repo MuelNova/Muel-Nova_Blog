@@ -45,6 +45,7 @@ As the drone swarm needs to operate collaboratively, we cannot use `.join()` met
 Here is the solution I came up with:
 
 > Check if it is the last drone, then add it to the `Future` class, so that all subsequent actions will wait for it to finish before proceeding.
+
 ```python
 for i in drones:
     print(drones)
@@ -54,7 +55,7 @@ for i in drones:
         client.takeoffAsync(vehicle_name=i)
 ```
 
-Now it's moving![](https://cdn.ova.moe/img/20210930153706.png)
+Now it's moving![](https://oss.nova.gal/img/20210930153706.png)
 
 Let's dive into the passion of NieR: Automata and make a thrilling purchase directly.
 

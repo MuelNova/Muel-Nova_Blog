@@ -1,7 +1,7 @@
 ---
 title: "PWN【ACSC 2023】Writeup WP Reproduction"
 authors: [nova]
-tags: ['CTF', 'Pwn', 'writeup', 'wp']
+tags: ["CTF", "Pwn", "writeup", "wp"]
 ---
 
 This is an individual competition, but I have already forgotten things related to Web or Rev, let alone Crypto. Meanwhile, we cannot solve the hard challenges, so uh-hum, let's just say I'm not participating for the sake of the ranks LOL
@@ -10,9 +10,9 @@ This is an individual competition, but I have already forgotten things related t
 
 ## Vaccine
 
-The program uses `scanf` to receive our input, therefore we have no length limit, and we can just modify *s* to be the same as *s2*.
+The program uses `scanf` to receive our input, therefore we have no length limit, and we can just modify _s_ to be the same as _s2_.
 
-![image-20230227192106762](https://cdn.ova.moe/img/image-20230227192106762.png)
+![image-20230227192106762](https://oss.nova.gal/img/image-20230227192106762.png)
 
 Then, we'll be able to leak the libc_address and ret2libc by simply doing a stack overflow and changing the return address.
 
@@ -61,7 +61,6 @@ sh.sendline(asm(shellcraft.sh()))
 
 sh.interactive()
 ```
-
 
 ## Evalbox
 

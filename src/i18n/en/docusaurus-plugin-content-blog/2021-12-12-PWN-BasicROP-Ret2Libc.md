@@ -1,15 +1,14 @@
 ---
 title: "PWN BasicROP - Ret2Libc"
-tags: ['CTF', 'Pwn']
+tags: ["CTF", "Pwn"]
 authors: [nova]
-
 ---
 
 # Basic ROP - Ret2libc
 
 After some painful reflections, failing to solve a few problems in a row, and receiving some guidance from zbr, I decided to commit suicide.
 
-Enough. 
+Enough.
 
 <!--truncate-->
 
@@ -17,11 +16,11 @@ Enough.
 
 Check the protections, no Canary and no PIE, 32-bit ELF.
 
-![image](https://cdn.ova.moe/img/image-20211212102309182.png)
+![image](https://oss.nova.gal/img/image-20211212102309182.png)
 
 In the string list, you can see both `system` and `/bin/sh`.
 
-![image](https://cdn.ova.moe/img/image-20211212102632678.png)
+![image](https://oss.nova.gal/img/image-20211212102632678.png)
 
 Simply construct a function to overwrite the return address.
 
@@ -53,7 +52,7 @@ Some key points:
 
   - Here's the solution provided by Mark:
 
-    ![image](https://cdn.ova.moe/img/image-20211212105927823.png)
+    ![image](https://oss.nova.gal/img/image-20211212105927823.png)
 
   - How to calculate the offset? Here are two methods using gdb and pwndbg:
 
@@ -61,7 +60,7 @@ Some key points:
 
       - Find the address of `call _gets`, you can see that `s` is right above it.
 
-      ![image](https://cdn.ova.moe/img/image-20211212110511113.png)
+      ![image](https://oss.nova.gal/img/image-20211212110511113.png)
 
       - Set a breakpoint at `0x0804867B`
 
@@ -92,14 +91,14 @@ Some key points:
                 arg[1]: 0x0
                 arg[2]: 0x1
                 arg[3]: 0x0
-         
+
            0x8048683 <main+107>             mov    eax, 0
-           0x8048688 <main+112>             leave  
-           0x8048689 <main+113>             ret    
-         
-           0x804868a                        nop    
-           0x804868c                        nop    
-           0x804868e                        nop    
+           0x8048688 <main+112>             leave
+           0x8048689 <main+113>             ret
+
+           0x804868a                        nop
+           0x804868c                        nop
+           0x804868e                        nop
            0x8048690 <__libc_csu_init>      push   ebp
            0x8048691 <__libc_csu_init+1>    push   edi
            0x8048692 <__libc_csu_init+2>    xor    edi, edi
@@ -135,13 +134,14 @@ Some key points:
 
         ```shell
         pwndbg> r
-        Starting program: /home/nova/Desktop/CTF/ctf-wiki/ret2libc/ret2libc1 
-        RET2LIBC >_<   
+        Starting program: /home/nova/Desktop/CTF/ctf-wiki/ret2libc/ret2libc1
+        RET2LIBC >_<
         aaaabaaacaaadaaaeaaafaaagaaahaaaiaaajaaakaaalaaamaaanaaaoaaapaaaqaaaraaasaaataaauaaavaaawaaaxaaayaaazaabbaabcaabdaabeaabfaabgaabhaabiaabjaabkaablaabmaabnaaboaabpaabqaabraabsaabtaabuaabvaabwaabxaabyaab
-        
+
         Program received signal SIGSEGV, Segmentation fault.
         0x62616164 in ?? ()
         LEGEND: STACK | HEAP | CODE | DATA | RWX | RODATA
         ─────────────────────────────────────────────────────────────────
+        ```
 
 <!-- AI -->

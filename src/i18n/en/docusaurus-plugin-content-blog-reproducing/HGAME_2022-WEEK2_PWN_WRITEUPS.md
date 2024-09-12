@@ -6,7 +6,7 @@
 
 First, let's see what the program will do.
 
-![image-20220217140202100](https://cdn.ova.moe/img/image-20220217140202100.png)
+![image-20220217140202100](https://oss.nova.gal/img/image-20220217140202100.png)
 
 You can see that the program first provides the address of `write`, but since we don't know the libc version, although we can find the libc version based on the lower 12 bits, we choose `LibcSearcher` for a quicker solution.
 
@@ -24,7 +24,7 @@ success(">>> libc_base: {}".format(hex(libc_base)))
 
 Next, it allows us to open a file.
 
-![image-20220217140449422](https://cdn.ova.moe/img/image-20220217140449422.png)
+![image-20220217140449422](https://oss.nova.gal/img/image-20220217140449422.png)
 
 Introduction to some related contents of `/proc/`.
 

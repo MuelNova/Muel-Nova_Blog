@@ -1,20 +1,18 @@
 ---
 title: 「PWN」【DASCTF2024 暑期】Writeup WP 复现
 
-tags: ['CTF', 'Pwn', 'writeup', 'wp']
+tags: ["CTF", "Pwn", "writeup", "wp"]
 
 authors: [nova]
 ---
 
 再不做题手生完了，没书读了。
 
-
-
 ## SpringBoard
 
-非栈上格式化字符串，栈上找一个 a->b->c 的链子，把 a->b 改成 a->b*->return_address（一般两字节够改了）
+非栈上格式化字符串，栈上找一个 a->b->c 的链子，把 a->b 改成 a->b\*->return_address（一般两字节够改了）
 
-然后改 b*->onegadget
+然后改 b\*->onegadget
 
 ```python
 from pwno import *
@@ -57,13 +55,9 @@ ia()
 
 ```
 
-
-
 ## magicbook
 
 2.35，一眼 largebin
-
-
 
 edit 看到是 read(0, buf, book)，考虑能不能直接把 book 改大了造成溢出
 
@@ -79,8 +73,6 @@ void *edit_the_book()
   return memcpy(dest, buf, v0);
 }
 ```
-
-
 
 create 能造最多五个
 
@@ -109,8 +101,6 @@ size_t creat_the_book()
   return ++book;
 }
 ```
-
-
 
 delete 有 UAF。free 出来一个 largebin 之后，改 fd 打 largebin attack，把 book 改了就能溢出了。
 
@@ -156,8 +146,6 @@ __int64 delete_the_book()
 }
 ```
 
-
-
 问题就是 Largebin 怎么改我已经忘完了 :joy:
 
 在这里简单复习一下 2.35 的路径。
@@ -187,11 +175,7 @@ fwd->fd->bk_nextsize = victim->bk_nextsize->fd_nextsize = victim;  // 可以把 
 
 因此可以注意到，我们可以修改 fwd->bk_nextsize，使得 fwd->bk_nextsize 指向 addr-0x20 的地方，就可以使得其写为 victim 的值。
 
-
-
 所以在这里，我们申请一个 0x450 的堆块，给它丢 largebin 里，然后改 bk_nextsize 为 book-0x20，再把一个 0x440 的堆块放 largebin 里，就可以把 book 写一个大值。
-
-
 
 最后 exp:
 
@@ -207,7 +191,7 @@ def menu(idx: int):
 def add(size: int):
     menu(1)
     sla(b'your book need?\n', str(size).encode())
-    
+
 
 def delete(idx: int, page: int | None = None, content: bytes = None):
     menu(2)
@@ -278,13 +262,11 @@ ia()
 
 好玩的题。虽然逆向难。
 
-![image-20240724005010517](https://cdn.ova.moe/img/image-20240724005010517.png)
+![image-20240724005010517](https://oss.nova.gal/img/image-20240724005010517.png)
 
-![image-20240724005022603](https://cdn.ova.moe/img/image-20240724005022603.png)
+![image-20240724005022603](https://oss.nova.gal/img/image-20240724005022603.png)
 
 可以看到有一个 fread，其 content-length 是我们可以控制的，因此有一个栈溢出。然而，由于它都用的 exit 退出，因此我们没办法直接 ROP。显然需要 longjmp 去间接跳转。
-
-
 
 setjmp 大概是这个情况
 
@@ -328,11 +310,9 @@ $2 = {
 
 但是，实际测试后发现，它变成了 `0x7f8cc1dd08d0 <__longjmp+192>    jmp    rdx                           <0x82b009f02e2e6b00>`
 
-![image-20240724011628277](https://cdn.ova.moe/img/image-20240724011628277.png)
+![image-20240724011628277](https://oss.nova.gal/img/image-20240724011628277.png)
 
 可以发现，它对这些寄存器进行了 ror 和 xor 的操作，这其实是 TLB 的 pointer guard 导致的。具体我也忘了在哪篇论文里看的了，对于 setjmp 和 longjmp，它会利用这个进行加密。（应该是 Eternal War?）
-
-
 
 那么我们只需要泄露它就好了。在多线程里，栈大小是固定的，fsbase 也是固定在栈底的。我们有一个无限大小的栈溢出和泄露，轻松拿到它。
 
@@ -356,8 +336,6 @@ def rol(v: int, k: int) -> int:
 def ptr(v: int, pg: int) -> int:
     return rol(v, 0x11) ^ pg
 ```
-
-
 
 那么回到哪里呢？headers！我们设一个 header，value 为 ROP 链子就好
 
@@ -478,8 +456,6 @@ sh.send(evil2)
 ia()
 ```
 
-
-
 ## 题外话
 
 ### Arch 如何自动进行 glibc 源码级调试
@@ -500,7 +476,6 @@ set debuginfod verbose 1
 
 ## 参考
 
-[Glibc TLS的实现与利用 | M4tsuri's Blog](https://m4tsuri.io/2020/10/18/glibc-tls/)
+[Glibc TLS 的实现与利用 | M4tsuri's Blog](https://m4tsuri.io/2020/10/18/glibc-tls/)
 
-[Largebin attack漏洞利用分析 - FreeBuf网络安全行业门户](https://www.freebuf.com/articles/system/232676.html) （大白学长写的hhh）
-
+[Largebin attack 漏洞利用分析 - FreeBuf 网络安全行业门户](https://www.freebuf.com/articles/system/232676.html) （大白学长写的 hhh）

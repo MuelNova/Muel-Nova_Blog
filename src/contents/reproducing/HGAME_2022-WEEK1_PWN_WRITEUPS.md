@@ -1,18 +1,17 @@
 ---
 title: 「PWN」【HGAME 2022 Week1】 Pwn Writeup WP 复现
 date: 2022-10-30
-tags: ['CTF', 'Pwn', 'writeup', 'wp']
+tags: ["CTF", "Pwn", "writeup", "wp"]
 authors: [nova]
-
 ---
 
 <!--truncate-->
 
 # test_your_nc
 
-这题就是最基本的nc拿flag的过程。
+这题就是最基本的 nc 拿 flag 的过程。
 
-贴一个爆破的方法(我做的时候还没有proof of work)
+贴一个爆破的方法(我做的时候还没有 proof of work)
 
 利用`pwnlib.util.iters`的`mbruteforce`
 
@@ -21,11 +20,9 @@ proof = mbruteforce(lambda x: hashlib.sha256((x).encode()).hexdigest() ==
 hash_code, charset, 4, method='fixed')
 ```
 
-
-
 # test_your_gdb
 
-gdb查看encrypted_secret，多次尝试发现不变直接绕memcpy就好
+gdb 查看 encrypted_secret，多次尝试发现不变直接绕 memcpy 就好
 
 exp:
 
@@ -55,11 +52,9 @@ sh.sendline(payload)
 sh.interactive()
 ```
 
-
-
 # enter_the_pwn_land
 
-ret2rop，需要注意的就是它循环的i的值会被修改所以得手工调一下
+ret2rop，需要注意的就是它循环的 i 的值会被修改所以得手工调一下
 
 ```python
 from pwn import *
@@ -101,19 +96,17 @@ sh.interactive()
 
 # enter_the_evil_pwn_land
 
-主要是绕过Canary的过程。
+主要是绕过 Canary 的过程。
 
-这题想要让我们搞清楚的是，创建线程时会顺便创建一个TLS用于储存诸如canary一类的值，且会用于比较canary是否被修改。这个TLS是存储在Stack高地址的，这意味着我们有一并修改TLS中canary值的机会。
+这题想要让我们搞清楚的是，创建线程时会顺便创建一个 TLS 用于储存诸如 canary 一类的值，且会用于比较 canary 是否被修改。这个 TLS 是存储在 Stack 高地址的，这意味着我们有一并修改 TLS 中 canary 值的机会。
 
+但是值得注意的是，当溢出这么多字节时，势必会对程序本身进行破坏导致 crash（修改了诸如 tcb, dtv, self 等指针），因此我们可以在本地调试时先用 gdb 调出 offset，再直接计算 libc_base。
 
-
-但是值得注意的是，当溢出这么多字节时，势必会对程序本身进行破坏导致crash（修改了诸如tcb, dtv, self等指针），因此我们可以在本地调试时先用gdb调出offset，再直接计算libc_base。
-
-> 看了官方wp之后发现是因为我们修改了dtv指针，而system函数又会调用到这个指针，所以导致程序crash，直接使用execve即可。
+> 看了官方 wp 之后发现是因为我们修改了 dtv 指针，而 system 函数又会调用到这个指针，所以导致程序 crash，直接使用 execve 即可。
 >
-> 不过，这也算一个不错的计算libc_base的经验
+> 不过，这也算一个不错的计算 libc_base 的经验
 
-在拿到libc_base之后再进行溢出，即使程序crash，我们也已经进入了system("/bin/sh")，可以成功拿到flag。
+在拿到 libc_base 之后再进行溢出，即使程序 crash，我们也已经进入了 system("/bin/sh")，可以成功拿到 flag。
 
 exp:
 
@@ -165,23 +158,19 @@ sh.sendline(payload)
 sh.interactive()
 ```
 
-
-
 # oldfashion_orw
 
-这题挺有意思的。看了题目谷歌之后发现是ORW三件套拿flag
+这题挺有意思的。看了题目谷歌之后发现是 ORW 三件套拿 flag
 
 一开始读出字节数将有符号数改成了无符号数，因此填入一个负数即可
 
-但这题给出的sh文件指出我们并不能知道flag文件的名字，因此还需要OGW读文件名（学到了）
+但这题给出的 sh 文件指出我们并不能知道 flag 文件的名字，因此还需要 OGW 读文件名（学到了）
 
-同时，这题也有一个坑点，glibc使用的open、read等使用的是`openat`实现的，这恰好是被seccomp禁用的，因此这里需要使用系统调用号实现这些函数
+同时，这题也有一个坑点，glibc 使用的 open、read 等使用的是`openat`实现的，这恰好是被 seccomp 禁用的，因此这里需要使用系统调用号实现这些函数
 
+同时，这给我整的很难受的是，我一开始的 exp 在本地能够读出文件名，远程却没有反应，不知道为什么（）
 
-
-同时，这给我整的很难受的是，我一开始的exp在本地能够读出文件名，远程却没有反应，不知道为什么（）
-
-不知道为什么，总之先贴exp上来
+不知道为什么，总之先贴 exp 上来
 
 ```python
 from pwn import *
@@ -272,15 +261,11 @@ sh.interactive()
 
 ```
 
+最后选择了 mprotect 改权限然后写 shellcode
 
+值得一提的是，mark 爹 ayoung 爹他们都是先读了 flag 名在第二次连接的时候再直接读文件内容的。
 
-
-
-最后选择了mprotect改权限然后写shellcode
-
-值得一提的是，mark爹ayoung爹他们都是先读了flag名在第二次连接的时候再直接读文件内容的。
-
-我做的时候却是不行的（每一次重新链接flag名字都换了），于是还重新改了改shellcode
+我做的时候却是不行的（每一次重新链接 flag 名字都换了），于是还重新改了改 shellcode
 
 exp:
 
@@ -399,25 +384,21 @@ print(sh.recvuntil(b"}"))
 sh.interactive()
 ```
 
-
-
 # ser_per_fa
 
 ~~在复现了在复现了(新建文件夹)~~
 
-这题作为week1的最后一题，在栈题里应该也算比较高难度了
+这题作为 week1 的最后一题，在栈题里应该也算比较高难度了
 
 好好写写（肯定不是因为我只有这题是今天做的）
 
+题目给出了源码，对于我这种 OI 什么都不知道的傻逼来说还是挺有用处的。
 
+![vulnable](https://oss.nova.gal/img/image-20220212195118394.png)
 
-题目给出了源码，对于我这种OI什么都不知道的傻逼来说还是挺有用处的。
+防护全开，因此我们不仅需要找到 libc_base，还需要找到 elf_base
 
-![vulnable](https://cdn.ova.moe/img/image-20220212195118394.png)
-
-防护全开，因此我们不仅需要找到libc_base，还需要找到elf_base
-
-通过审计可以发现dist下标可控，因此泄露libc_base和elf_base还是很容易的
+通过审计可以发现 dist 下标可控，因此泄露 libc_base 和 elf_base 还是很容易的
 
 ```python
 s.recvuntil(b'how many nodes?\n>> ')
@@ -448,15 +429,15 @@ libc_base = int(s.recv(15), 10) - libc.sym['puts']
 success('libc_base=>' + hex(libc_base))
 ```
 
-> 这里的-2275和0x7008就是直接观察静态随便找的，但是我也不知道是不是什么默契还是必要，很多人的wp中都选择了这个地址（我换了几个地址似乎也可以哈）
+> 这里的-2275 和 0x7008 就是直接观察静态随便找的，但是我也不知道是不是什么默契还是必要，很多人的 wp 中都选择了这个地址（我换了几个地址似乎也可以哈）
 
 这样即可做到任意地址读了，接下来就得思考如何写。
 
-通过add函数我们是可以做到写的，但是我们还需要知道main函数返回地址在栈上的位置。
+通过 add 函数我们是可以做到写的，但是我们还需要知道 main 函数返回地址在栈上的位置。
 
-这里给出一个[通过environ泄露栈](https://blog.csdn.net/chennbnbnb/article/details/104035261)的方法，也就是说，我们只要泄露出来_environ，即可通过gdb算出距离rbp+8的偏移
+这里给出一个[通过 environ 泄露栈](https://blog.csdn.net/chennbnbnb/article/details/104035261)的方法，也就是说，我们只要泄露出来\_environ，即可通过 gdb 算出距离 rbp+8 的偏移
 
-这里直接贴上官方exp中的写法:
+这里直接贴上官方 exp 中的写法:
 
 ```python
 # get environ (stack addr)
@@ -476,11 +457,11 @@ sh.sendlineafter("format\n", "0 " + str(index_to_ret) + " " + str(proc_base +
 0x16AA))
 ```
 
-但事实上，我们也可以通过改写got表的方法做到直接进入后门
+但事实上，我们也可以通过改写 got 表的方法做到直接进入后门
 
-> puts中调用了strlen这一函数，而这一函数在libc.so的got.plt表中是可查到的
+> puts 中调用了 strlen 这一函数，而这一函数在 libc.so 的 got.plt 表中是可查到的
 
-最后的exp:
+最后的 exp:
 
 ```python
 from pwn import *
@@ -543,4 +524,3 @@ sh.sendline(b'HACKED')
 sh.interactive()
 
 ```
-

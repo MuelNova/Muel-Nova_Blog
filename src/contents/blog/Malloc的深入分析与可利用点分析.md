@@ -1,9 +1,8 @@
 ---
 title: Malloc的源码审计
 date: 2022-06-30
-tags: ['CTF', 'Pwn', 'glibc']
+tags: ["CTF", "Pwn", "glibc"]
 authors: [nova]
-
 ---
 
 <div align='center'>
@@ -12,8 +11,7 @@ authors: [nova]
     </h1>
 </div>
 
-
-不知不觉已经2个月没更`BLOG`了，因为这两个月我确实是基本没看过`CTF`（一段时间是拿去代练赚我上头消费花掉的神里绫华的嫁妆了，另一段时间则是拿去做开发了）。今天有闲心又把下的题拿出来看了一看，发现别说堆了，我连`gdb`怎么用都忘了（）
+不知不觉已经 2 个月没更`BLOG`了，因为这两个月我确实是基本没看过`CTF`（一段时间是拿去代练赚我上头消费花掉的神里绫华的嫁妆了，另一段时间则是拿去做开发了）。今天有闲心又把下的题拿出来看了一看，发现别说堆了，我连`gdb`怎么用都忘了（）
 
 <!--truncate-->
 
@@ -31,13 +29,9 @@ authors: [nova]
     <li>因为太多了，所以决定分开写</li>
 </details>
 
-
-
 目前主要写的是`ptmalloc2`，也就是`glibc`的堆实现标准。[源码](https://sourceware.org/git/?p=glibc.git;a=blob;f=malloc/malloc.c;h=09e5ff2bce5d79b3754687db3aef314640d336eb;hb=HEAD)在[gnu.org](https://www.gnu.org/software/libc/sources.html)可以看到
 
 使用的是`93ce3e`这个提交的仓库代码。
-
-
 
 # 使用 glibc 源码调试程序的方法
 
@@ -91,15 +85,13 @@ gcc -L "${glibc_install}/lib" -I "${glibc_install}/include" -Wl,--rpath="${glibc
 */
 ```
 
-`malloc`返回一个*至少*n字节的`chunk`的指针，在没有空间的情况下返回`null`
+`malloc`返回一个*至少*n 字节的`chunk`的指针，在没有空间的情况下返回`null`
 
-如果n是0的话，`malloc`返回一个`minimum_sized`的`chunk`——在32bit上一般为16字节，在64bit上一般为32字节（也有可能是24字节）
+如果 n 是 0 的话，`malloc`返回一个`minimum_sized`的`chunk`——在 32bit 上一般为 16 字节，在 64bit 上一般为 32 字节（也有可能是 24 字节）
 
-![32bytes_of_malloc(0)](https://cdn.ova.moe/img/image-20220519164757635.png)
+![32bytes_of_malloc(0)](https://oss.nova.gal/img/image-20220519164757635.png)
 
-因为`size_t`是无符号类型，n是负数通常会导致系统分配一个极大的内存且出现没有足够多的内存分配而失败的情况。
-
-
+因为`size_t`是无符号类型，n 是负数通常会导致系统分配一个极大的内存且出现没有足够多的内存分配而失败的情况。
 
 # 原理
 
@@ -136,14 +128,12 @@ ptmalloc_init (void)
 #endif
   thread_arena = &main_arena; // 记录 arena 的指针地址，初始化时记录主线程的 main_arena 指针地址
   malloc_init_state (&main_arena); // 对主线程的 arena 进行初始化
-    
+
   ...
 }
 ```
 
 为了精简内容，将一部分我们不需要注意的东西省去。
-
-
 
 ### tcache_key_initialize ()
 
@@ -175,8 +165,6 @@ tcache_key_initialize (void)
     }
 }
 ```
-
-
 
 ### malloc_init_state
 
@@ -211,7 +199,7 @@ malloc_init_state (mstate av)
     set_max_fast (DEFAULT_MXFAST); // 设置最大 fast_bin 大小，定义了宏一通计算
   atomic_store_relaxed (&av->have_fastchunks, false); // 原子写入
 
-  av->top = initial_top (av); // 将 top 字段指向 bins 
+  av->top = initial_top (av); // 将 top 字段指向 bins
 }
 ```
 
@@ -254,7 +242,7 @@ malloc_init_state (mstate av)
     {
       victim = tag_new_usable (_int_malloc (&main_arena, bytes)); // 使用 _int_malloc 从 main_arena 中取 bytes 大小的内存。
       assert (!victim || chunk_is_mmapped (mem2chunk (victim)) ||
-	      &main_arena == arena_for_chunk (mem2chunk (victim))); 
+	      &main_arena == arena_for_chunk (mem2chunk (victim)));
       /* 需满足以下至少一点
       	1. 取到了 chunk
       	2. chunk 是 mmap 分配的
@@ -262,12 +250,12 @@ malloc_init_state (mstate av)
       return victim;
     }
   // 多线程
-  arena_get (ar_ptr, bytes); 
+  arena_get (ar_ptr, bytes);
 
   victim = _int_malloc (ar_ptr, bytes);
   /* Retry with another arena only if we were able to find a usable arena
      before.  */
-  // 使用其他的 arena 
+  // 使用其他的 arena
   if (!victim && ar_ptr != NULL)
     {
       LIBC_PROBE (memory_malloc_retry, 1, bytes);
@@ -288,7 +276,7 @@ malloc_init_state (mstate av)
 
 多线程的 `malloc` 我们放到`arena`那讲， 先来看看` _int_malloc`
 
-## _int_malloc ()
+## \_int_malloc ()
 
 定义在`malloc.c`的[#3765](https://sourceware.org/git/?p=glibc.git;a=blob;f=malloc/malloc.c;h=09e5ff2bce5d79b3754687db3aef314640d336eb;hb=HEAD#l3765)。这就是`malloc`的关键函数。代码很长，我们分段来看。
 
@@ -370,7 +358,7 @@ _int_malloc (mstate av, size_t bytes)
       if (__glibc_unlikely (pp != NULL && misaligned_chunk (pp)))       \
 	malloc_printerr ("malloc(): unaligned fastbin chunk detected"); \
     }							\
-  while ((pp = catomic_compare_and_exchange_val_acq (fb, pp, victim)) \ 
+  while ((pp = catomic_compare_and_exchange_val_acq (fb, pp, victim)) \
 	 != victim);					\
          /* 遍历 fd 对应的 bins 中是否有空闲的 chunk 块 */
   if ((unsigned long) (nb) <= (unsigned long) (get_max_fast ())) // nb 在 fastbin 范围内
@@ -397,17 +385,17 @@ _int_malloc (mstate av, size_t bytes)
 
 未进入`REMOVE_FB`前，我们的结构是这样的
 
-![structure_of_the_first](https://cdn.ova.moe/img/image-20220519204208793.png)
+![structure_of_the_first](https://oss.nova.gal/img/image-20220519204208793.png)
 
 首先第一次循环时，`pp = victim`, `victim = pp->fd`
 
-![first_loop](https://cdn.ova.moe/img/image-20220519204410001.png)
+![first_loop](https://oss.nova.gal/img/image-20220519204410001.png)
 
 之后执行`while`，`catomic_compare_and_exchange_val_acq(mem, newval, oldval)`执行逻辑是这样的：如果 `*mem = oldval`，则返回`oldval`，且`*mem = newval`
 
 我们的`mem`是`fb`，`oldval`是`pp`，`newval`是`victim`。显然成立，则第一次循环完毕后我们有`*fb=victim`, `victim = pp`
 
-![end_of_the_first_loop](https://cdn.ova.moe/img/image-20220519205349480.png)
+![end_of_the_first_loop](https://oss.nova.gal/img/image-20220519205349480.png)
 
 是的，`chunk1`从链表上完全脱离了。
 
@@ -427,7 +415,7 @@ _int_malloc (mstate av, size_t bytes)
 		{
 		  mchunkptr tc_victim;
 
-		  /* While bin not empty and tcache not full, copy chunks.  */ 
+		  /* While bin not empty and tcache not full, copy chunks.  */
            /* 将 fastbin 拆到对应大小的 tcache 中 */
 		  while (tcache->counts[tc_idx] < mp_.tcache_count
 			 && (tc_victim = *fb) != NULL)
@@ -446,7 +434,7 @@ _int_malloc (mstate av, size_t bytes)
 		    }
 		}
 #endif
-	      void *p = chunk2mem (victim); // 指针向后移动 0x10 
+	      void *p = chunk2mem (victim); // 指针向后移动 0x10
 	      alloc_perturb (p, bytes);
 	      return p;
 	    }
@@ -479,7 +467,7 @@ _int_malloc (mstate av, size_t bytes)
 	    malloc_printerr ("malloc(): smallbin double linked list corrupted");
           set_inuse_bit_at_offset (victim, nb); // 设置 victim 的 inuse 位
           /* 取出 victim 修改链表 */
-          bin->bk = bck; 
+          bin->bk = bck;
           bck->fd = bin;
 
           if (av != &main_arena)
@@ -521,7 +509,7 @@ _int_malloc (mstate av, size_t bytes)
 
 ### after_smallbin
 
-在取出`larginbin`之前，malloc还对`fastbin`中的一些碎片进行了合并。
+在取出`larginbin`之前，malloc 还对`fastbin`中的一些碎片进行了合并。
 
 ```c
 /*
@@ -593,7 +581,7 @@ static void malloc_consolidate(mstate av)
     if (p != 0) {
       do {
 	{
-	  if (__glibc_unlikely (misaligned_chunk (p))) // 指针必须得对齐 
+	  if (__glibc_unlikely (misaligned_chunk (p))) // 指针必须得对齐
 	    malloc_printerr ("malloc_consolidate(): "
 			     "unaligned fastbin chunk detected");
 
@@ -658,7 +646,7 @@ static void malloc_consolidate(mstate av)
 }
 ```
 
-首先将与该块相邻的下一块的PREV_INUSE置为1。如果相邻的上一块未被占用，则合并，再判断相邻的下一块是否被占用，若未被占用，则合并。不管是否完成合并，都会把`fastbin`或者完成合并以后的bin放到`unsortbin`中。（如果与`top chunk`相邻，则合并到`top chunk`中）
+首先将与该块相邻的下一块的 PREV_INUSE 置为 1。如果相邻的上一块未被占用，则合并，再判断相邻的下一块是否被占用，若未被占用，则合并。不管是否完成合并，都会把`fastbin`或者完成合并以后的 bin 放到`unsortbin`中。（如果与`top chunk`相邻，则合并到`top chunk`中）
 
 ### iteration
 
@@ -721,8 +709,8 @@ static void malloc_consolidate(mstate av)
              exception to best-fit, and applies only when there is
              no exact fit for a small chunk.
            */
-          
-          
+
+
           if (in_smallbin_range (nb) && // 在 smallbin 范围内
               bck == unsorted_chunks (av) && // unsorted_bin 只有一个 chunk
               victim == av->last_remainder && // 为 last_remainder
@@ -754,8 +742,8 @@ static void malloc_consolidate(mstate av)
           // 妈妈滴，又检查。
           /* remove from unsorted list */
           if (__glibc_unlikely (bck->fd != victim))
-            malloc_printerr ("malloc(): corrupted unsorted chunks 3"); 
-          
+            malloc_printerr ("malloc(): corrupted unsorted chunks 3");
+
           // 取出头部的 chunk
           unsorted_chunks (av)->bk = bck;
           bck->fd = unsorted_chunks (av);
@@ -857,7 +845,7 @@ static void malloc_consolidate(mstate av)
               else // large bin 为空
                 victim->fd_nextsize = victim->bk_nextsize = victim;
             }
-          
+
           // 插入链表
           mark_bin (av, victim_index);
           victim->bk = bck;
@@ -924,7 +912,7 @@ static void malloc_consolidate(mstate av)
 		  && chunksize_nomask (victim)
 		    == chunksize_nomask (victim->fd))
                 victim = victim->fd;
-              
+
               remainder_size = size - nb;
               unlink_chunk (av, victim); // 取出 victim
 
@@ -1153,10 +1141,8 @@ static void malloc_consolidate(mstate av)
 }
 ```
 
-
-
 # 总结
 
 浅偷一张图，我觉得总结全了。
 
-![img](https://cdn.ova.moe/img/20210928234156-9c2ced00-2072-1.png)
+![img](https://oss.nova.gal/img/20210928234156-9c2ced00-2072-1.png)

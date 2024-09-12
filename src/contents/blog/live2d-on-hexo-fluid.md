@@ -1,15 +1,13 @@
 ---
 title: Hexo-Fluid下的live2d 3.x看板娘实现
 date: 2021-11-30
-tags: ['Hexo', 'live2d', Investigate]
+tags: ["Hexo", "live2d", Investigate]
 authors: [nova]
-
-
 ---
 
 # 引言
 
-总感觉自己Blog太空了,  想搞个看板娘什么的。使用了 HEXO-live2d 发现只支持Cubism2版本的live2d, 其他也是这样（看了下Issues好像是因为商用版权什么的）, 在官网看到了这个SDK所以尝试着`ctrl+c` `ctrl+v`了一下, 也没想到成功了:P
+总感觉自己 Blog 太空了, 想搞个看板娘什么的。使用了 HEXO-live2d 发现只支持 Cubism2 版本的 live2d, 其他也是这样（看了下 Issues 好像是因为商用版权什么的）, 在官网看到了这个 SDK 所以尝试着`ctrl+c` `ctrl+v`了一下, 也没想到成功了:P
 
 <!--truncate-->
 
@@ -34,35 +32,26 @@ npm install
 npm run build
 ```
 
+官方推荐使用 VS 进行，此时命令有所区别，详情请去[Github](https://github.com/Live2D/CubismWebSamples/blob/develop/Samples/TypeScript/README.md)查看。
 
-官方推荐使用VS进行，此时命令有所区别，详情请去[Github](https://github.com/Live2D/CubismWebSamples/blob/develop/Samples/TypeScript/README.md)查看。
-
-
-此时会在`\dist\`下编译生成一个`bundle.js`, 在`index.html`中用于加载live2d模型。
-
-
+此时会在`\dist\`下编译生成一个`bundle.js`, 在`index.html`中用于加载 live2d 模型。
 
 接下来的地址若无特殊说明默认均在`\CubismSdkForWeb-x\Samples\TypeScript\Demo`文件夹下。
-
-
 
 ### 导入自己的模型
 
 打开`\src\lappdefine.ts`文件, 找到如下代码：
 
 ```typescript
-export const ResourcesPath = '../../Resources/';
-
+export const ResourcesPath = "../../Resources/";
 
 // モデル定義---------------------------------------------
 // モデルを配置したディレクトリ名の配列
 // ディレクトリ名とmodel3.jsonの名前を一致させておくこと
-export const ModelDir: string[] = ['Haru', 'Hiyori', 'Mark', 'Natori', 'Rice'];
+export const ModelDir: string[] = ["Haru", "Hiyori", "Mark", "Natori", "Rice"];
 ```
 
-这里定义了各个live2d模型的文件位置, 我们要做的就是把我们的模型放到代码中的`ResourcesPath`这个位置, 默认情况下也就是`\CubismSdkForWeb-4-r.3\Samples\Resources\`下, 并在`ModelDir`中添加我们的模型名字。
-
-
+这里定义了各个 live2d 模型的文件位置, 我们要做的就是把我们的模型放到代码中的`ResourcesPath`这个位置, 默认情况下也就是`\CubismSdkForWeb-4-r.3\Samples\Resources\`下, 并在`ModelDir`中添加我们的模型名字。
 
 **值得注意的是**，我们需要把`.model3.json`的文件名改成与文件夹一致。
 
@@ -76,7 +65,7 @@ export const ModelDir: string[] = ['Haru', 'Hiyori', 'Mark', 'Natori', 'Rice'];
 │  │  86.model3.json
 │  │  86.physics3.json
 │  │  cc_86.cfg
-│  │  
+│  │
 │  └─86.4096
 │          texture_00.png
 ├─Other_Models
@@ -94,7 +83,7 @@ export const ModelDir: string[] = ['Haru', 'Hiyori', 'Mark', 'Natori', 'Rice'];
 │  │  Nova.model3.json
 │  │  86.physics3.json
 │  │  cc_86.cfg
-│  │  
+│  │
 │  └─86.4096
 │          texture_00.png
 ├─Other_Models
@@ -104,41 +93,39 @@ export const ModelDir: string[] = ['Haru', 'Hiyori', 'Mark', 'Natori', 'Rice'];
 
 再次编译并运行本地服务器, 你现在应该能看到刚才导入的模型了。
 
-
 > 你可以使用第三方工具如`Visual Studio`或`WebStorm`打开本地服务器，或者在命令行输入`npm run start`后打开所示的网址, 进入`Demo`文件夹预览。
 
-
-![烧啊](https://cdn.ova.moe/img/image-20211007214102328.png)
+![烧啊](https://oss.nova.gal/img/image-20211007214102328.png)
 
 > [皮](https://t.bilibili.com/485722661869867718?tab=2)来自石油佬的奉献
 
 ## 修改模型跟随鼠标移动
 
-SDK中默认看板娘是按住`鼠标左键/鼠标右键`才会跟随的，我们接下来的操作就是把它变成跟随鼠标移动的。
+SDK 中默认看板娘是按住`鼠标左键/鼠标右键`才会跟随的，我们接下来的操作就是把它变成跟随鼠标移动的。
 
 打开`\src\lappdelegate.ts`文件， 找到以下代码:
 
 ```typescript
-const supportTouch: boolean = 'ontouchend' in canvas;
+const supportTouch: boolean = "ontouchend" in canvas;
 
-    if (supportTouch) {
-      // タッチ関連コールバック関数登録
-      canvas.ontouchstart = onTouchBegan;
-      canvas.ontouchmove = onTouchMoved;
-      canvas.ontouchend = onTouchEnded;
-      canvas.ontouchcancel = onTouchCancel;
-    } else {
-      // マウス関連コールバック関数登録
-      canvas.onmousedown = onClickBegan;
-      canvas.onmousemove = onMouseMoved;
-      canvas.onmouseup = onClickEnded;
-    }
+if (supportTouch) {
+  // タッチ関連コールバック関数登録
+  canvas.ontouchstart = onTouchBegan;
+  canvas.ontouchmove = onTouchMoved;
+  canvas.ontouchend = onTouchEnded;
+  canvas.ontouchcancel = onTouchCancel;
+} else {
+  // マウス関連コールバック関数登録
+  canvas.onmousedown = onClickBegan;
+  canvas.onmousemove = onMouseMoved;
+  canvas.onmouseup = onClickEnded;
+}
 ```
 
 注释掉，添加鼠标移动事件
 
 ```typescript
-document.addEventListener('mousemove', function (e) {
+document.addEventListener("mousemove", function (e) {
   const rect = canvas.getBoundingClientRect();
   const posX: number = e.clientX - rect.left;
   const posY: number = e.clientY - rect.top;
@@ -155,7 +142,7 @@ document.addEventListener('mousemove', function (e) {
 canvas.onmouseup = onClickEnded;
 
 // 为了美观，我又添加了一个移出浏览器归位的事件
-document.addEventListener('mouseout', function (e) {
+document.addEventListener("mouseout", function (e) {
   const live2DManager: LAppLive2DManager = LAppLive2DManager.getInstance();
   live2DManager.onDrag(0.0, 0.0);
 });
@@ -163,9 +150,9 @@ document.addEventListener('mouseout', function (e) {
 
 再次测试，已经可以正常使用了。
 
-## 绘制canvas
+## 绘制 canvas
 
-为了去除canvas中的背景, 我们打开`\src\lappview.ts`, 找到图像创建的方法注释掉
+为了去除 canvas 中的背景, 我们打开`\src\lappview.ts`, 找到图像创建的方法注释掉
 
 ```typescript
 public initializeSprite(): void {
@@ -236,7 +223,7 @@ public initializeSprite(): void {
       gl.clearColor(0.0, 0.0, 0.0, 0.0); //将gl.clearColor(0.0, 0.0, 0.0, 1.0)的alpha修改为0.0
 ```
 
-接下来就是对live2d模型布局的一个自定义, 这里直接套用了live2d 2.x版本的[Live2D](https://github.com/galnetwen/Live2D)项目
+接下来就是对 live2d 模型布局的一个自定义, 这里直接套用了 live2d 2.x 版本的[Live2D](https://github.com/galnetwen/Live2D)项目
 
 > 该项目里的`js/live2d.js`即为`dist`目录下的`bundle.js`, 因此我们应该对`demo.html`做一些修改
 
@@ -263,19 +250,15 @@ public initialize(): boolean {
     // canvas.width = window.innerWidth;
     // canvas.height = window.innerHeight;
   }
-	
+
 ```
-
-
-
-
 
 把[Live2D](https://github.com/galnetwen/Live2D)克隆出来的`live2d`文件夹放入`hexo`的`source`文件夹中, 再将先前编译的`\dist\bundle.js` 与`\CubismSdkForWeb-4-r.3\Core\live2dcubismcore.js`放入`source\live2d\js\`文件夹下, 最后找到`hexo根目录`下的`_config.fluid.yml`文件, 找到以下行:
 
 ```yml
 # 自定义 <head> 节点中的 HTML 内容
 # Customize <head> HTML content
-custom_head: 
+custom_head:
 ```
 
 添加上`demo.html`里的代码:
@@ -289,14 +272,17 @@ custom_head:
 ```html
 <div id="landlord">
   <div class="message" style="opacity:0"></div>
-  <canvas id="live2d" width="280" height="250" class="live2d"></canvas> 
+  <canvas id="live2d" width="280" height="250" class="live2d"></canvas>
   <!-- 如果你修改这里的id, 则对应JS的id也要改变 -->
   <div class="hide-button">隐藏</div>
 </div>
-<script type="text/javascript" src="https://cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script
+  type="text/javascript"
+  src="https://cdn.bootcss.com/jquery/2.2.4/jquery.min.js"
+></script>
 <script type="text/javascript">
-  var message_Path = '/live2d/'
-  var home_Path = 'https://haremu.com/' //可以修改为自己的主页链接或者删除
+  var message_Path = "/live2d/";
+  var home_Path = "https://haremu.com/"; //可以修改为自己的主页链接或者删除
 </script>
 <!--将 live2d.js 改为 bundle.js -->
 <script type="text/javascript" src="./live2d/js/bundle.js"></script>
@@ -306,9 +292,7 @@ custom_head:
 <script type="text/javascript" src="/live2d/js/message.js"></script>
 ```
 
-最后, 我们使用命令`hexo clean && hexo g`即可在blog上看到我们的live2d人物
-
-
+最后, 我们使用命令`hexo clean && hexo g`即可在 blog 上看到我们的 live2d 人物
 
 ## 其它
 
@@ -338,22 +322,17 @@ custom_head:
     this.scale(scaleX*2, scaleY*2);
   }
   //你想放大多少倍就乘以多少即可
-  
+
 ```
 
 完成后重新编译`bundle.js`放入`source\live2d\js\`文件夹并重新部署`hexo`即可
 
-
-
 ### 后记
 
-简单的修改并不能使看板娘趋于完美，你会遇到诸如**模型显示不全**、**模型无法交互**、**模型跟随鼠标诡异**等等问题, 解决方法也就是如上的删改源码, 自己添加实现。 由于精力有限实在是难以全部复述(毕竟写这个blog的时候看板娘已经部署好几个月了())
+简单的修改并不能使看板娘趋于完美，你会遇到诸如**模型显示不全**、**模型无法交互**、**模型跟随鼠标诡异**等等问题, 解决方法也就是如上的删改源码, 自己添加实现。 由于精力有限实在是难以全部复述(毕竟写这个 blog 的时候看板娘已经部署好几个月了())
 
-你可以研究[大佬已经做好的项目](https://github.com/cqc233/live2dDemo)得到上述问题的大部分解决方法, 添加了不少自定义方法以优化看板娘体验, 甚至做到开盖即用(甚至还有BLOG与视频, 比起我这个详细到不知道哪里去了~~所以我花大量时间写这个BLOG的意义在哪里~~)， 你可以前往[仰望星空的sun](https://space.bilibili.com/42800229)了解更多。
+你可以研究[大佬已经做好的项目](https://github.com/cqc233/live2dDemo)得到上述问题的大部分解决方法, 添加了不少自定义方法以优化看板娘体验, 甚至做到开盖即用(甚至还有 BLOG 与视频, 比起我这个详细到不知道哪里去了~~所以我花大量时间写这个 BLOG 的意义在哪里~~)， 你可以前往[仰望星空的 sun](https://space.bilibili.com/42800229)了解更多。
 
 ~~人类存在的意义就是不断制造重复的轮子！~~
 
-![通过各种自定义后的看板娘](https://cdn.ova.moe/img/image-20211010114744975.png)
-
-
-
+![通过各种自定义后的看板娘](https://oss.nova.gal/img/image-20211010114744975.png)

@@ -1,8 +1,7 @@
 ---
 title: 「PWN」【XCTF-final 7th】Pwn Writeup WP Reproduction
 authors: [nova]
-tags: ['CTF', 'Pwn', 'writeup', 'wp']
-
+tags: ["CTF", "Pwn", "writeup", "wp"]
 ---
 
 import Link from '@docusaurus/Link';
@@ -24,21 +23,21 @@ There are many tricks in the whole problem, and there are many optimizations in 
 
 ### Program Analysis
 
-![image-20230409233807386](https://cdn.ova.moe/img/image-20230409233807386.png)
+![image-20230409233807386](https://oss.nova.gal/img/image-20230409233807386.png)
 
 Firstly, let's analyze the logic: Change the permissions of memory from 0 to 0x1000 to RWX, then run the code in this memory, so it is inferred that shellcode needs to be written.
 
-![image-20230409234142546](https://cdn.ova.moe/img/image-20230409234142546.png)
+![image-20230409234142546](https://oss.nova.gal/img/image-20230409234142546.png)
 
 In `init_env`, the `name` is filled with 160 random numbers, and the first ten random numbers are output. Noticing that `seed` is only 256, so we can actually brute force the initial seed, and then complete all 160 bits of the name.
 
-![image-20230409234335295](https://cdn.ova.moe/img/image-20230409234335295.png)
+![image-20230409234335295](https://oss.nova.gal/img/image-20230409234335295.png)
 
-![image-20230409234421662](https://cdn.ova.moe/img/image-20230409234421662.png)
+![image-20230409234421662](https://oss.nova.gal/img/image-20230409234421662.png)
 
 Observe the `getnumber` function, it reads in 0x14 bytes of content to the `buffer`, but the `buffer` size is 0x10, which can overflow to cover the following `seed`, but the effect is not clear for now.
 
-![image-20230409234626691](https://cdn.ova.moe/img/image-20230409234626691.png)
+![image-20230409234626691](https://oss.nova.gal/img/image-20230409234626691.png)
 
 In the `playgame` function, the random number seed is reset, so in the `getnumber` function we can directly set the random number seed, thereby controlling it to some extent.
 
@@ -49,7 +48,7 @@ Continuing to look at `playgame`, it changes `name[i]` as well as `name[i-1]` an
 - Afterwards, we can repeat this process, setting `name[i+2]` to determine `name[i+1]` to a specific value.
 - Finally, using n+1 names, we can control the values of `name[0, 1, ..., n]`, noting that n+2 will also change.
 
-![image-20230409235536471](https://cdn.ova.moe/img/image-20230409235536471.png)
+![image-20230409235536471](https://oss.nova.gal/img/image-20230409235536471.png)
 
 Let's look at the next condition. First, it ensures that `name[i]` is between 47 and 122, meaning our name needs to be visible. Of course, we can bypass its check on the rest of the text by setting `name[n]` to 0.
 
@@ -61,7 +60,7 @@ Assuming there is no `messstr` function, we can set the name to this format, avo
 -----------------------------------------------------
 ```
 
-![image-20230410000029657](https://cdn.ova.moe/img/image-20230410000029657.png)
+![image-20230410000029657](https://oss.nova.gal/img/image-20230410000029657.png)
 
 Finally, it is `messstr()`, where many teams likely got stuck. In simple terms, it permutes the name via the program's PID as the random number seed.
 
@@ -73,7 +72,7 @@ The problem is: generally, when we start a program, its PID usually changes. If 
 
 Before writing the exploit, we happened to check the Dockerfile.
 
-![image-20230410000627857](https://cdn.ova.moe/img/image-20230410000627857.png)
+![image-20230410000627857](https://oss.nova.gal/img/image-20230410000627857.png)
 
 Noticing that it uses the pwn.red/jail image, upon investigation, we found it is an entirely isolated sandbox environment. This prompted us to think: if it uses a method similar to spawning child processes, will `getpid()` fetch the PID of its parent process? So when repeatedly opening processes, since the parent process is not terminated, the PID remains constant.
 

@@ -1,9 +1,8 @@
 ---
 title: ret2usr
-
 ---
 
-import Link from '@docusaurus/Link';
+import Link from "@docusaurus/Link";
 
 在本章中，我们将介绍一种最基础的攻击，也就是 ret2usr
 
@@ -19,19 +18,13 @@ import Link from '@docusaurus/Link';
 
 :::
 
-
-
 ### SMEP/SMAP
 
 See <Link to="getting_start#内核保护机制">内核保护机制</Link>
 
-
-
 ### KPTI(Kernel Page Table Isolation)
 
 在 KPTI 中，使得内核态与用户态的隔离进一步增强。具体而言，就是内核态中的页表包含了用户态的页表，以及内核态的页表。而用户态中的页表包含了用户态的页表，以及仅部分的内核态页表。同时，内核态中的用户态页表是不可执行的，即类似于 SMEP。
-
-
 
 ## K3RN3L 2021 - Easy Kernel
 
@@ -189,16 +182,12 @@ mov     [rsp+38h+var_10], rax
 xor     eax, eax
 ```
 
-
-
 因此我们的思路非常清晰：
 
 1. 泄露 Kernel Stack Canary
 2. 泄露 Kernel Address
 3. 写 ROP
 4. ret2usr
-
-
 
 ### 准备工作
 
@@ -261,7 +250,7 @@ sudo gdb -x gdbscript
 
 > gdbscript 参照 <Link to="kernel_exploit_cheatsheet#gdbscript">gdbscript</Link>
 
-之后，通过 lsmod 查看 module基址，在 gdb 中增加 symbol-file
+之后，通过 lsmod 查看 module 基址，在 gdb 中增加 symbol-file
 
 ```bash
 / # lsmod
@@ -302,8 +291,6 @@ gef➤  x/i 0xffffffff98200000+0x16e9
 :::info 如何设置？
 
 As with a real-address mode interrupt return, the IRET instruction pops the return instruction pointer, return code segment selector, and EFLAGS image from the stack to the **EIP, CS, and EFLAGS registers**, respectively, and then resumes execution of the interrupted program or procedure. If the return is to another privilege level, the IRET instruction **also pops the stack pointer and SS from the stack**, before resuming program execution. If the return is to virtual-8086 mode, the processor also pops the data segment registers from the stack.
-
-
 
 ```c
     payload[++i] = (unsigned long)spawn_shell; // userland rip
@@ -396,7 +383,7 @@ int main() {
 
 此时再次运行 exp，我们可以看到已经返回到了我们的 spawn_shell 函数，然而由于 KPTI 的限制，我们无法在内核态中运行我们的用户态函数，此时就会报一个 Segmentation fault。
 
-![image-20240225111831744](https://cdn.ova.moe/img/image-20240225111831744.png)
+![image-20240225111831744](https://oss.nova.gal/img/image-20240225111831744.png)
 
 简单使用 `signal(SIGSEGV, spawn_shell);` 即可绕过
 

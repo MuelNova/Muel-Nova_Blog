@@ -145,10 +145,10 @@ Then open the remote `settings.json` and add the following line:
 
 ```json
 {
-    "clangd.arguments": [
-        // highlight-next-line
-        "--compile-commands-dir=/linux"
-    ]
+  "clangd.arguments": [
+    // highlight-next-line
+    "--compile-commands-dir=/linux"
+  ]
 }
 ```
 
@@ -162,108 +162,109 @@ Add the following:
 
 ```json
 [
-    {
-        "arguments": [
-            "clang",
-            "-c",
-            "-Wp,-MMD,scripts/mod/.empty.o.d",
-            "-nostdinc",
-            "-isystem",
-            "/usr/lib/llvm-10/lib/clang/10.0.0/include",
-            "-I./arch/x86/include",
-            "-I./arch/x86/include/generated",
-            "-I./include",
-            "-I./arch/x86/include/uapi",
-            "-I./arch/x86/include/generated/uapi",
-            "-I./include/uapi",
-            "-I./include/generated/uapi",
-            "-include",
-            "./include/linux/kconfig.h",
-            "-include",
-            "./include/linux/compiler_types.h",
-            "-D__KERNEL__",
-            "-Qunused-arguments",
-            "-fmacro-prefix-map=./=",
-            "-Wall",
-            "-Wundef",
-            "-Werror=strict-prototypes",
-            "-Wno-trigraphs",
-            "-fno-strict-aliasing",
-            "-fno-common",
-            "-fshort-wchar",
-            "-fno-PIE",
-            "-Werror=implicit-function-declaration",
-            "-Werror=implicit-int",
-            "-Werror=return-type",
-            "-Wno-format-security",
-            "-std=gnu89",
-            "-no-integrated-as",
-            "-Werror=unknown-warning-option",
-            "-mno-sse",
-            "-mno-mmx",
-            "-mno-sse2",
-            "-mno-3dnow",
-            "-mno-avx",
-            "-m32",
-            "-msoft-float",
-            "-mregparm=3",
-            "-freg-struct-return",
-            "-fno-pic",
-            "-mstack-alignment=4",
-            "-march=i686",
-            "-Wa,-mtune=generic32",
-            "-ffreestanding",
-            "-Wno-sign-compare",
-            "-fno-asynchronous-unwind-tables",
-            "-mretpoline-external-thunk",
-            "-fno-delete-null-pointer-checks",
-            "-Wno-address-of-packed-member",
-            "-O2",
-            "-Wframe-larger-than=1024",
-            "-fstack-protector-strong",
-            "-Wno-format-invalid-specifier",
-            "-Wno-gnu",
-            "-mno-global-merge",
-            "-Wno-unused-const-variable",
-            "-fno-omit-frame-pointer",
-            "-fno-optimize-sibling-calls",
-            "-g",
-            "-gdwarf-4",
-            "-Wdeclaration-after-statement",
-            "-Wvla",
-            "-Wno-pointer-sign",
-            "-Wno-array-bounds",
-            "-fno-strict-overflow",
-            "-fno-stack-check",
-            "-Werror=date-time",
-            "-Werror=incompatible-pointer-types",
-            "-fcf-protection=none",
-            "-Wno-initializer-overrides",
-            "-Wno-format",
-            "-Wno-sign-compare",
-            "-Wno-format-zero-length",
-            "-Wno-tautological-constant-out-of-range-compare",
-            "-DKBUILD_MODFILE=\"scripts/mod/empty\"",
-            "-DKBUILD_BASENAME=\"empty\"",
-            "-DKBUILD_MODNAME=\"empty\"",
-            "-o",
-            "scripts/mod/empty.o",
-            "scripts/mod/empty.c"
-        ],
-        "directory": "/linux",
-        "file": "scripts/mod/empty.c"
-    }
+  {
+    "arguments": [
+      "clang",
+      "-c",
+      "-Wp,-MMD,scripts/mod/.empty.o.d",
+      "-nostdinc",
+      "-isystem",
+      "/usr/lib/llvm-10/lib/clang/10.0.0/include",
+      "-I./arch/x86/include",
+      "-I./arch/x86/include/generated",
+      "-I./include",
+      "-I./arch/x86/include/uapi",
+      "-I./arch/x86/include/generated/uapi",
+      "-I./include/uapi",
+      "-I./include/generated/uapi",
+      "-include",
+      "./include/linux/kconfig.h",
+      "-include",
+      "./include/linux/compiler_types.h",
+      "-D__KERNEL__",
+      "-Qunused-arguments",
+      "-fmacro-prefix-map=./=",
+      "-Wall",
+      "-Wundef",
+      "-Werror=strict-prototypes",
+      "-Wno-trigraphs",
+      "-fno-strict-aliasing",
+      "-fno-common",
+      "-fshort-wchar",
+      "-fno-PIE",
+      "-Werror=implicit-function-declaration",
+      "-Werror=implicit-int",
+      "-Werror=return-type",
+      "-Wno-format-security",
+      "-std=gnu89",
+      "-no-integrated-as",
+      "-Werror=unknown-warning-option",
+      "-mno-sse",
+      "-mno-mmx",
+      "-mno-sse2",
+      "-mno-3dnow",
+      "-mno-avx",
+      "-m32",
+      "-msoft-float",
+      "-mregparm=3",
+      "-freg-struct-return",
+      "-fno-pic",
+      "-mstack-alignment=4",
+      "-march=i686",
+      "-Wa,-mtune=generic32",
+      "-ffreestanding",
+      "-Wno-sign-compare",
+      "-fno-asynchronous-unwind-tables",
+      "-mretpoline-external-thunk",
+      "-fno-delete-null-pointer-checks",
+      "-Wno-address-of-packed-member",
+      "-O2",
+      "-Wframe-larger-than=1024",
+      "-fstack-protector-strong",
+      "-Wno-format-invalid-specifier",
+      "-Wno-gnu",
+      "-mno-global-merge",
+      "-Wno-unused-const-variable",
+      "-fno-omit-frame-pointer",
+      "-fno-optimize-sibling-calls",
+      "-g",
+      "-gdwarf-4",
+      "-Wdeclaration-after-statement",
+      "-Wvla",
+      "-Wno-pointer-sign",
+      "-Wno-array-bounds",
+      "-fno-strict-overflow",
+      "-fno-stack-check",
+      "-Werror=date-time",
+      "-Werror=incompatible-pointer-types",
+      "-fcf-protection=none",
+      "-Wno-initializer-overrides",
+      "-Wno-format",
+      "-Wno-sign-compare",
+      "-Wno-format-zero-length",
+      "-Wno-tautological-constant-out-of-range-compare",
+      "-DKBUILD_MODFILE=\"scripts/mod/empty\"",
+      "-DKBUILD_BASENAME=\"empty\"",
+      "-DKBUILD_MODNAME=\"empty\"",
+      "-o",
+      "scripts/mod/empty.o",
+      "scripts/mod/empty.c"
+    ],
+    "directory": "/linux",
+    "file": "scripts/mod/empty.c"
+  }
 ]
 ```
 
 Then open the remote `sett```json
 {
-    "clangd.arguments": [
-        // highlight-next-line
-        "--compile-commands-dir=/linux/tools/lab"
-    ]
+"clangd.arguments": [
+// highlight-next-line
+"--compile-commands-dir=/linux/tools/lab"
+]
 }
-```
+
+````
 
 ## Kernel Modules
 
@@ -288,7 +289,7 @@ Then open the remote `sett```json
 The Docker setup has been configured, so we can directly use cscope to search.
 ```bash
 vim -t module_init
-```
+````
 
 However, this search yields references rather than definitions, so let's use [Linux source code (v6.9.9) - Bootlin](https://elixir.bootlin.com/linux/latest/source) to search.
 
@@ -316,7 +317,6 @@ Macros are hard to read. Here, a function called `__inittest` is defined, which 
 
 `module_exit` is similar, so we won't explain it further.
 
-
 For `ignore_loglevel`, its literal meaning is to ignore log levels and output everything.
 
 ```c
@@ -327,7 +327,6 @@ static bool suppress_message_printing(int level)
 	return (level >= console_loglevel && !ignore_loglevel);
 }
 ```
-
 
 ### 1. Kernel Module
 
@@ -365,7 +364,7 @@ Poky (Yocto Project Reference Distro) 2.3 qemux86 /dev/hvc0
 qemux86 login: root
 ```
 
-![image-20240714220741790](https://cdn.ova.moe/img/image-20240714220741790.png)
+![image-20240714220741790](https://oss.nova.gal/img/image-20240714220741790.png)
 
 ```bash
 root@qemux86:~/skels/kernel_modules/1-2-test-mod# insmod hello_mod.ko
@@ -376,8 +375,6 @@ hello_mod 16384 0 - Live 0xd085f000 (O)
 root@qemux86:~/skels/kernel_modules/1-2-test-mod# rmmod hello_mod.ko
 Goodbye!
 ```
-
-
 
 ### 2. Printk
 
@@ -406,8 +403,6 @@ root@qemux86:~# insmod skels/kernel_modules/1-2-test-mod/hello_mod.ko
 root@qemux86:~# rmmod skels/kernel_modules/1-2-test-mod/hello_mod.ko
 root@qemux86:~#
 ```
-
-
 
 ### 3. Errors
 
@@ -469,8 +464,6 @@ err_mod: loading out-of-tree module taints kernel.
 n1 is 1, n2 is 2
 ```
 
-
-
 ### 4. Submodules
 
 > Look at the C source files `mod1.c` and `mod2.c` in the directory `4-multi-mod/`. Module 2 only contains the definitions of functions used by module 1.
@@ -498,21 +491,19 @@ ccflags-y = -Wno-unused-function -Wno-unused-label -Wno-unused-variable
 # TODO: add rules to create a multi object module
 # highlight-start
 multi-y = mod1.o mod2.o
-obj-m = multi.o 
+obj-m = multi.o
 # highlight-end
 ```
 
 After recompiling, we can see that `4` has successfully compiled and runs normally.
 
 ```bash title="minicom"
-root@qemux86:~/skels/kernel_modules/4-multi-mod# insmod multi.ko                                      
-multi: loading out-of-tree module taints kernel.                                                     
-n1 is 1, n2 is 2       
-root@qemux86:~/skels/kernel_modules/4-multi-mod# rmmod multi.ko         
+root@qemux86:~/skels/kernel_modules/4-multi-mod# insmod multi.ko
+multi: loading out-of-tree module taints kernel.
+n1 is 1, n2 is 2
+root@qemux86:~/skels/kernel_modules/4-multi-mod# rmmod multi.ko
 sum is 3
 ```
-
-
 
 ### 5. Kernel Oops
 
@@ -537,7 +528,7 @@ static int my_oops_init(void)
 
 Let's `insmod` it and look at `dmsg`.
 
-```bash
+````bash
 Oops: 0002 [#1] SMP
 CPU: 0 PID: 238 Comm: insmod Tainted: G           O      5.10.14+ #1
 Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.13.0-1ubuntu1.1 04/01/2014
@@ -603,7 +594,7 @@ enum x86_pf_error_code {
 	X86_PF_SGX	=		BIT(15),
 	X86_PF_RMP	=		BIT(31),
 };
-```
+````
 
 :::
 
@@ -665,6 +656,7 @@ d086600d:       c6 05 00 00 00 00 61    movb   $0x61,0x0
 ```
 
 ### 6. Module Parameters
+
 > Navigate to the directory 6-cmd-mod and inspect the C source file `cmd_mod.c`. Compile and copy the relevant module, then load the kernel module to view the `printk` messages. Unload the module from the kernel afterward.
 >
 > Load the kernel module without modifying the source code to display the message "Early bird gets tired".
@@ -676,8 +668,8 @@ module_param(str, charp, 0000);
 MODULE_PARM_DESC(str, "A simple string");
 
 static int __init cmd_init(void)
-{      
-    pr_info("Early bird gets %s\n", str);                                                          
+{
+    pr_info("Early bird gets %s\n", str);
     return 0;
 }
 ```
@@ -725,7 +717,6 @@ Early bird gets tired
 
 ### 7. Process Information
 
->
 > Examine the framework named 7-list-proc. Add code to display the process ID (PID) and executable filename of the current process.
 >
 > Follow the commands marked as TODO. This information must be displayed when the module is loaded and unloaded.
@@ -849,7 +840,7 @@ module_init(my_proc_init);
 module_exit(my_proc_exit);
 ```
 
-```bash
+````bash
             Name: kswapd0
 [I] Current PID: 42
             Name: cifsiod
@@ -904,15 +895,15 @@ Very spirited!
 echo hvc0 > /sys/module/kgdboc/parameters/kgdboc
 echo g > /proc/sysrq-trigger
 # Or use Ctrl+O g
-```
+````
 
-![image-20240715233154679](https://cdn.ova.moe/img/image-20240715233154679.png)
+![image-20240715233154679](https://oss.nova.gal/img/image-20240715233154679.png)
 
 There's a bug here, the display is incomplete, so it will be left as is.
 
 Using `echo` to write into it directly enters the KDB.
 
-![image-20240715233319670](https://cdn.ova.moe/img/image-20240715233319670.png)
+![image-20240715233319670](https://oss.nova.gal/img/image-20240715233319670.png)
 
 From the stack trace using `bt`, we can see that there's an issue at `dummy_func1+0x8`. We can also see `current=0xc42b2b40`, and with `lsmod`, we can find the base address `0xd0880000`. However, when we use `bt`, we cannot see the backtrace stack, so it was left unresolved.
 
@@ -924,7 +915,7 @@ The `proc-info` has been completed up to point 7.
 
 ### Ex3. Memory Information
 
->Create a kernel module that displays the virtual memory regions of the current process; for each memory region, it should show the start and end addresses.
+> Create a kernel module that displays the virtual memory regions of the current process; for each memory region, it should show the start and end addresses.
 
 Memory regions are represented by the `struct vm_area_struct` type, so we can start writing the kernel module.
 
@@ -967,9 +958,9 @@ In newer versions, we should use `mapleTree` to fetch it, which means getting it
 > ```c
 > struct maple_tree *mt = &mm->mm_mt;
 > struct vm_area_struct *vma_mt;
-> 
+>
 > MA_STATE(mas, mt, 0, 0);
-> 
+>
 > mas_for_each(&mas, vma_mt, ULONG_MAX) {
 >     // do something...
 > }
@@ -1178,7 +1169,7 @@ Unquestionably, this results in an error:
 
 ```bash
 root@qemux86:~/skels/kernel_api/2-sched-spin# insmod sched-spin.ko
-sched_spin: loading out-of-tree module taints kernel.              
+sched_spin: loading out-of-tree module taints kernel.
 BUG: scheduling while atomic: insmod/322/0x00000002                1 lock held by insmod/322:
 ```
 
@@ -1233,7 +1224,6 @@ Generate a skeleton for a task named **3-memory** and browse the contents of the
 
 :::
 
-
 TODO1
 
 ```c
@@ -1254,18 +1244,17 @@ static struct task_info *task_info_alloc(int pid)
 }
 ```
 
-
 TODO2
 
 ```c
-static int memory_init(void)	
-{	
+static int memory_init(void)
+{
 	struct task_struct* cur = get_current();
 	ti1 = task_info_alloc(cur->pid);
 	ti2 = task_info_alloc(cur->parent->pid);
 	ti3 = task_info_alloc(next_task(cur)->pid);
 	ti4 = task_info_alloc(next_task(next_task(cur))->pid);
-	
+
 	/* TODO 2: call task_info_alloc for current pid */
 
 	/* TODO 2: call task_info_alloc for parent PID */
@@ -1277,7 +1266,6 @@ static int memory_init(void)
 	return 0;
 }
 ```
-
 
 TODO3,4
 
@@ -1299,7 +1287,6 @@ static void memory_exit(void)
 }
 ```
 
-
 ```bash
 root@qemux86:~/skels/kernel_api/3-memory# rmmod memory.ko
 [task_info] Current:                                                       PID:241                                                            timestamp:4294910496
@@ -1313,7 +1300,6 @@ root@qemux86:~/skels/kernel_api/3-memory# rmmod memory.ko
                                                                    [task_info] Next:                                                          PID:0                                                              timestamp:4294912218
                                                                    [task_info] Next(Next):                                                    PID:1                                                              timestamp:4294912218
 ```
-
 
 That's correct.
 
@@ -1342,7 +1328,6 @@ static void task_info_add_to_list(int pid)
 }
 ```
 
-
 TODO2
 
 Note that this is about deleting, so we need a `nxt` to store the next element.
@@ -1362,7 +1347,6 @@ static void task_info_purge_list(void)
 }
 ```
 
-
 No issues.
 
 ```bash
@@ -1374,7 +1358,6 @@ before exiting: [
 (296, 66185)
 ]
 ```
-
 
 ### 5. Using Kernel Lists for Process Handling
 
@@ -1407,7 +1390,6 @@ Generate a skeleton named **5-list-full**. Browse the contents of the `list-full
 
 3. Compile, copy, load, and unload the kernel module, following the displayed messages. Loading the kernel module takes some time because the `schedule_timeout()` function calls `sleep()`.
 
-
 This traversal is also straightforward, just scan the linked list once. The second part is given as a hint, setting `count` to 5.
 
 TODO1
@@ -1429,7 +1411,6 @@ static struct task_info *task_info_find_pid(int pid)
 }
 ```
 
-
 TODO2
 
 ```c
@@ -1449,7 +1430,6 @@ static void list_full_exit(void)
 }
 ```
 
-
 We kept one alive, which is next next.
 
 ```bash
@@ -1468,7 +1448,6 @@ after removing expired: [
 ]
 ```
 
-
 ### 6. Synchronizing List Operations
 
 Generate a skeleton for a task named **6-list-sync**.
@@ -1483,10 +1462,9 @@ Always lock data, not code!
 
 :::
 
-
 And here comes my favorite concurrency programming section.
 
-```c
+````c
 /*
  * Linux API lab
  *
@@ -1568,9 +1546,9 @@ static void task_info_add_to_list(int pid)
 		return;
 	}
 	read_unlock(&lock);
-	
+
 	/* TODO 1: critical section ends here */
-    
+
 	ti = task_info_alloc(pid);
 	// Note here, alloc because of the GFP_KERNEL flag, is preemptible, we cannot take the lock in the previous line!!
 	write_lock(&lock);
@@ -1601,13 +1579,13 @@ void task_info_print_list(const char *msg)
     // No need to put this inside the loop, taking the lock is expensive
 	read_lock(&lock);
 	list_for_each(p, &head) {
-		
+
 		ti = list_entry(p, struct task_info, list);
 		pr_info("(%d, %lu) ", ti->pid, ti->timestamp);
-		
+
 	}
     read_unlock(&lock);
-	
+
 	/* TODO 1: Critical section ends here */
 	pr_info("]\n");
 }
@@ -1680,7 +1658,7 @@ static void list_sync_exit(void)
 module_init(list_sync_init);
 module_exit(list_sync_exit);
 
-```
+````
 
 ### 7. Testing Module Calls in Our List Module
 
@@ -1710,7 +1688,6 @@ There's not much to say about this; it's just a test.
 The order should definitely be sync first, then test, and the unloading order should be reversed. Otherwise, it would be undefined.
 
 End, Kernel API
-
 
 ## Character Device Drivers
 
@@ -1825,121 +1802,126 @@ The kernel uses the `struct cdev` to register character devices. Generally, the 
 
 - `struct inode`: Includes many fields, such as `i_cdev`, which points to a pointer defining the character device structure.
 
-  ```c
+  ````c
   struct inode {
   	umode_t			i_mode;
   	unsi```c
-short		i_opflags;
-	kuid_t			i_uid;
-	kgid_t			i_gid;
-	unsigned int		i_flags;
+  short		i_opflags;
+  	kuid_t			i_uid;
+  	kgid_t			i_gid;
+  	unsigned int		i_flags;
+  ````
 
 #ifdef CONFIG_FS_POSIX_ACL
-	struct posix_acl	*i_acl;
-	struct posix_acl	*i_default_acl;
+struct posix_acl *i_acl;
+struct posix_acl *i_default_acl;
 #endif
 
-	const struct inode_operations	*i_op;
-	struct super_block	*i_sb;
-	struct address_space	*i_mapping;
+    const struct inode_operations	*i_op;
+    struct super_block	*i_sb;
+    struct address_space	*i_mapping;
 
 #ifdef CONFIG_SECURITY
-	void			*i_security;
+void \*i_security;
 #endif
 
-	/* Stat data, not accessed from path walking */
-	unsigned long		i_ino;
+    /* Stat data, not accessed from path walking */
+    unsigned long		i_ino;
 
-	/*
-	 * Filesystems may only read i_nlink directly.  They shall use the
-	 * following functions for modification:
-	 *
-	 *    (set|clear|inc|drop)_nlink
-	 *    inode_(inc|dec)_link_count
-	 */
-	union {
-		const unsigned int i_nlink;
-		unsigned int __i_nlink;
-	};
-	dev_t			i_rdev;
-	loff_t			i_size;
-	struct timespec64	__i_atime;
-	struct timespec64	__i_mtime;
-	struct timespec64	__i_ctime; /* use inode_*_ctime accessors! */
-	spinlock_t		i_lock;	/* i_blocks, i_bytes, maybe i_size */
-	unsigned short          i_bytes;
-	u8			i_blkbits;
-	enum rw_hint		i_write_hint;
-	blkcnt_t		i_blocks;
+    /*
+     * Filesystems may only read i_nlink directly.  They shall use the
+     * following functions for modification:
+     *
+     *    (set|clear|inc|drop)_nlink
+     *    inode_(inc|dec)_link_count
+     */
+    union {
+    	const unsigned int i_nlink;
+    	unsigned int __i_nlink;
+    };
+    dev_t			i_rdev;
+    loff_t			i_size;
+    struct timespec64	__i_atime;
+    struct timespec64	__i_mtime;
+    struct timespec64	__i_ctime; /* use inode_*_ctime accessors! */
+    spinlock_t		i_lock;	/* i_blocks, i_bytes, maybe i_size */
+    unsigned short          i_bytes;
+    u8			i_blkbits;
+    enum rw_hint		i_write_hint;
+    blkcnt_t		i_blocks;
 
-#ifdef __NEED_I_SIZE_ORDERED
-	seqcount_t		i_size_seqcount;
+#ifdef \_\_NEED_I_SIZE_ORDERED
+seqcount_t i_size_seqcount;
 #endif
 
-	/* Misc */
-	unsigned long		i_state;
-	struct rw_semaphore	i_rwsem;
+    /* Misc */
+    unsigned long		i_state;
+    struct rw_semaphore	i_rwsem;
 
-	unsigned long		dirtied_when;	/* jiffies of first dirtying */
-	unsigned long		dirtied_time_when;
+    unsigned long		dirtied_when;	/* jiffies of first dirtying */
+    unsigned long		dirtied_time_when;
 
-	struct hlist_node	i_hash;
-	struct list_head	i_io_list;	/* backing dev IO list */
+    struct hlist_node	i_hash;
+    struct list_head	i_io_list;	/* backing dev IO list */
+
 #ifdef CONFIG_CGROUP_WRITEBACK
-	struct bdi_writeback	*i_wb;		/* the associated cgroup wb */
+struct bdi_writeback _i_wb; /_ the associated cgroup wb \*/
 
-	/* foreign inode detection, see wbc_detach_inode() */
-	int			i_wb_frn_winner;
-	u16			i_wb_frn_avg_time;
-	u16			i_wb_frn_history;
+    /* foreign inode detection, see wbc_detach_inode() */
+    int			i_wb_frn_winner;
+    u16			i_wb_frn_avg_time;
+    u16			i_wb_frn_history;
+
 #endif
-	struct list_head	i_lru;		/* inode LRU list */
-	struct list_head	i_sb_list;
-	struct list_head	i_wb_list;	/* backing dev writeback list */
-	union {
-		struct hlist_head	i_dentry;
-		struct rcu_head		i_rcu;
-	};
-	atomic64_t		i_version;
-	atomic64_t		i_sequence; /* see futex */
-	atomic_t		i_count;
-	atomic_t		i_dio_count;
-	atomic_t		i_writecount;
+struct list_head i_lru; /_ inode LRU list _/
+struct list_head i_sb_list;
+struct list_head i_wb_list; /_ backing dev writeback list _/
+union {
+struct hlist_head i_dentry;
+struct rcu_head i_rcu;
+};
+atomic64_t i_version;
+atomic64_t i_sequence; /_ see futex _/
+atomic_t i_count;
+atomic_t i_dio_count;
+atomic_t i_writecount;
 #if defined(CONFIG_IMA) || defined(CONFIG_FILE_LOCKING)
-	atomic_t		i_readcount; /* struct files open RO */
+atomic_t i_readcount; /_ struct files open RO _/
 #endif
-	union {
-		const struct file_operations	*i_fop;	/* former ->i_op->default_file_ops */
-		void (*free_inode)(struct inode *);
-	};
-	struct file_lock_context	*i_flctx;
-	struct address_space	i_data;
-	struct list_head	i_devices;
-	union {
-		struct pipe_inode_info	*i_pipe;
-		struct cdev		*i_cdev;
-		char			*i_link;
-		unsigned		i_dir_seq;
-	};
+union {
+const struct file_operations _i_fop; /_ former ->i_op->default_file_ops */
+void (*free_inode)(struct inode *);
+};
+struct file_lock_context *i_flctx;
+struct address_space i_data;
+struct list_head i_devices;
+union {
+struct pipe_inode_info *i_pipe;
+struct cdev *i_cdev;
+char \*i_link;
+unsigned i_dir_seq;
+};
 
-	__u32			i_generation;
+    __u32			i_generation;
 
 #ifdef CONFIG_FSNOTIFY
-	__u32			i_fsnotify_mask; /* all events this inode cares about */
-	struct fsnotify_mark_connector __rcu	*i_fsnotify_marks;
+**u32 i_fsnotify_mask; /_ all events this inode cares about _/
+struct fsnotify_mark_connector **rcu \*i_fsnotify_marks;
 #endif
 
 #ifdef CONFIG_FS_ENCRYPTION
-	struct fscrypt_inode_info	*i_crypt_info;
+struct fscrypt_inode_info \*i_crypt_info;
 #endif
 
 #ifdef CONFIG_FS_VERITY
-	struct fsverity_info	*i_verity_info;
+struct fsverity_info \*i_verity_info;
 #endif
 
-	void			*i_private; /* fs or device private pointer */
-} __randomize_layout;
-```
+    void			*i_private; /* fs or device private pointer */
+
+} \_\_randomize_layout;
+
+````
 
 ### 0. Introduction
 
@@ -1959,7 +1941,7 @@ const struct file_operations generic_ro_fops = {
 	.mmap		= generic_file_readonly_mmap,
 	.splice_read	= filemap_splice_read,
 };
-```
+````
 
 This clearly defines a generic readonly file operations structure.
 
@@ -2124,7 +2106,6 @@ Character devices:
 254 bsg
 ```
 
-
 Let's try changing it to 4. There was no error message, but it turns out we didn't handle the error. Change it like this:
 
 ```c
@@ -2149,7 +2130,7 @@ Run `cat /dev/so2_cdev` to read data from our character device. Since the driver
 
 `cdev` is of type `struct cdev`, not a pointer.
 
-```c
+```````c
 struct so2_device_data {
 	/* TODO 2: add cdev member */
 	struct cdev cdev;
@@ -2358,7 +2339,7 @@ static void so2_cdev_exit(void)
     }
 
     /* TODO 1: unregister char device region, for MY_MAJOR and NUM_MINORS starting at MY_MINOR */
-    
+
     unregister_chrdev_region(MKDEV(MY_MAJOR, MY_MINOR), NUM_MINORS);
     pr_info("WHOW, YOU UNREGISTERED %d DEVICES!!!!", NUM_MINORS);
 }
@@ -2478,7 +2459,7 @@ so2_cdev_release(struct inode *inode, struct file *file)
 	pr_info("No!!! You closed the device, you evil!");
 
 #ifndef EXTRA
-	struct so2_device_data *data = 
+	struct so2_device_data *data =
 
 		(struct so2_device_data *) file->private_data;
 
@@ -2599,7 +2580,7 @@ static void so2_cdev_exit(void)
 	}
 
 	/* TODO 1: unregister char device region, for MY_MAJOR and NUM_MINORS starting at MY_MINOR */
-	
+
 	unregister_chrdev_region(MKDEV(MY_MAJOR, MY_MINOR), NUM_MINORS);
 	pr_info("WHOW, YOU REGISTERED %d DEVICES!!!!", NUM_MINORS);
 }
@@ -2607,10 +2588,9 @@ static void so2_cdev_exit(void)
 module_init(so2_cdev_init);
 module_exit(so2_cdev_exit);
 
-```
+```````
 
 Here, we read just a little bit :P and then it keeps transmitting.
-
 
 Then let's modify it so it works properly.
 
@@ -2664,9 +2644,6 @@ cat /dev/so2_cdev
 
 Read the sections on [Reading and Writing](https://linux-kernel-labs-zh.xyz/labs/device_drivers.html#section-10) and [Accessing Process Address Space](https://linux-kernel-labs-zh.xyz/labs/device_drivers.html#section-8).
 
-
-
-
 Simple and straightforward
 
 ```c
@@ -2701,7 +2678,8 @@ so2_cdev_write(struct file *file,
 ```
 
 ### 7. ioctl Operation [¶](https://linux-kernel-labs-zh.xyz/
-``````markdown
+
+```````markdown
 For this exercise, we want to add the ioctl `MY_IOCTL_PRINT` in the driver to display the message from the macro `IOCTL_MESSAGE`. Follow the comments marked with `TODO 6`.
 
 To do this:
@@ -2724,7 +2702,6 @@ The userspace code is automatically compiled when you run `make build` and copie
 Since we need to compile the program for a 32-bit qemu machine, if your host is 64-bit, you will need to install the `gcc-multilib` package.
 
 :::
-
 
 ```c title="so2_cdev_ioctl.c"
 static long
@@ -2778,7 +2755,6 @@ Add two ioctl operations to the driver to modify the message associated with the
    - `MY_IOCTL_GET_BUFFER`: to read a message from the device.
 2. To test, pass the required command-line arguments to the userspace program.
 
-
 Using SET_BUFFER as an example, we can see it passes a char[] through ioctl
 
 It looks something like this, but my virtual machine is not accessible.
@@ -2821,8 +2797,6 @@ so2_cdev_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 }
 ```
 
-
-
 ## I/O Access and Interrupts
 
 ### 0. Introduction[¶](https://linux-kernel-labs-zh.xyz/labs/interrupts.html#section-14)
@@ -2839,8 +2813,6 @@ Analyze the following Linux code:
 - Keyboard initialization function `i8042_setup_kbd()`
 - AT or PS/2 keyboard interrupt function `atkbd_interrupt()`
 
-
-
 - `struct resource`: It appears to be a tree structure, with markers for parents, siblings, and children. It also includes some flags.
 
   ```c
@@ -2854,7 +2826,7 @@ Analyze the following Linux code:
   };
   ```
 
-- `request_region()`: A wrapper around `__request_region`. It allocates a resource with GFP_KERNEL and marks the parent, start, n, name, and flags information. 
+- `request_region()`: A wrapper around `__request_region`. It allocates a resource with GFP_KERNEL and marks the parent, start, n, name, and flags information.
 
   ```c
   #define request_region(start,n,name)		__request_region(&ioport_resource, (start), (n), (name), 0)
@@ -2995,13 +2967,11 @@ Analyze the following Linux code:
   }
   ```
 
-
-
 Analyzing the code
 
 **i8042_setup_kbd()**:
 
-```c
+```````c
 static int i8042_setup_kbd(void)
 {
 	int error;
@@ -3056,7 +3026,7 @@ static int i8042_create_kbd_port(void)
 
     return 0;
 }
-```
+```````
 
 The function `i8042_create_kbd_port` essentially creates a `struct serio` instance and sets its values.
 
@@ -3176,7 +3146,7 @@ irqreturn_t ps2_interrupt(struct serio *serio, u8 data, unsigned int flags) {
 
 First, our goal is to allocate memory for hardware devices in the I/O space. We notice that we cannot allocate space for the keyboard because the designated area has already been allocated. Then, we will allocate I/O space for unused ports.
 
-The *kbd.c* file contains the framework for the keyboard driver. Browse the source code and inspect the `kbd_init()` function. Note that the I/O ports we need are I8042_STATUS_REG and I8042_DATA_REG.
+The _kbd.c_ file contains the framework for the keyboard driver. Browse the source code and inspect the `kbd_init()` function. Note that the I/O ports we need are I8042_STATUS_REG and I8042_DATA_REG.
 
 Follow the section marked with **TODO 1** in the skeleton. In the `kbd_init()` function, request the I/O ports for the keyboard and ensure to check for errors and perform appropriate cleanup in case of an error. When requesting, use the `MODULE_NAME` macro to set the caller's ID string (`name`) to the value of this macro. Additionally, add code in the `kbd_exit()` function to release the I/O ports.
 
@@ -3268,13 +3238,13 @@ Then, register the interrupt handler routine using `request_irq`. The interrupt 
 
 :::info
 
-For shared interrupts, *dev_id* cannot be NULL. Use `&devs[0]`, the pointer to the `struct kbd`. This structure contains all the information needed for device management. To see the interrupt in */proc/interrupts*, do not use NULL for *dev_name*. You can use the `MODULE_NAME` macro.
+For shared interrupts, _dev_id_ cannot be NULL. Use `&devs[0]`, the pointer to the `struct kbd`. This structure contains all the information needed for device management. To see the interrupt in _/proc/interrupts_, do not use NULL for _dev_name_. You can use the `MODULE_NAME` macro.
 
 If the interrupt request fails, make sure to perform appropriate cleanup by jumping to the correct label, i.e., releasing I/O ports and unregistering the character device driver.
 
 :::
 
-Compile, copy, and load the module into the kernel. Check whether the interrupt line has been registered by looking at */proc/interrupts*. Determine the IRQ number from the source code (see I8042_KBD_IRQ) and verify that there are two registered drivers on that interrupt line (this indicates that we have a shared interrupt line): the initial i8042 driver and our driver.
+Compile, copy, and load the module into the kernel. Check whether the interrupt line has been registered by looking at _/proc/interrupts_. Determine the IRQ number from the source code (see I8042_KBD_IRQ) and verify that there are two registered drivers on that interrupt line (this indicates that we have a shared interrupt line): the initial i8042 driver and our driver.
 
 Print a message inside the routine to ensure it is being called. Compile and reload the module into the kernel. Use **dmesg** to check if the interrupt handler routine is called when keys are pressed in the virtual machine. Also note that keyboard interrupts are not triggered when using a serial console.
 ```This is the process of handling code, where we need to register interrupts during initialization and then return an `IRQ_NONE` in the interrupt handler to pass the handling over to other keyboard handlers.
@@ -3314,7 +3284,6 @@ root@qemux86:~/skels/interrupts# cat /proc/interrupts
 
 We can see that our `kbd` is already registered there.
 
-
 ### 3. Storing ASCII Keys in the Buffer[¶](https://linux-kernel-labs-zh.xyz/labs/interrupts.html#ascii)
 
 Next, we want to collect key inputs into a buffer and send its contents to user space. To achieve this, we will add the following content in the interrupt handler:
@@ -3348,7 +3317,6 @@ Here, `scancode`, the scan code, is the value of the register read using the `i8
 
 Note that the scan code (the value of the read register) is not the ASCII character of the pressed key. We need to understand the scan code.
 
-
 Unlike before, we open XLaunch and run it with `--allow-gui`. After compilation, we also use `make gui` to launch it, as the serial port won't trigger interrupts.
 
 ```c
@@ -3377,7 +3345,7 @@ irqreturn_t kbd_interrupt_handler(int irq_no, void *dev_id) {
 }
 ```
 
-![image-20240726185825523](https://cdn.ova.moe/img/image-20240726185825523.png)
+![image-20240726185825523](https://oss.nova.gal/img/image-20240726185825523.png)
 
 We can see that there is now a response when pressing a key, 666
 
@@ -3407,21 +3375,20 @@ As noted in [this article](http://www.linuxjournal.com/article/1080), the scan c
 
 The scan code is translated into a keycode that matches the key. The scan codes for pressed keys and released keys have the same keycode. For the keys shown above, we have the following table:
 
-| Key    | Scan Code (Pressed) | Scan Code (Released) | Keycode |
-| ------ | ------------------- | -------------------- | ------- |
-| Enter  | 0x1c                | 0x9c                 | 0x1c (28) |
-| a      | 0x1e                | 0x9e                 | 0x1e (30) |
-| b      | 0x30                | 0xb0                 | 0x30 (48) |
-| c      | 0x2e                | 0xae                 | 0x2e (46) |
-| Shift  | 0x2a                | 0xaa                 | 0x2a (42) |
-| Ctrl   | 0x1d                | 0x9d                 | 0x1d (29) |
+| Key   | Scan Code (Pressed) | Scan Code (Released) | Keycode   |
+| ----- | ------------------- | -------------------- | --------- |
+| Enter | 0x1c                | 0x9c                 | 0x1c (28) |
+| a     | 0x1e                | 0x9e                 | 0x1e (30) |
+| b     | 0x30                | 0xb0                 | 0x30 (48) |
+| c     | 0x2e                | 0xae                 | 0x2e (46) |
+| Shift | 0x2a                | 0xaa                 | 0x2a (42) |
+| Ctrl  | 0x1d                | 0x9d                 | 0x1d (29) |
 
 The key press/release operation is performed in the `is_key_press()` function, and getting the ASCII character of the scan code is done in the `get_ascii()` function.
 
 :::
 
 In the interrupt handler, first check the scan code to determine whether the key was pressed or released, and then determine the corresponding ASCII character.
-
 
 :::tip
 
@@ -3453,7 +3420,6 @@ Just add a couple of lines:
 	}
 ```
 
-
 #### Storing Characters in the Buffer[¶](https://linux-kernel-labs-zh.xyz/labs/interrupts.html#section-19)
 
 We want to collect the pressed characters (not other keys) into a circular buffer so they can be accessed from user space.
@@ -3481,7 +3447,6 @@ Use the `spin_lock()` and `spin_unlock()` functions to protect the buffer in the
 See the section on [Locking](https://linux-kernel-labs-zh.xyz/labs/interrupts.html#section-7).
 
 :::
-
 
 A spin lock needs to be added, roughly like this:
 
@@ -3511,7 +3476,7 @@ irqreturn_t kbd_interrupt_handler(int irq_no, void *dev_id) {
 		put_char((struct kbd *) dev_id, ch);
 		spin_unlock(&((struct kbd *) dev_id)->lock);
 	}
-	
+
 	return IRQ_NONE;
 
 }
@@ -3538,7 +3503,6 @@ static int kbd_init(void)
 	/* TODO 3: initialize spinlock */
 	spin_lock_init(&devs[0].lock);
 ```
-
 
 ### 4. Reading the Buffer[¶](https://linux-kernel-labs-zh.xyz/labs/interrupts.html#section-20)
 
@@ -3584,11 +3548,9 @@ Build, copy, and boot the virtual machine and load the module. Test using the fo
 cat /dev/kbd
 ```
 
-
-
 When reading, we need to disable interrupts.
 
-```c
+````c
 static bool get_char(char *c, struct kbd *data)
 {
 	/* TODO 4: get char from buffer; update count and get_idx */
@@ -3609,7 +3571,7 @@ static ssize_t kbd_read(struct file *file,  char __user *user_buffer,
 	/* TODO 4: read data from buffer */
 	unsigned long flags;
 
-	
+
 	while (read < size) {
 		char c;
 		spin_lock_irqsave(&data->lock, flags);
@@ -3626,7 +3588,7 @@ if (copy_to_user(user_buffer + read, &c, 1)) {
 read++;
 }
 return read;
-```
+````
 
 ---
 
@@ -3634,7 +3596,7 @@ return read;
 
 If a write operation is performed on the device, reset the buffer. In this step, follow the part marked with **TODO 5** in the skeleton.
 
-Implement `reset_buffer()` and add the write operation to *kbd_fops*.
+Implement `reset_buffer()` and add the write operation to _kbd_fops_.
 
 :::info
 
@@ -3684,3 +3646,4 @@ This Content is generated by ChatGPT and might be wrong / incomplete, refer to C
 :::
 
 <!-- AI -->
+```````

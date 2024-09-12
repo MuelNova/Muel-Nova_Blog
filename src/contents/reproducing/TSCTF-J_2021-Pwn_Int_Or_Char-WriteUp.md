@@ -1,7 +1,7 @@
 ---
 title: 「TSCTF-J_2021」Pwn - Int_Or_Char WriteUp
 date: 2021-10-30
-tags: ['TSCTF-J_2021', 'Pwn', 'writeup', 'wp']
+tags: ["TSCTF-J_2021", "Pwn", "writeup", "wp"]
 authors: [nova]
 ---
 
@@ -9,9 +9,9 @@ authors: [nova]
 
 ### 初步确定思路
 
-使用`checksec`查看一下文件，发现并没有开启NX和PIE，则初步考虑ret2text和ret2shellcode
+使用`checksec`查看一下文件，发现并没有开启 NX 和 PIE，则初步考虑 ret2text 和 ret2shellcode
 
-![checksec](https://cdn.ova.moe/img/image-20211025175327904.png)
+![checksec](https://oss.nova.gal/img/image-20211025175327904.png)
 
 <!--truncate-->
 
@@ -51,11 +51,11 @@ char *__cdecl check(int a1, char *src)
 }
 ```
 
-这里要求我们的长度`a1 > 3 && a1 <= 8`，如果是这样的话我们很明显无法构造出我们想要的payload, 这里可以参考攻防世界的[Int_Overflow](https://adworld.xctf.org.cn/task/answer?type=pwn&number=2&grade=0&id=5058&page=1)的writeups提到的**整数溢出漏洞**
+这里要求我们的长度`a1 > 3 && a1 <= 8`，如果是这样的话我们很明显无法构造出我们想要的 payload, 这里可以参考攻防世界的[Int_Overflow](https://adworld.xctf.org.cn/task/answer?type=pwn&number=2&grade=0&id=5058&page=1)的 writeups 提到的**整数溢出漏洞**
 
-> 一个通俗易懂的C语言例子
+> 一个通俗易懂的 C 语言例子
 >
-> 对于一个`2字节的unsigned short int型变量`，当它的数据长度超过2字节时，就会溢出，使用的数据也仅仅是最后两个字节
+> 对于一个`2字节的unsigned short int型变量`，当它的数据长度超过 2 字节时，就会溢出，使用的数据也仅仅是最后两个字节
 >
 > ```c
 > int main()
@@ -84,19 +84,19 @@ char *strcpy(char *dest, const char *src);
 
 这是`strcpy`的原型, 也就是说, `src`的内容会拷贝到`dest`所在的地址上，也就是题目中的`passwd_buf`处
 
-![passwd_buf地址](https://cdn.ova.moe/img/image-20211025194709773.png)
+![passwd_buf地址](https://oss.nova.gal/img/image-20211025194709773.png)
 
 我们来看一下栈堆
 
-![stack of check](https://cdn.ova.moe/img/image-20211025192814285.png)
+![stack of check](https://oss.nova.gal/img/image-20211025192814285.png)
 
-这里我贴上Mark大爹的讲解：
+这里我贴上 Mark 大爹的讲解：
 
-![性感Mark在线教学](https://cdn.ova.moe/img/image-20211025192651649.png)
+![性感Mark在线教学](https://oss.nova.gal/img/image-20211025192651649.png)
 
-> 理解较浅，原因什么的按下不表，等我去把Pwn入门了把栈整明白了再说（）
+> 理解较浅，原因什么的按下不表，等我去把 Pwn 入门了把栈整明白了再说（）
 
-前面提到，因为NX没开，所以我们的buf是**可执行**的，这也给了我们使用`shellcode`的条件，而且我们并没有调用系统指令的函数存在，因此必须糙一个shellcode出来
+前面提到，因为 NX 没开，所以我们的 buf 是**可执行**的，这也给了我们使用`shellcode`的条件，而且我们并没有调用系统指令的函数存在，因此必须糙一个 shellcode 出来
 
 ```python
 from pwn import *
@@ -120,16 +120,16 @@ p.interactive()
 
 ```
 
-> 在本WriteUp编写之前服务器已经shutdown了，所以没有获得shell之后的过程啦
+> 在本 WriteUp 编写之前服务器已经 shutdown 了，所以没有获得 shell 之后的过程啦
 
 ### 个人总结
 
-虽然在做这题的时候虽然整数溢出这个很快就实现了，如何运行shellcode却卡了很久（原因就是到达了栈底之后还要覆盖掉rbp才能跳转，在这之前我完全不理解为什么）
+虽然在做这题的时候虽然整数溢出这个很快就实现了，如何运行 shellcode 却卡了很久（原因就是到达了栈底之后还要覆盖掉 rbp 才能跳转，在这之前我完全不理解为什么）
 
-Pwn真是太有意思辣
+Pwn 真是太有意思辣
 
 ## 参考资料
 
 [ret2shellcode](https://blog.csdn.net/qq_45691294/article/details/111387593)
 
-Mark大爹
+Mark 大爹

@@ -1,6 +1,7 @@
 # Setting up a fully automatic STEAM trading bot front and back end
 
 # Aims
+
 - [ ] Real-time monitoring of the sales proportion and demand proportion of items
 - [ ] Automatic price adjustments (involving STEAM token generation, trade confirmation, etc.)
 - [ ] Crawling for low percentage items
@@ -43,7 +44,7 @@ To implement STEAM login, the relevant requests need to be captured.
 
 #### Principle
 
-![Capture](https://cdn.ova.moe/img/image-20220307220607534.png)
+![Capture](https://oss.nova.gal/img/image-20220307220607534.png)
 
 1. Received the account's `public_key` through `getrsakey/`, with `donotcache` and `username` fields in the `payload`
 
@@ -53,17 +54,18 @@ The returned JSON looks like
 
 ```json
 {
-    "success": true,
-    "publickey_mod": "deadbeef0deadbeef0deadbeef",
-    "publickey_exp": "010001",
-    "timestamp": "216071450000",
-    "token_gid": "deadbeef0deadbee"
+  "success": true,
+  "publickey_mod": "deadbeef0deadbeef0deadbeef",
+  "publickey_exp": "010001",
+  "timestamp": "216071450000",
+  "token_gid": "deadbeef0deadbee"
 }
 ```
 
 Provided `modulus` and `exponent`, we need to generate our public key and encrypt the password
 
 i.e.
+
 $$
 c = m^e \pmod m
 $$
@@ -74,15 +76,15 @@ The typical payload looks like
 
 ```json
 {
-    "donotcache": 1646663656289, // Same timestamp as above
-	"password": "base64_encoded_encrypted_password", // RSA public key encrypted binary data encoded in base64
-	"username": "username", // Username
-	"twofactorcode": "Guard_Code", // Mobile authenticator code
-	"emailauth": "", // Email verification code
-	"captchagid": 4210307962151791925, // CaptchaGID, retrieved from the value returned by `do_login/`, and fetch the Captcha image at `https://steamcommunity.com/login/rendercaptcha/?gid=%captchagid%`
-	"captcha_text": "th37yr", // Captcha text, if needed, must exist simultaneously with the item above
-	"rsatimestamp": 216071450000, // RSA expiration time, obtainable in `getrsakey/`
-	"remember_login": true, // Save login information (although we don't need it)
+  "donotcache": 1646663656289, // Same timestamp as above
+  "password": "base64_encoded_encrypted_password", // RSA public key encrypted binary data encoded in base64
+  "username": "username", // Username
+  "twofactorcode": "Guard_Code", // Mobile authenticator code
+  "emailauth": "", // Email verification code
+  "captchagid": 4210307962151791925, // CaptchaGID, retrieved from the value returned by `do_login/`, and fetch the Captcha image at `https://steamcommunity.com/login/rendercaptcha/?gid=%captchagid%`
+  "captcha_text": "th37yr", // Captcha text, if needed, must exist simultaneously with the item above
+  "rsatimestamp": 216071450000, // RSA expiration time, obtainable in `getrsakey/`
+  "remember_login": true // Save login information (although we don't need it)
 }
 ```
 
@@ -90,19 +92,19 @@ The results are conveyed through different return values, for example:
 
 ```json
 {
-    "success": false,
-    "requires_twofactor": true,
-    "message": ""
+  "success": false,
+  "requires_twofactor": true,
+  "message": ""
 }
 ```
 
 ```json
 {
-    "success": false,
-    "message": "Please enter the characters below to verify this is a human operation.",
-    "requires_twofactor": false,
-    "captcha_needed": true,
-    "captcha_gid": "4209182061243079173"
+  "success": false,
+  "message": "Please enter the characters below to verify this is a human operation.",
+  "requires_twofactor": false,
+  "captcha_needed": true,
+  "captcha_gid": "4209182061243079173"
 }
 ```
 
@@ -278,7 +280,7 @@ def gen_guard_code(shared_secret: str) -> str:
 
 ```
 
-![Token successfully generated](https://cdn.ova.moe/img/image-20220306231115470.png)
+![Token successfully generated](https://oss.nova.gal/img/image-20220306231115470.png)
 
 ### Trade Confirmation
 
@@ -292,13 +294,13 @@ First, let's implement `fetch_confirmation_query_params`, i.e., to fetch the con
 
 Required parameters are
 
-| Param | Description                                                  |
-| ----- | ------------------------------------------------------------ |
-| p     | `device_id`                                                  |
-| a     | `steam_id`                                                   |
-| t     | Timestamp                                                    |
-| m     | Device (`Android`/`IOS`)                                    |
-| tag   | Tag, unique value `conf` (to be confirmed)                  |
+| Param | Description                                                                                                                |
+| ----- | -------------------------------------------------------------------------------------------------------------------------- |
+| p     | `device_id`                                                                                                                |
+| a     | `steam_id`                                                                                                                 |
+| t     | Timestamp                                                                                                                  |
+| m     | Device (`Android`/`IOS`)                                                                                                   |
+| tag   | Tag, unique value `conf` (to be confirmed)                                                                                 |
 | k     | `timehash`, generated by `time_stamp` and `tag` as parameters, encoded in base64 `HMAC` using `identity_secret` as the key |
 
 Initially, generate `timehash`
@@ -426,18 +428,18 @@ The `url` is `https://steamcommunity.com/mobileconf/ajaxop?%payload%`
 
 The `payload` parameters are as follows
 
-| Param | Description                                                  |
-| ----- | ------------------------------------------------------------ |
-| p     | `device_id`                                                  |
-| a     | `steam_id`                                                   |
-| t     | Timestamp                                                    |
-| m     | Device (`Android`/`IOS`)                                    |
-| op    | Action, either `cancel` or `allow`                          |
+| Param | Description                                                                                                                 |
+| ----- | --------------------------------------------------------------------------------------------------------------------------- |
+| p     | `device_id`                                                                                                                 |
+| a     | `steam_id`                                                                                                                  |
+| t     | Timestamp                                                                                                                   |
+| m     | Device (`Android`/`IOS`)                                                                                                    |
+| op    | Action, either `cancel` or `allow`                                                                                          |
 | k     | `timehash`, generated from `time_stamp` and `op` as parameters, encoded in base64 `HMAC` using `identity_secret` as the key |
-| cid   | `data-confid`, provided in `<div>` tag with class `mobileconf_list_entry` |
-| ck    | `data-key`, provided in `<div>` tag with class `mobileconf_list_entry` |
+| cid   | `data-confid`, provided in `<div>` tag with class `mobileconf_list_entry`                                                   |
+| ck    | `data-key`, provided in `<div>` tag with class `mobileconf_list_entry`                                                      |
 
-```python
+````python
 AJAX_POST_URL = "/mobileconf/ajaxop"
 
 async def send_confirmation_ajax(cookies: Union[Dict, SimpleCookie],
@@ -486,7 +488,7 @@ def fetch_confirmation_details(cookies: Dict, steam_id: str, identity_secret: st
                 return await resp.json()
             else:
                 raise ConnectionError(f"Fetch Confirmation Details Error! Error Code: {resp.status}")
-```
+````
 
 :::info
 This Content is generated by ChatGPT and might be wrong / incomplete, refer to Chinese version if you find something wrong.
