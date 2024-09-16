@@ -5,7 +5,7 @@ tags: [kernel, rust]
 date: 2024-09-12
 last_update:
   author: nova
-  date: 2024-09-16
+  date: 2024-09-17
 
 ---
 
@@ -912,3 +912,583 @@ fn first_try() -> ! {
 ```
 
 非常自豪，有了 rust 的语法特性之后我们开发内核将如虎添翼。
+
+
+
+## 0x05、Test Is A Must
+
+既然有了 rust 的语法特性，我们自然考虑：能不能把集成测试搬进来？
+
+如果你有注意到的话，我们的 main.rs 上一直飘着一个错误：
+
+> can't find crate for `test`
+
+这是因为 test 本身是 std 里的，因此我们需要编写我们自己的 test_runner
+
+[custom_test_frameworks - The Rust Unstable Book (rust-lang.org)](https://doc.rust-lang.org/nightly/unstable-book/language-features/custom-test-frameworks.html?highlight=custom_test#custom_test_frameworks)
+
+在 `main.rs` 头部添加
+
+```rust
+#![feature(custom_test_frameworks)]
+#![test_runner(crate::test_runner)]
+```
+
+这样，任何 #[test_case] 就会被交由 `crate::test_runner` 这个函数来运行
+
+```rust title="src/main.rs"
+#[cfg(test)]
+pub fn test_runner(tests: &[&dyn Fn()]) {
+    println!("Running {} tests", tests.len());
+    for test in tests {
+        test();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test_case]
+    fn foo() {
+        assert_eq!(1, 1);
+    }
+}
+```
+
+简单用条件编译搞一下，然后我们运行 `cargo test`，发现它报错，这也是正常，毕竟我们是 x86_64，所以需要设置 runner
+
+```toml title=".cargo/config.toml"
+[build]
+target = "riscv64gc-unknown-none-elf"
+
+ [target.riscv64gc-unknown-none-elf]
+ rustflags = [
+     "-Clink-arg=-Tsrc/linker.ld", "-Cforce-frame-pointers=yes"
+ ]
+ runner = "qemu-system-riscv64 -machine virt -nographic -bios ../bootloader/rustsbi-qemu -kernel"
+```
+
+添加 runner 后再 `cargo test`，可以看到正常跑起来了，但是并没有我们预期的 `Running 1 tests` 出现
+
+也是可以想到的啦，因为我们现在没有 main 函数了，它是直接走的 `_start` 然后到了 `novaos_start`
+
+再在 `main.rs` 里添加一个 shebang，这似乎在文档中没有提及，反正直接用就是了
+
+```rust
+#![reexport_test_harness_main = "test_main"]
+
+#[no_mangle]
+fn novaos_start() -> ! {
+    #[cfg(test)]
+    {
+        test_main();
+    }
+    first_try();
+}
+```
+
+```rust title="src/main.rs"
+#![no_std]
+#![no_main]
+#![feature(custom_test_frameworks)]
+#![test_runner(crate::test_runner)]
+#![reexport_test_harness_main = "test_main"]
+
+mod lang_items;
+mod sbi;
+
+#[macro_use]
+mod console;
+
+core::arch::global_asm!(include_str!("entry.s"));
+
+#[no_mangle]
+fn novaos_start() -> ! {
+    #[cfg(test)]
+    {
+        test_main();
+    }
+    first_try();
+}
+
+fn first_try() -> ! {
+    let str = "世界的答案";
+    let num: u8 = 42;
+    println!("{} {}", str, num);
+    loop {
+            
+    }
+}
+
+
+
+#[cfg(test)]
+pub fn test_runner(tests: &[&dyn Fn()]) {
+    println!("Running {} tests", tests.len());
+    for test in tests {
+        test();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test_case]
+    fn foo() {
+        assert_eq!(1, 1);
+    }
+}
+```
+
+此时再次运行 `cargo test`，可以看到已经正常输出了，不过在这之后它还是跑了我们的后面的内核，这点就留给后面开关机之后再来做。
+
+## 0x06、Shut My Life Down
+
+一直用 ctrl+a x 来关闭 qemu 实在是不够优雅，让我们来增加一个关机功能。
+
+如法炮制的，我们也是利用 rustsbi 提供的功能来做，这部分就不再详细说了
+
+```rust title="src/sbi.rs"
+pub fn console_putchar(c: u8) {
+    sbi_rt::console_write_byte(c);
+}
+
+pub fn shutdown(failure: bool) -> ! {
+    use sbi_rt::{system_reset, Shutdown, NoReason, SystemFailure};
+    match failure {
+        true => system_reset(Shutdown, SystemFailure),
+        false => system_reset(Shutdown, NoReason),
+    };
+
+    unreachable!()
+    
+}
+```
+
+接着，我们也可以把 panic_handler 简单完善一下
+
+```rust title="src/lang_items.rs"
+use crate::*;
+use sbi::shutdown;
+
+#[panic_handler]
+fn panic_handler(_info: &core::panic::PanicInfo) -> ! {
+    match _info.location() {
+        Some(location) => {
+            println!("Panicked at {}:{} {}", location.file(), location.line(), _info.message().unwrap());
+        }
+        None => {
+            println!("Panicked: {}", _info.message().unwrap());
+        }
+    }
+    shutdown(true);
+}
+```
+
+```rust title="src/main.rs"
+#![no_std]
+#![no_main]
+#![feature(custom_test_frameworks)]
+#![test_runner(crate::test_runner)]
+#![feature(panic_info_message)]
+// highlight-next-line
+#![reexport_test_harness_main = "test_main"]
+
+mod lang_items;
+mod sbi;
+
+#[macro_use]
+mod console;
+
+core::arch::global_asm!(include_str!("entry.s"));
+
+#[no_mangle]
+fn novaos_start() -> ! {
+    #[cfg(test)]
+    {
+        test_main();
+    }
+    first_try();
+}
+
+fn first_try() -> ! {
+    let str = "世界的答案";
+    let num: u8 = 42;
+    println!("{} {}", str, num);
+    // highlight-next-line
+    panic!("Who Told you that?");
+    loop {
+            
+    }
+}
+
+
+
+#[cfg(test)]
+pub fn test_runner(tests: &[&dyn Fn()]) {
+    println!("Running {} tests", tests.len());
+    for test in tests {
+        test();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test_case]
+    fn foo() {
+        assert_eq!(1, 1);
+    }
+}
+```
+
+
+
+但是说了这么多，似乎我们这个并不能称为操作系统 —— 显然他没有提供一个操作系统应有的功能：作为应用和硬件的中间层，选择应用执行，并且提供系统调用给用户态应用使用。
+
+
+
+于是接下来我们将实现一个 BatchSystem
+
+
+
+## 0x07、Now Isolate it
+
+既然我们想要实现一个操作系统，内核态和用户态分离就是必不可少的东西。具体而言，RISC V ISA 规定了不同特权等级能够使用的指令子集，而显然存在一些函数（例如 write、read）用户态想要使用的，然而，这种函数会访问硬件，因此必定需要操作系统特权级指令的支持才能做到。因此，我们的操作系统就要提供一个接口，能够让应用程序安全的访问这些硬件，并且在出错时进行错误处理从而不会使得整个内核崩溃。
+
+
+
+在 RiscV 上，存在四个特权级，由低到高分别为 User、Supervisor、Hypervisor 和 Machine。对于我们的操作系统来说，我们可以忽略掉 Hypervisor 特权等级，仅在 Supervisor 特权上运行，而 RustSBI 则运行在 Machine 态上，作为 Supervisor 和 Machine 的接口。于是，我们接下来的目标就是实现 Supervisor 到 User 的接口。
+
+
+
+为了做到这点，我们必定需要首先考虑一些事情：
+
+1. U <-> S 的转换应该如何实现
+2. 如何确保 U 不能访问 S 的内存
+3. 如何确保 S 对 U 有控制权
+
+对于第一条，S -> U 那么显然是我们能控制的 —— 我们内核本身就占有 CPU，但是 U -> S 则需要我们进行思考：在哪些情况下，应该转移到 S？
+
+形如你一样的操作系统肯定能够想到：Syscall、Exception 这类的 Trap 操作。
+
+
+
+对于 RISCV 来说， 在不同的特权等级下执行 `ecall` 这条指令，将会触发不同的异常，我们也就主要依靠这点来做 syscall
+
+而特权态的切换，也就主要依赖于一些 CSR 寄存器
+
+| CSR 名  | 该 CSR 与 Trap 相关的功能                                    |
+| ------- | ------------------------------------------------------------ |
+| sstatus | `SPP` 等字段给出 Trap 发生之前 CPU 处在哪个特权级（S/U）等信息 |
+| sepc    | 当 Trap 是一个异常的时候，记录 Trap 发生之前执行的最后一条指令的地址 |
+| scause  | 描述 Trap 的原因                                             |
+| stval   | 给出 Trap 附加信息                                           |
+| stvec   | 控制 Trap 处理代码的入口地址                                 |
+
+
+
+仔细思考，我们现在编写特权切换的代码还为时尚早 —— 我们还没有做运行程序的代码。所以我们先从用户态程序开始，做一两个 Demo。
+
+### 0x07-A、User  Runtime Library
+
+对于用户程序，我们需要实现一个运行时库 —— 它作为包装 Supervisor 提供的接口，将 unsafe 的代码块转为可供调用的 safe 的函数。
+
+```bash
+cargo new usr --lib
+```
+
+然后类似的添加 config.toml
+
+```toml title="usr/.cargo/config.toml"
+[build]
+target = "riscv64gc-unknown-none-elf"
+
+[target.riscv64gc-unknown-none-elf]
+rustflags = [
+    "-Clink-args=-Tsrc/linker.ld",
+]
+```
+
+接下来我们思考 Runtime Library 应该如何实现
+
+我们可以通过这种方式来做：固定 runtime library 的入口点，让它调用特定函数（i.e. main 函数），而在不同的用户程序里，它将会和 runtime library 一起被编译，并且通过 linkage 覆盖 runtime library 的 main 函数（也就是说 runtime 的 main 只是为了让编译器开心而已）
+
+```rust title="usr/src/lib.rs"
+#![no_std]
+#![feature(linkage)]
+
+#[link_section = ".text._start"]
+#[no_mangle]
+pub extern "C" fn _start() -> ! {
+    main();
+    panic!("No way to be here");
+}
+
+#[linkage = "weak"]
+#[no_mangle]
+pub extern "C" fn main() -> i32 {
+    panic!("Main function not implemented.");
+}
+```
+
+我们将 _start 作为启动点，简单先实现一下。
+
+
+
+接下来，我们编写 linker.ld，使 runtime library 被加载在固定地址
+
+```ld title="usr/src/linker.ld"
+OUTPUT_ARCH(riscv)
+ENTRY(_start)
+
+SECTIONS {
+    . = 0x80400000;
+
+    .text : {
+        *(.text._start)
+        *(.text*)
+    }
+
+    .rodata : {
+        *(.rodata .rodata.*)
+    }
+}
+```
+
+
+
+至于其他的 panic_handler 等，我们可以暂时直接从 OS 里复制过来
+
+```rust title="usr/src/lang_items.rs"
+#[panic_handler]
+fn panic_handler(_info: &core::panic::PanicInfo) -> ! {
+    match _info.location() {
+        Some(location) => {
+            println!("Panicked at {}:{} {}", location.file(), location.line(), _info.message().unwrap());
+        }
+        None => {
+            println!("Panicked: {}", _info.message().unwrap());
+        }
+    }
+    loop {}
+}
+```
+
+```rust title="susr/src/console.rs"
+use core::fmt::{self, Write};
+
+struct Stdout;
+
+impl Write for Stdout {
+    fn write_str(&mut self, s: &str) -> core::fmt::Result {
+        for c in s.bytes() {
+            console_putchar(c);
+        }
+        Ok(())
+    }
+}
+
+pub fn print(args: fmt::Arguments) {
+    Stdout.write_fmt(args).unwrap();
+}
+
+#[macro_export]
+macro_rules! print {
+    ($($arg:tt)*) => {
+        $crate::console::print(format_args!($($arg)*));
+    };
+}
+
+#[macro_export]
+macro_rules! println {
+    () => {
+        print!("\n");
+    };
+    ($($arg:tt)*) => {
+        print!("{}\n", format_args!($($arg)*));
+    };
+}
+```
+
+```rust title="usr/src/lib.rs"
+#![no_std]
+#![feature(linkage)]
+#![feature(panic_info_message)]
+
+
+#[macro_use]
+mod console;
+mod lang_items;
+
+#[link_section = ".text.entry"]
+#[no_mangle]
+pub extern "C" fn _start() -> ! {
+    main();
+    panic!("No way to be here");
+}
+
+#[linkage = "weak"]
+#[no_mangle]
+pub extern "C" fn main() -> i32 {
+    panic!("Main function not implemented.");
+}
+```
+
+注意唯一的不同点，就是我们现在需要实现用户态的 println，因此我们需要编写用户态的 syscall，而非直接利用 sbi
+
+新建一个 `syscall.rs`，为了方便在 qemu 上测试我们的用户态程序，我们使 syscall 满足 RISCV syscall convention
+
+- a0~a6 存储参数
+- a7 存储 syscall number
+- a0 同时存储返回值
+- 使用 ecall 指令
+
+首先要实现的自然是 write，它接受 3 个参数，因此我们先实现一个 3 个参数的 syscall 先
+
+```rust title="usr/src/syscall.rs"
+use core::arch::asm;
+
+
+fn syscall(id: usize, args: [usize; 3]) -> isize {
+    let mut ret: isize;
+    unsafe {
+        asm!(
+            "ecall",
+            inlateout("x10") args[0] => ret,
+            in("x11") args[0],
+            in("x12") args[1],
+            in("x17") id
+        );
+    }
+    ret
+}
+```
+
+在这里就是 [asm! 宏 ](https://doc.rust-lang.org/reference/inline-assembly.html)的含金量了，它可以将寄存器和变量绑定，且支持 in|late|out 的绑定方式绑定两个变量
+
+接着我们包装 sys_write
+
+```rust
+use core::arch::asm;
+
+const SYS_WRITE: usize = 64;
+
+
+fn syscall(id: usize, args: [usize; 3]) -> isize {
+    let mut ret: isize;
+    unsafe {
+        asm!(
+            "ecall",
+            inlateout("x10") args[0] => ret,
+            in("x11") args[0],
+            in("x12") args[1],
+            in("x17") id
+        );
+    }
+    ret
+}
+
+pub fn sys_write(fd: usize, buffer: usize, len: usize) -> isize {
+    syscall(SYS_WRITE, [fd, buffer, len])
+}
+```
+
+:::warning
+
+如果你注意到的话，这里我们 syscall 写错了，他应该是 args[0]、args[1]、args[2]
+
+这个 bug 让我之后调了快一个小时，留以自省
+
+:::
+
+然后我们在 lib 里再进行进一步封装
+
+```rust title="usr/src/lib.rs"
+mod syscall;
+
+use syscall::sys_write;
+
+pub fn write(fd: usize, buffer: usize, len: usize) -> isize { sys_write(fd, buffer, len) }
+```
+
+此时，我们的用户态程序只需要 extern 一下我们的 lib，就可以调用 write 方法执行系统调用了
+
+别忘了 console.rs，我们现在在用户态中，console_putchar 不再能用了，让我们把他改成 write
+
+```rust title="usr/src/console.rs"
+use core::fmt::{self, Write};
+
+use super::write;
+
+const STDOUT: usize = 1;
+
+struct Stdout;
+
+impl Write for Stdout {
+    fn write_str(&mut self, s: &str) -> core::fmt::Result {
+        let buffer = s.as_bytes();
+        write(STDOUT, buffer.as_ptr() as usize, buffer.len());
+        Ok(())
+    }
+}
+
+pub fn print(args: fmt::Arguments) {
+    Stdout.write_fmt(args).unwrap();
+}
+
+#[macro_export]
+macro_rules! print {
+    ($($arg:tt)*) => {
+        $crate::console::print(format_args!($($arg)*));
+    };
+}
+
+#[macro_export]
+macro_rules! println {
+    () => {
+        print!("\n");
+    };
+    ($($arg:tt)*) => {
+        print!("{}\n", format_args!($($arg)*));
+    };
+}
+```
+
+
+
+### 0x07-B、User App
+
+现在，让我们写一个用户态程序试试吧
+
+新建一个文件夹 bin，写一个
+
+```rust title="usr/src/bin/first.rs"
+#![no_std]
+#![no_main]
+
+use usr_rtm::*;  // 注意这里是我 usr/Cargo.toml 里设置的 name
+
+#[no_mangle]
+fn main() -> i32 {
+    println!("Hello, world!");
+    0
+}
+```
+
+发现出错了，因为我们没有把 console 导出为 pub module，所以它宏展开成了 crate::console::print 这个 private module 的 pub func
+
+简单修改导出 mod 为 pub 即可
+
+然后就是编译的时候有概率遇到 ld section overlap 的问题
+
+:::info
+
+尝试了一下，应该是 cargo workspace 的问题？所以接下来我们把 usr 目录移到了根目录下的 novaos_usr 文件夹
+
+:::
+
+![image-20240917024040034](https://oss.nova.gal/img/image-20240917024040034.png)
+
+
+
+之后我们使用 qemu-riscv64 运行一下看看，非常好
+
+![image-20240917033342479](https://oss.nova.gal/img/image-20240917024040034.png)
