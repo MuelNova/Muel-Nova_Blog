@@ -1,3 +1,5 @@
+import Follow from "@site/src/static/img/follow.svg";
+
 const svgList = [
   {
     title: "bilibili",
@@ -18,6 +20,11 @@ const svgList = [
     title: "Email",
     Svg: require("@site/src/static/img/email.svg").default,
     link: "mailto:muel@nova.gal",
+  },
+  {
+    title: "Follow",
+    Svg: Follow,
+    link: "https://app.follow.is/profile/56300998939738112",
   },
   {
     title: "rss",

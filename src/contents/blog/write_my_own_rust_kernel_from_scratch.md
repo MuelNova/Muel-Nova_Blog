@@ -1491,4 +1491,6 @@ fn main() -> i32 {
 
 之后我们使用 qemu-riscv64 运行一下看看，非常好
 
-![image-20240917033342479](https://oss.nova.gal/img/image-20240917024040034.png)
+![image-20240917034016487](https://oss.nova.gal/img/image-20240917033342479.png)
+
+![image-20240917034119337](C:\Users\nova\AppData\Roaming\Typora\typora-user-images\image-20240917034119337.png)

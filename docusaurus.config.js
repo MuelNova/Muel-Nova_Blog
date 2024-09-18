@@ -220,14 +220,14 @@ const config = {
           //   position: 'right',
           //   label: '🤡文章',
           // },
-          { to: "/posts", label: "🤡文章", position: "right" },
-          { to: "/reproducing", label: "♻️复现", position: "right" },
+          { to: "/posts", label: "🤡文章", position: "left" },
+          { to: "/reproducing", label: "♻️复现", position: "left" },
           {
             type: "localeDropdown",
             position: "right",
           },
-          { to: "/blog", label: "📝Blog", position: "left" },
-          { to: "/library", label: "♿️Library", position: "left" },
+          { to: "/blog", label: "📝博客", position: "left" },
+          { to: "/library", label: "♿️知识库", position: "left" },
           {
             href: "https://github.com/MuelNova",
             label: "GitHub",
@@ -235,14 +235,14 @@ const config = {
           },
           {
             href: "/about",
-            label: "About",
+            label: "关于",
             position: "right",
           },
-          // To-Do: About Page Nav
-          // {
-          //   type: 'html',
-          //   value: '<a class="menu__link"></a>'
-          // },
+          {
+            href: "/links",
+            label: "友情链接",
+            position: "right",
+          },
         ],
       },
       footer: {
@@ -251,8 +251,8 @@ const config = {
           {
             title: "Here",
             items: [
-              { to: "/blog", label: "📝Blog" },
-              { to: "/library", label: "♿️Library" },
+              { to: "/blog", label: "📝博客" },
+              { to: "/library", label: "♿️知识库" },
             ],
           },
           {
@@ -266,8 +266,12 @@ const config = {
             title: "Who",
             items: [
               {
-                label: "About",
+                label: "关于",
                 href: "/about",
+              },
+              {
+                label: "Follow",
+                href: "https://app.follow.is/profile/56300998939738112",
               },
               {
                 label: "Steam",

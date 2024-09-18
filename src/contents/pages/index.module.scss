@@ -336,7 +336,7 @@ $last-chapter__theme-red: #c45c66;
       width: 100%;
       height: 100%;
       border-radius: 50%;
-      transform: scale(0);
+      transform: scale(0.001);
       background-color: $last-chapter__theme-blue;
       transition: all 0.4s cubic-bezier(0.77, 0, 0.17, 1.02) 0s;
     }
@@ -350,6 +350,9 @@ $last-chapter__theme-red: #c45c66;
       display: block;
       text-align: center;
       fill: $last-chapter__theme-black;
+      g path:not(:first-of-type) {
+        fill: $last-chapter__theme-white;
+      }
       transition: all 0.4s cubic-bezier(0.77, 0, 0.17, 1.02) 0s;
       @include mixin.pc-layout {
         font-size: 23px;
@@ -369,6 +372,9 @@ $last-chapter__theme-red: #c45c66;
   }
   a:hover svg {
     fill: $last-chapter__theme-white;
+    g path:not(:first-of-type) {
+      fill: $last-chapter__theme-blue;
+    }
   }
 }
 
