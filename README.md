@@ -37,14 +37,14 @@ _✨ MuelNova [博客](https://nova.gal)的备份 ✨_
 
 ### Discussion
 
-在 [讨论](#18) 里回复
+在 [讨论](discussions/#18) 里回复
 
 ### Pull Request
 
-对 [\_linksVals.tsx](src/pages/links/_linksVals.tsx) 进行修改并且提交 PR
+对 [\_linksVals.tsx](src/contents/pages/links/_linksVals.tsx) 进行修改并且提交 PR
 
 <br />
 
 如果你想要让我在你的友链中出现的话，
 请使用 [这个文件](src/static/img/nova-logo-par.png) 作为 LOGO
-博客地址为 [https://nova.gal](https://nova.gal)
+，我的博客地址是 [https://nova.gal](https://nova.gal) / [https://zm.md]
