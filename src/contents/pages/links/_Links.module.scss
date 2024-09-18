@@ -1,0 +1,47 @@
+// LinkCard.module.scss
+
+.cardContainer {
+  display: flex;
+  align-items: center;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 10px;
+  min-width: 80%;
+  &:hover {
+    text-decoration: none;
+    .linkText {
+      text-decoration: underline;
+    }
+  }
+}
+
+.iconContainer {
+  margin-right: 10px;
+  font-size: 24px;
+  img {
+    width: 5rem;
+    height: 5rem;
+  }
+}
+
+.textContainer {
+  display: flex;
+  flex-direction: column;
+}
+
+.linkText {
+  font-weight: bold;
+  font-size: 20px;
+}
+
+.linkText:hover {
+  text-decoration: underline;
+}
+
+.description {
+  margin-top: 4px;
+  color: #666;
+  font-size: 15px;
+  text-decoration: none;
+}

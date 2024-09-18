@@ -1,0 +1,17 @@
+---
+title: 友情链接
+---
+
+import { React } from "react";
+import LinkCard from "./_Links";
+import LinksVals from "./_linksVals";
+
+export default function Links() {
+  return (
+    <main>
+      {LinksVals.map((link, index) => (
+        <LinkCard key={index} {...link} />
+      ))}
+    </main>
+  );
+}
