@@ -37,7 +37,7 @@ _✨ MuelNova [博客](https://nova.gal)的备份 ✨_
 
 ### Discussion
 
-在 [讨论](discussions/#18) 里回复
+在 [讨论](https://github.com/MuelNova/Muel-Nova_Blog/discussions/18) 里回复
 
 ### Pull Request
 
@@ -47,4 +47,4 @@ _✨ MuelNova [博客](https://nova.gal)的备份 ✨_
 
 如果你想要让我在你的友链中出现的话，
 请使用 [这个文件](src/static/img/nova-logo-par.png) 作为 LOGO
-，我的博客地址是 [https://nova.gal](https://nova.gal) / [https://zm.md]
+，我的博客地址是 [https://nova.gal](https://nova.gal) / [https://zm.md](https://zm.md)
