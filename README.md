@@ -37,7 +37,7 @@ _✨ MuelNova [博客](https://nova.gal)的备份 ✨_
 
 ### Discussion
 
-在 [讨论](https://github.com/MuelNova/Muel-Nova_Blog/discussions/18) 里回复
+在 [讨论](https://github.com/MuelNova/Muel-Nova_Blog/discussions/19) 里回复
 
 ### Pull Request
 
