@@ -5,6 +5,7 @@ title: 友情链接
 import { React } from "react";
 import LinkCard from "./_Links";
 import LinksVals from "./_linksVals";
+import GiscusComment from "@site/src/theme/components/GiscusComment/GiscusComment";
 
 export default function Links() {
   return (
@@ -12,6 +13,8 @@ export default function Links() {
       {LinksVals.map((link, index) => (
         <LinkCard key={index} {...link} />
       ))}
+      <br />
+      <GiscusComment />
     </main>
   );
 }
