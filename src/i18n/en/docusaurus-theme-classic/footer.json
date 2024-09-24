@@ -29,11 +29,11 @@
   },
   "link.item.label.♻️复现": {
     "message": "♻️Reproducing",
-    "description": "The label of footer link with label=♻️Reproducing linking to /reproducing"
+    "description": "The label of footer link with label=♻️复现 linking to /reproducing"
   },
   "link.item.label.🤡文章": {
     "message": "🤡Posts",
-    "description": "The label of footer link with label=🤡Posts linking to /posts"
+    "description": "The label of footer link with label=🤡文章 linking to /posts"
   },
   "link.item.label.Teamspeak": {
     "message": "Teamspeak",
@@ -90,5 +90,21 @@
   "link.item.label.Mail": {
     "message": "Mail",
     "description": "The label of footer link with label=Mail linking to mailto:muel@nova.gal"
+  },
+  "link.item.label.📝博客": {
+    "message": "📝Blog",
+    "description": "The label of footer link with label=📝Blog linking to /blog"
+  },
+  "link.item.label.♿️知识库": {
+    "message": "♿️Library",
+    "description": "The label of footer link with label=♿️Library linking to /library"
+  },
+  "link.item.label.关于": {
+    "message": "About",
+    "description": "The label of footer link with label=关于 linking to /about"
+  },
+  "link.item.label.Follow": {
+    "message": "Follow",
+    "description": "The label of footer link with label=Follow linking to https://app.follow.is/profile/56300998939738112"
   }
 }

@@ -29,6 +29,6 @@
   },
   "sidebar.defaultSidebar.category.Linux 内核": {
     "message": "Linux Kernel",
-    "description": "The label for category Linux Kernel in sidebar defaultSidebar"
+    "description": "The label for category Linux 内核 in sidebar defaultSidebar"
   }
 }

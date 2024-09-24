@@ -5,11 +5,11 @@
   },
   "item.label.🤡文章": {
     "message": "🤡Posts",
-    "description": "Navbar item with label 🤡Posts"
+    "description": "Navbar item with label 🤡文章"
   },
   "item.label.♻️复现": {
     "message": "♻️Reproducing",
-    "description": "Navbar item with label ♻️Reproducing"
+    "description": "Navbar item with label ♻️复现"
   },
   "item.label.📝Blog": {
     "message": "📝Blog",
@@ -38,5 +38,21 @@
   "item.label.About": {
     "message": "About",
     "description": "Navbar item with label About"
+  },
+  "item.label.📝博客": {
+    "message": "📝Blog",
+    "description": "Navbar item with label 📝Blog"
+  },
+  "item.label.♿️知识库": {
+    "message": "♿️Library",
+    "description": "Navbar item with label ♿️Library"
+  },
+  "item.label.关于": {
+    "message": "About",
+    "description": "Navbar item with label About"
+  },
+  "item.label.友情链接": {
+    "message": "FriendLinks",
+    "description": "Navbar item with label FriendLinks"
   }
 }
