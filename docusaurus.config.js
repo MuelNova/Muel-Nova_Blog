@@ -122,6 +122,7 @@ const config = {
         editUrl: "https://github.com/MuelNova/NovaNo1r-Blog/tree/main/",
         feedOptions: {
           type: "rss",
+          description: "Nova 是一个做 PWN 的二次元，Nova 的博客用于输出无营养内容。",
           copyright: `Copyright © ${new Date().getFullYear()} NovaNo1r with ❤`,
         },
         remarkPlugins: [remarkMath],
@@ -143,7 +144,6 @@ const config = {
 
         feedOptions: {
           type: "rss",
-          description: "feedId:56327270751371264+userId:56300998939738112",
           copyright: `Copyright © ${new Date().getFullYear()} NovaNo1r with ❤`,
         },
       },
