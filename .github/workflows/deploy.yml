@@ -23,6 +23,10 @@ jobs:
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
+
+      - name: Setup environment variables
+        run: echo "${{ secrets.ENV_FILE }}" > .env
+
       - name: Build website
         run: yarn build
 
