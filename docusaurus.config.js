@@ -122,7 +122,8 @@ const config = {
         editUrl: "https://github.com/MuelNova/NovaNo1r-Blog/tree/main/",
         feedOptions: {
           type: "rss",
-          description: "Nova 是一个做 PWN 的二次元，Nova 的博客用于输出无营养内容。",
+          description:
+            "Nova 是一个做 PWN 的二次元，Nova 的博客用于输出无营养内容。",
           copyright: `Copyright © ${new Date().getFullYear()} NovaNo1r with ❤`,
         },
         remarkPlugins: [remarkMath],
@@ -157,23 +158,23 @@ const config = {
     //     anonymizeIP: true,
     //   },
     // ],
-    [
-      require.resolve("./src/plugins/ai-summary"),
-      {
-        OPENAI_API_KEY: process.env.OPENAI_API_KEY,
-        OPENAI_BASE_URL: process.env.OPENAI_BASE_URL,
-        OPENAI_SUMMARY_MODEL: process.env.OPENAI_SUMMARY_MODEL,
-      },
-    ],
-    [
-      require.resolve("./src/plugins/ai-translate"),
-      {
-        OPENAI_API_KEY: process.env.OPENAI_API_KEY,
-        OPENAI_BASE_URL: process.env.OPENAI_BASE_URL,
-        OPENAI_TRANSLATE_MODEL: process.env.OPENAI_TRANSLATE_MODEL,
-        OPENAI_TOKEN_SIZE: process.env.OPENAI_TOKEN_SIZE,
-      },
-    ],
+    // [
+    //   require.resolve("./src/plugins/ai-summary"),
+    //   {
+    //     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+    //     OPENAI_BASE_URL: process.env.OPENAI_BASE_URL,
+    //     OPENAI_SUMMARY_MODEL: process.env.OPENAI_SUMMARY_MODEL,
+    //   },
+    // ],
+    // [
+    //   require.resolve("./src/plugins/ai-translate"),
+    //   {
+    //     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+    //     OPENAI_BASE_URL: process.env.OPENAI_BASE_URL,
+    //     OPENAI_TRANSLATE_MODEL: process.env.OPENAI_TRANSLATE_MODEL,
+    //     OPENAI_TOKEN_SIZE: process.env.OPENAI_TOKEN_SIZE,
+    //   },
+    // ],
   ],
 
   themes: [
