@@ -28,6 +28,12 @@ function BlogSummary({
 }): JSX.Element {
   try {
     const Data = require("@site/.docusaurus/ai-summary/default/aisummary.json");
+    if (!content.metadata.editUrl) {
+      console.warn(
+        "No editUrl found in metadata, skipping AI summary generation"
+      );
+      return <></>;
+    }
     const link = content.metadata.editUrl.split("/");
     const blog = link[link.length - 2],
       post = link[link.length - 1].replace(/\.(md|mdx)$/, "");
@@ -45,8 +51,13 @@ function BlogSummary({
       </Admonition>
     );
   } catch (e) {
-    console.warn(e);
-    console.warn("No ai-summary plugin found, skipping AI summary generation");
+    if (e.code === "MODULE_NOT_FOUND") {
+      console.debug(
+        "No ai-summary plugin found, skipping AI summary generation"
+      );
+    } else {
+      console.warn(e);
+    }
     return <></>;
   }
 }
