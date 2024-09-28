@@ -1,5 +1,5 @@
 // dotenv
-require("dotenv").config();
+import "dotenv/config";
 
 // @ts-check
 // Note: type annotations allow type checking and IDEs autocompletion
@@ -26,6 +26,8 @@ const config = {
   // If you aren't using GitHub pages, you don't need these.
   organizationName: "MuelNova", // Usually your GitHub org/user name.
   projectName: "Muel-Nova_Blog", // Usually your repo name.
+  deploymentBranch: "gh-pages", // The branch your GitHub pages site is deployed from.
+  trailingSlash: false,
 
   // Even if you don't use internalization, you can use this field to set useful
   // metadata like html lang. For example, if your site is Chinese, you may want
