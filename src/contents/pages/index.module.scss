@@ -980,6 +980,9 @@ $last-chapter__theme-red: #c45c66;
       a:nth-child(4) {
         animation: fadein 0.7s ease 1s forwards;
       }
+      a:nth-child(5) {
+        animation: fadein 0.7s ease 1.1s forwards;
+      }
     }
     .colors {
       div:nth-child(1) {
@@ -993,6 +996,9 @@ $last-chapter__theme-red: #c45c66;
       }
       div:nth-child(4) {
         animation: scale0-1 0.4s ease 1s forwards;
+      }
+      div:nth-child(4) {
+        animation: scale0-1 0.4s ease 1.1s forwards;
       }
     }
   }

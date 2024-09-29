@@ -105,6 +105,15 @@ const DropMenu = ({ dropMenu, setDropMenu }) => (
             {/* <ProfileImg className={styles["title"]} /> */}
           </div>
         </Link>
+        <Link to="/links">
+          <div className={styles["inner"]}>
+            <div className={styles["icon"]}>
+              <MountainIcon />
+            </div>
+            <p className={styles["text"]}>友链</p>
+            {/* <ProfileImg className={styles["title"]} /> */}
+          </div>
+        </Link>
       </nav>
       <div className={styles["colors"]}>
         <div></div>
