@@ -8,22 +8,24 @@ import StarIcon from "@site/src/static/img/index/menu/star.svg";
 import MoonIcon from "@site/src/static/img/index/menu/moon.svg";
 import DogIcon from "@site/src/static/img/index/menu/dog.svg";
 import MountainIcon from "@site/src/static/img/index/menu/mountain.svg";
-import ProfileImg from "@site/src/static/img/index/menu/menu-1.svg";
-import SiteImg from "@site/src/static/img/index/menu/menu-2.svg";
-import ProductImg from "@site/src/static/img/index/menu/menu-3.svg";
-import MemoriesImg from "@site/src/static/img/index/menu/menu-4.svg";
+import AniEnabledIcon from "@site/src/static/img/index/menu/ani_enable.svg";
+import AniDisabledIcon from "@site/src/static/img/index/menu/ani_disable.svg";
 import svgList from "@site/src/theme/utils/_SocialMediaList";
 import Svg from "./about/_Svg";
 
 function AboutComponent() {
   const [dropMenu, setDropMenu] = useState(false);
   const [hasPlayedAnimation, setHasPlayedAnimation] = useState(false);
+  const [disableAnimation, setDisableAnimation] = useState(false);
 
   useEffect(() => {
-    const isFirstVisit = !sessionStorage.getItem("hasPlayedAnimation");
-    console.log(isFirstVisit);
+    const savedDisableAnimation =
+      localStorage.getItem("disableAnimation") === "true";
+    setDisableAnimation(savedDisableAnimation);
 
-    if (isFirstVisit) {
+    const showFirstAnimation = !sessionStorage.getItem("hasPlayedAnimation");
+
+    if (!savedDisableAnimation && showFirstAnimation) {
       setHasPlayedAnimation(false);
       sessionStorage.setItem("hasPlayedAnimation", "true");
     } else {
@@ -31,7 +33,7 @@ function AboutComponent() {
     }
   }, []);
 
-  const DropMenu = ({ dropMenu, setDropMenu }) => (
+  const DropMenu = () => (
     <div className={`${styles["menu"]} ${dropMenu ? styles["show"] : ""}`}>
       <section className={styles["menu__space"]}>
         <div />
@@ -143,6 +145,18 @@ function AboutComponent() {
       </nav>
 
       <button
+        className={styles["anibtn"]}
+        onClick={() => {
+          const prev = disableAnimation;
+          setDisableAnimation(!prev);
+          setHasPlayedAnimation(!prev);
+          localStorage.setItem("disableAnimation", (!prev).toString());
+        }}
+      >
+        {!disableAnimation ? <AniEnabledIcon /> : <AniDisabledIcon />}
+      </button>
+
+      <button
         type="button"
         className={styles["last-chapter__menu-btn"]}
         aria-expanded={dropMenu ? "true" : "false"}
@@ -154,7 +168,7 @@ function AboutComponent() {
         <div />
         <div />
       </button>
-      <DropMenu dropMenu={dropMenu} setDropMenu={setDropMenu} />
+      <DropMenu />
     </article>
   );
 }
