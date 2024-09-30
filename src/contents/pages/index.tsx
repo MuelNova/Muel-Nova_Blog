@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useState } from "react";
 import styles from "@site/src/contents/pages/index.module.scss";
 import Link from "@docusaurus/Link";
@@ -17,8 +17,108 @@ import Svg from "./about/_Svg";
 
 function AboutComponent() {
   const [dropMenu, setDropMenu] = useState(false);
+  const [hasPlayedAnimation, setHasPlayedAnimation] = useState(false);
+
+  useEffect(() => {
+    const isFirstVisit = !sessionStorage.getItem("hasPlayedAnimation");
+    console.log(isFirstVisit);
+
+    if (isFirstVisit) {
+      setHasPlayedAnimation(false);
+      sessionStorage.setItem("hasPlayedAnimation", "true");
+    } else {
+      setHasPlayedAnimation(true);
+    }
+  }, []);
+
+  const DropMenu = ({ dropMenu, setDropMenu }) => (
+    <div className={`${styles["menu"]} ${dropMenu ? styles["show"] : ""}`}>
+      <section className={styles["menu__space"]}>
+        <div />
+        <div />
+        <div />
+        <div />
+      </section>
+      <section className={styles["menu__box"]}>
+        <div className={styles["bg"]} />
+        <TitleImg className={styles["menu-title"]} />
+        <nav className={styles["nav"]}>
+          <Link to="/blog">
+            <div className={styles["inner"]}>
+              <div className={styles["icon"]}>
+                <MountainIcon />
+              </div>
+              <p className={styles["text"]}>博客</p>
+              {/* <SiteImg className={styles["title"]} /> */}
+            </div>
+          </Link>
+          <Link to="/posts">
+            <div className={styles["inner"]}>
+              <div className={styles["icon"]}>
+                <MoonIcon />
+              </div>
+              <p className={styles["text"]}>文章</p>
+              {/* <MemoriesImg className={styles["title"]} /> */}
+            </div>
+          </Link>
+          <Link to="/reproducing">
+            <div className={styles["inner"]}>
+              <div className={styles["icon"]}>
+                <DogIcon />
+              </div>
+              <p className={styles["text"]}>复现</p>
+              {/* <ProductImg className={styles["title"]} /> */}
+            </div>
+          </Link>
+          <Link to="/about">
+            <div className={styles["inner"]}>
+              <div className={styles["icon"]}>
+                <StarIcon />
+              </div>
+              <p className={styles["text"]}>关于</p>
+              {/* <ProfileImg className={styles["title"]} /> */}
+            </div>
+          </Link>
+          <Link to="/links">
+            <div className={styles["inner"]}>
+              <div className={styles["icon"]}>
+                <MountainIcon />
+              </div>
+              <p className={styles["text"]}>友链</p>
+              {/* <ProfileImg className={styles["title"]} /> */}
+            </div>
+          </Link>
+        </nav>
+        <div className={styles["colors"]}>
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+        </div>
+      </section>
+      <button
+        type="button"
+        className={styles["menu__close-btn"]}
+        aria-expanded={dropMenu ? "true" : "false"}
+        onClick={() => {
+          setDropMenu((prev) => !prev);
+          if (!hasPlayedAnimation) {
+            setHasPlayedAnimation(true);
+          }
+        }}
+      >
+        <div></div>
+        <div></div>
+      </button>
+    </div>
+  );
+
   return (
-    <article className={styles["last-chapter"]}>
+    <article
+      className={`${styles["last-chapter"]} ${
+        hasPlayedAnimation ? styles["animation-done"] : styles["animation"]
+      }`}
+    >
       <div className={styles["last-chapter__bg-help"]} />
       <div className={styles["last-chapter__bg"]} />
       <div className={styles["last-chapter__ball"]} />
@@ -46,7 +146,9 @@ function AboutComponent() {
         type="button"
         className={styles["last-chapter__menu-btn"]}
         aria-expanded={dropMenu ? "true" : "false"}
-        onClick={() => setDropMenu((prev) => !prev)}
+        onClick={() => {
+          setDropMenu((prev) => !prev);
+        }}
       >
         <div />
         <div />
@@ -56,83 +158,6 @@ function AboutComponent() {
     </article>
   );
 }
-
-const DropMenu = ({ dropMenu, setDropMenu }) => (
-  <div className={`${styles["menu"]} ${dropMenu ? styles["show"] : ""}`}>
-    <section className={styles["menu__space"]}>
-      <div />
-      <div />
-      <div />
-      <div />
-    </section>
-    <section className={styles["menu__box"]}>
-      <div className={styles["bg"]} />
-      <TitleImg className={styles["menu-title"]} />
-      <nav className={styles["nav"]}>
-        <Link to="/blog">
-          <div className={styles["inner"]}>
-            <div className={styles["icon"]}>
-              <MountainIcon />
-            </div>
-            <p className={styles["text"]}>博客</p>
-            {/* <SiteImg className={styles["title"]} /> */}
-          </div>
-        </Link>
-        <Link to="/posts">
-          <div className={styles["inner"]}>
-            <div className={styles["icon"]}>
-              <MoonIcon />
-            </div>
-            <p className={styles["text"]}>文章</p>
-            {/* <MemoriesImg className={styles["title"]} /> */}
-          </div>
-        </Link>
-        <Link to="/reproducing">
-          <div className={styles["inner"]}>
-            <div className={styles["icon"]}>
-              <DogIcon />
-            </div>
-            <p className={styles["text"]}>复现</p>
-            {/* <ProductImg className={styles["title"]} /> */}
-          </div>
-        </Link>
-        <Link to="/about">
-          <div className={styles["inner"]}>
-            <div className={styles["icon"]}>
-              <StarIcon />
-            </div>
-            <p className={styles["text"]}>关于</p>
-            {/* <ProfileImg className={styles["title"]} /> */}
-          </div>
-        </Link>
-        <Link to="/links">
-          <div className={styles["inner"]}>
-            <div className={styles["icon"]}>
-              <MountainIcon />
-            </div>
-            <p className={styles["text"]}>友链</p>
-            {/* <ProfileImg className={styles["title"]} /> */}
-          </div>
-        </Link>
-      </nav>
-      <div className={styles["colors"]}>
-        <div></div>
-        <div></div>
-        <div></div>
-        <div></div>
-      </div>
-    </section>
-    <button
-      type="button"
-      className={styles["menu__close-btn"]}
-      aria-expanded={dropMenu ? "true" : "false"}
-      onClick={() => setDropMenu((prev) => !prev)}
-    >
-      <div></div>
-      <div></div>
-    </button>
-  </div>
-);
 
 export default function Home(): JSX.Element {
   return (
