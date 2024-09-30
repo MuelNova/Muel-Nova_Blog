@@ -1,3 +1,0 @@
-[submodule "go-github-webhooks"]
-	path = go-github-webhooks
-	url = https://github.com/MuelNova/go-github-webhooks
