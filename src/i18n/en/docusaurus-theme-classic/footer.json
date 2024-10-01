@@ -93,11 +93,11 @@
   },
   "link.item.label.📝博客": {
     "message": "📝Blog",
-    "description": "The label of footer link with label=📝Blog linking to /blog"
+    "description": "The label of footer link with label=📝博客 linking to /blog"
   },
   "link.item.label.♿️知识库": {
     "message": "♿️Library",
-    "description": "The label of footer link with label=♿️Library linking to /library"
+    "description": "The label of footer link with label=♿️知识库 linking to /library"
   },
   "link.item.label.关于": {
     "message": "About",

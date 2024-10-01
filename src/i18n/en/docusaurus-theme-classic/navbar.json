@@ -41,18 +41,18 @@
   },
   "item.label.📝博客": {
     "message": "📝Blog",
-    "description": "Navbar item with label 📝Blog"
+    "description": "Navbar item with label 📝博客"
   },
   "item.label.♿️知识库": {
     "message": "♿️Library",
-    "description": "Navbar item with label ♿️Library"
+    "description": "Navbar item with label ♿️知识库"
   },
   "item.label.关于": {
     "message": "About",
-    "description": "Navbar item with label About"
+    "description": "Navbar item with label 关于"
   },
   "item.label.友情链接": {
-    "message": "FriendLinks",
-    "description": "Navbar item with label FriendLinks"
+    "message": "Links",
+    "description": "Navbar item with label 友情链接"
   }
 }
