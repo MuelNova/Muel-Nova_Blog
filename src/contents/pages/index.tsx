@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { useState } from "react";
 import styles from "@site/src/contents/pages/index.module.scss";
 import Link from "@docusaurus/Link";
+import Translate from "@docusaurus/Translate";
 
 import TitleImg from "@site/src/static/img/index/menu/title.svg";
 import StarIcon from "@site/src/static/img/index/menu/star.svg";
@@ -11,7 +12,7 @@ import MountainIcon from "@site/src/static/img/index/menu/mountain.svg";
 import AniEnabledIcon from "@site/src/static/img/index/menu/ani_enable.svg";
 import AniDisabledIcon from "@site/src/static/img/index/menu/ani_disable.svg";
 import svgList from "@site/src/theme/utils/_SocialMediaList";
-import Svg from "./about/_Svg";
+import Svg from "@site/src/contents/pages/about/_Svg";
 
 function AboutComponent() {
   const [dropMenu, setDropMenu] = useState(false);
@@ -50,7 +51,9 @@ function AboutComponent() {
               <div className={styles["icon"]}>
                 <MountainIcon />
               </div>
-              <p className={styles["text"]}>博客</p>
+              <p className={styles["text"]}>
+                <Translate>博客</Translate>
+              </p>
               {/* <SiteImg className={styles["title"]} /> */}
             </div>
           </Link>
@@ -59,7 +62,9 @@ function AboutComponent() {
               <div className={styles["icon"]}>
                 <MoonIcon />
               </div>
-              <p className={styles["text"]}>文章</p>
+              <p className={styles["text"]}>
+                <Translate>文章</Translate>
+              </p>
               {/* <MemoriesImg className={styles["title"]} /> */}
             </div>
           </Link>
@@ -68,7 +73,9 @@ function AboutComponent() {
               <div className={styles["icon"]}>
                 <DogIcon />
               </div>
-              <p className={styles["text"]}>复现</p>
+              <p className={styles["text"]}>
+                <Translate>复现</Translate>
+              </p>
               {/* <ProductImg className={styles["title"]} /> */}
             </div>
           </Link>
@@ -77,7 +84,9 @@ function AboutComponent() {
               <div className={styles["icon"]}>
                 <StarIcon />
               </div>
-              <p className={styles["text"]}>关于</p>
+              <p className={styles["text"]}>
+                <Translate>关于</Translate>
+              </p>
               {/* <ProfileImg className={styles["title"]} /> */}
             </div>
           </Link>
@@ -86,7 +95,9 @@ function AboutComponent() {
               <div className={styles["icon"]}>
                 <MountainIcon />
               </div>
-              <p className={styles["text"]}>友链</p>
+              <p className={styles["text"]}>
+                <Translate>友链</Translate>
+              </p>
               {/* <ProfileImg className={styles["title"]} /> */}
             </div>
           </Link>
