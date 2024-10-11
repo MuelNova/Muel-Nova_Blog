@@ -24,8 +24,10 @@
       background-color: var(--ifm-color-secondary);
       svg {
         fill: var(--ifm-link-color);
+        color: var(--ifm-link-color);
         g path:not(:first-of-type) {
           fill: var(--ifm-color-secondary);
+          color: var(--ifm-color-secondary);
         }
       }
     }
@@ -37,10 +39,12 @@
       width: 75%;
       height: 75%;
       fill: var(--ifm-color-secondary);
+      color: var(--ifm-color-secondary);
       display: block;
       text-align: center;
       g path:not(:first-of-type) {
         fill: var(--ifm-link-color);
+        color: var(--ifm-link-color);
       }
     }
   }

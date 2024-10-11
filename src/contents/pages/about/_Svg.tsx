@@ -3,11 +3,11 @@ import React from "react";
 interface SvgProps {
   Svg: React.FunctionComponent<React.SVGProps<SVGElement>>;
   link: string;
-  Name?: string;
+  title?: string;
   style?: React.CSSProperties;
 }
 
-const Svg: React.FC<SvgProps> = ({ Svg, link, Name = "", style = {} }) => {
+const Svg: React.FC<SvgProps> = ({ Svg, link, title = "", style = {} }) => {
   const defaultStyle: React.CSSProperties = {
     top: "20%",
     left: "20%",
@@ -20,8 +20,8 @@ const Svg: React.FC<SvgProps> = ({ Svg, link, Name = "", style = {} }) => {
   style = { ...defaultStyle, ...style };
 
   return (
-    <a href={link} target="_blank">
-      <Svg className={Name} style={style} />
+    <a href={link} target="_blank" rel={title}>
+      <Svg className={title} style={style} />
     </a>
   );
 };

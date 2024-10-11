@@ -1,10 +1,14 @@
 import Follow from "@site/src/static/img/follow.svg";
+import { faQq } from "@fortawesome/free-brands-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import React from "react";
+
 
 const svgList = [
   {
-    title: "bilibili",
-    Svg: require("@site/src/static/img/bilibili.svg").default,
-    link: "https://space.bilibili.com/11966801",
+    title: "QQ(4050909)",
+    Svg: ({ ...props }) => <FontAwesomeIcon icon={faQq} {...props}/>,
+    link: "https://qm.qq.com/q/2liGTvjIM",
   },
   {
     title: "github",
