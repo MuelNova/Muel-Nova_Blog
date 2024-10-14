@@ -107,6 +107,7 @@ const config = {
         authorsMapPath: "../blog/authors.yml",
         remarkPlugins: [remarkMath],
         rehypePlugins: [rehypeKatex],
+        showLastUpdateTime: true,
       },
     ],
 
@@ -130,6 +131,7 @@ const config = {
         },
         remarkPlugins: [remarkMath],
         rehypePlugins: [rehypeKatex],
+        showLastUpdateTime: true,
       },
     ],
 
@@ -149,6 +151,7 @@ const config = {
           type: "rss",
           copyright: `Copyright © ${new Date().getFullYear()} NovaNo1r with ❤`,
         },
+        showLastUpdateTime: true,
       },
     ],
     "docusaurus-plugin-sass",
