@@ -8,6 +8,10 @@ authors: [nova]
 
 再不做题手生完了，没书读了。
 
+一个非栈上格式化，一个 http 协议
+
+<!--truncate-->
+
 ## SpringBoard
 
 非栈上格式化字符串，栈上找一个 a->b->c 的链子，把 a->b 改成 a->b\*->return_address（一般两字节够改了）

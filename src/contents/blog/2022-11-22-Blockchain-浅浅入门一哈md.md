@@ -6,6 +6,8 @@ tags: ['Blockchain']
 
 题目平台 [点这里](https://ethernaut.openzeppelin.com/)
 
+<!--truncate-->
+
 ## Hello Ethernaut
 
 这关大概就是让你熟悉合约的操作的。

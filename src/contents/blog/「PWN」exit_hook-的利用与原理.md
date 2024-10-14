@@ -11,6 +11,8 @@ unlisted: true
 > - 两次任意写 func + arg1
 > - 伪造 *_rtld_global* 结构体
 
+<!--truncate-->
+
 #### 成因
 
 简要而言，在 *exit* 调用 *_dl_fini* 时，会调用 *_rtld_lock_lock_recursive* 和 *_rtld_lock_unlock_recursive* 进行上锁和释放。而这两个宏展开之后分别是 *\_rtld_global.\_dl_lock_lock_recursive(&\_rtld_global.\_dl_load_lock.mutex)* 和 *\_rtld_global.\_dl_lock_unlock_recursive(&\_rtld_global.\_dl_load_lock.mutex)*
