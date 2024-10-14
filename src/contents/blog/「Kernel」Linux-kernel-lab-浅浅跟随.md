@@ -1070,7 +1070,7 @@ mount -t debugfs none /debug
   {
   	if (!__list_add_valid(new, prev, next))
   		return;
-
+  
   	next->prev = new;
   	new->next = next;
   	new->prev = prev;
@@ -1815,20 +1815,20 @@ crw-r--r-- 1 root root 114, 514 Jul 24 19:03 /dev/muelnova
   	kuid_t			i_uid;
   	kgid_t			i_gid;
   	unsigned int		i_flags;
-
+  
   #ifdef CONFIG_FS_POSIX_ACL
   	struct posix_acl	*i_acl;
   	struct posix_acl	*i_default_acl;
   #endif
-
+  
   	const struct inode_operations	*i_op;
   	struct super_block	*i_sb;
   	struct address_space	*i_mapping;
-
+  
   #ifdef CONFIG_SECURITY
   	void			*i_security;
   #endif
-
+  
   	/* Stat data, not accessed from path walking */
   	unsigned long		i_ino;
   	/*
@@ -1852,23 +1852,23 @@ crw-r--r-- 1 root root 114, 514 Jul 24 19:03 /dev/muelnova
   	u8			i_blkbits;
   	enum rw_hint		i_write_hint;
   	blkcnt_t		i_blocks;
-
+  
   #ifdef __NEED_I_SIZE_ORDERED
   	seqcount_t		i_size_seqcount;
   #endif
-
+  
   	/* Misc */
   	unsigned long		i_state;
   	struct rw_semaphore	i_rwsem;
-
+  
   	unsigned long		dirtied_when;	/* jiffies of first dirtying */
   	unsigned long		dirtied_time_when;
-
+  
   	struct hlist_node	i_hash;
   	struct list_head	i_io_list;	/* backing dev IO list */
   #ifdef CONFIG_CGROUP_WRITEBACK
   	struct bdi_writeback	*i_wb;		/* the associated cgroup wb */
-
+  
   	/* foreign inode detection, see wbc_detach_inode() */
   	int			i_wb_frn_winner;
   	u16			i_wb_frn_avg_time;
@@ -1902,22 +1902,22 @@ crw-r--r-- 1 root root 114, 514 Jul 24 19:03 /dev/muelnova
   		char			*i_link;
   		unsigned		i_dir_seq;
   	};
-
+  
   	__u32			i_generation;
-
+  
   #ifdef CONFIG_FSNOTIFY
   	__u32			i_fsnotify_mask; /* all events this inode cares about */
   	struct fsnotify_mark_connector __rcu	*i_fsnotify_marks;
   #endif
-
+  
   #ifdef CONFIG_FS_ENCRYPTION
   	struct fscrypt_inode_info	*i_crypt_info;
   #endif
-
+  
   #ifdef CONFIG_FS_VERITY
   	struct fsverity_info	*i_verity_info;
   #endif
-
+  
   	void			*i_private; /* fs or device private pointer */
   } __randomize_layout;
   ```
@@ -3800,3 +3800,978 @@ static const struct file_operations kbd_fops = {
 	.write = kdb_write
 };
 ```
+
+
+
+## 延迟工作
+
+眨眼之间三个月就过去了，原本有点弃坑那个感觉了，然后发现 @hanqing 在看，就想着继续做做呢，正好不知道最近干啥，想学做游戏和前端去。
+
+---
+
+### 0. 简介¶
+
+使用 [LXR](http://elixir.free-electrons.com/linux/latest/source)，找到以下符号的定义：
+
+- `jiffies`
+- `struct timer_list`
+- `spin_lock_bh function()`
+
+`jiffies` 类似于一个计数器，它记录的是 "内核 ticks"，在每一次系统时钟中断时就会加 1
+
+找定义有点复杂，它是一个 extern 的，但是都在用。
+
+```c title="include/linux/jiffies.h"
+extern unsigned long volatile __cacheline_aligned_in_smp __jiffy_arch_data jiffies;
+```
+
+```c title="kernel/time/tick-common.c"
+/*
+ * Periodic tick
+ */
+static void tick_periodic(int cpu)
+{
+	if (tick_do_timer_cpu == cpu) {
+		raw_spin_lock(&jiffies_lock);
+		write_seqcount_begin(&jiffies_seq);
+
+		/* Keep track of the next tick event */
+		tick_next_period = ktime_add_ns(tick_next_period, TICK_NSEC);
+
+		do_timer(1);
+		write_seqcount_end(&jiffies_seq);
+		raw_spin_unlock(&jiffies_lock);
+		update_wall_time();
+	}
+
+	update_process_times(user_mode(get_irq_regs()));
+	profile_tick(CPU_PROFILING);
+}
+```
+
+在 `do_timer` 里，我们能看到它给 `jiffies_64` 做了更新。
+
+```c
+/*
+ * Must hold jiffies_lock
+ */
+void do_timer(unsigned long ticks)
+{
+	jiffies_64 += ticks;
+	calc_global_load();
+}
+
+```
+
+
+
+所以在 x86_64 里，我们实际拿 jiffies 拿到的应该就是 jiffies_64（所以是在哪里切换的？我真没找到相关代码）
+
+```c title="kernel/time/timer.c"
+__visible u64 jiffies_64 __cacheline_aligned_in_smp = INITIAL_JIFFIES;
+
+EXPORT_SYMBOL(jiffies_64);
+```
+
+
+
+- `struct timer_list`
+
+```c title="include/linux/timer.h"
+struct timer_list {
+	/*
+	 * All fields that change during normal runtime grouped to the
+	 * same cacheline
+	 */
+	struct hlist_node	entry;
+	unsigned long		expires;
+	void			(*function)(struct timer_list *);
+	u32			flags;
+
+#ifdef CONFIG_LOCKDEP
+	struct lockdep_map	lockdep_map;
+#endif
+};
+```
+
+
+
+- **spin_lock_bh**
+
+```c title="include/linux/spinlock.h"
+static __always_inline void spin_lock_bh(spinlock_t *lock)
+{
+	raw_spin_lock_bh(&lock->rlock);
+}
+```
+
+
+
+### 1. 定时器¶
+
+我们将创建一个简单的内核模块，在模块的内核加载后的第 *TIMER_TIMEOUT* 秒显示一条消息。
+
+生成名为 **1-2-timer** 的任务骨架，并按照标有 **TODO 1** 的部分来完成任务。
+
+:::info
+
+使用 pr_info(...)。消息将显示在控制台上，并且还可以使用 dmesg 查看。在调度定时器时，我们需要使用系统的（未来）绝对时间并且以滴答数表示。系统的当前时间（以滴答数表示）由 `jiffies` 给出。因此，我们需要将 `jiffies + TIMER_TIMEOUT * HZ` 作为绝对时间传递给定时器。
+
+:::
+
+有关更多信息，请查阅 [定时器（Timer）](https://linux-kernel-labs-zh.xyz/labs/deferred_work.html#timer) 部分。
+
+---
+
+基本上就是抄 Timer 部分的东西
+
+```c
+/*
+ * Deferred Work
+ *
+ * Exercise #1, #2: simple timer
+ */
+
+#include "linux/timer.h"
+#include <linux/kernel.h>
+#include <linux/init.h>
+#include <linux/module.h>
+#include <linux/sched.h>
+
+MODULE_DESCRIPTION("Simple kernel timer");
+MODULE_AUTHOR("SO2");
+MODULE_LICENSE("GPL");
+
+#define TIMER_TIMEOUT	1
+
+static struct timer_list timer;
+
+static void timer_handler(struct timer_list *tl)
+{
+	/* TODO 1: print a message */
+	pr_info("No Timer Executed!\n");
+
+	/* TODO 2: rechedule timer */
+}
+
+static int __init timer_init(void)
+{
+	pr_info("[timer_init] Init module\n");
+
+	/* TODO 1: initialize timer */
+	timer_setup(&timer, timer_handler, 0);
+	
+
+	/* TODO 1: schedule timer for the first time */
+	mod_timer(&timer, jiffies + HZ * TIMER_TIMEOUT);
+
+	return 0;
+}
+
+static void __exit timer_exit(void)
+{
+	pr_info("[timer_exit] Exit module\n");
+
+	/* TODO 1: cleanup; make sure the timer is not running after we exit */
+	del_timer_sync(&timer);
+}
+
+module_init(timer_init);
+module_exit(timer_exit);
+
+```
+
+![image-20241015005017159](https://oss.nova.gal/img/image-20241015005017159.png)
+
+没问题，所以我们这个就是 1S 后执行。
+
+
+
+### 2. 周期性定时器[¶](https://linux-kernel-labs-zh.xyz/labs/deferred_work.html#section-10)
+
+修改前面的模块，使消息每隔 TIMER_TIMEOUT 秒显示一次。按照骨架中标有 **TODO 2** 的部分进行修改。
+
+---
+
+想法就是每次 handle 的时候再设置下一次调用
+
+```c
+static void timer_handler(struct timer_list *tl)
+{
+	/* TODO 1: print a message */
+	pr_info("No Timer Executed!\n");
+
+	/* TODO 2: rechedule timer */
+	mod_timer(tl, jiffies + HZ * TIMER_TIMEOUT);
+}
+```
+
+
+
+### 3. 使用 ioctl 控制定时器[¶](https://linux-kernel-labs-zh.xyz/labs/deferred_work.html#ioctl)
+
+我们计划在从用户空间接收到 ioctl 调用后的第 N 秒显示有关当前进程的信息。N 作为 ioctl 参数传递。
+
+生成名为 **3-4-5-deferred** 的任务骨架，并按照骨架中标有 **TODO 1** 的部分进行修改。
+
+你需要实现以下 ioctl 操作。
+
+- MY_IOCTL_TIMER_SET：安排定时器在接收到的秒数之后运行，该秒数作为 ioctl 的参数。该定时器并不周期运行。 * 此命令直接接收一个值，而不是指针。
+- MY_IOCTL_TIMER_CANCEL：停用定时器。
+
+:::info
+
+请查阅 [ioctl](https://linux-kernel-labs-zh.xyz/so2/lab3-device-drivers.html#ioctl) 了解如何访问 ioctl 参数。
+
+
+
+请查阅 [定时器（Timer）](https://linux-kernel-labs-zh.xyz/labs/deferred_work.html#timer) 部分，了解如何启用/禁用定时器。在定时器处理程序中，显示当前进程标识符（PID）和进程执行镜像名称。
+
+
+
+你可以使用当前进程的 *pid* 和 *comm* 字段来查找当前进程标识符。有关详细信息，请查阅 proc-info。
+
+
+
+要从用户空间使用设备驱动程序，你必须使用 mknod 程序创建设备字符文件 */dev/deferred*。或者，你可以运行 *3-4-5-deferred/kernel/makenode* 脚本来执行此操作。
+
+通过调用用户空间的 ioctl 操作来启用和禁用定时器。使用 *3-4-5-deferred/user/test* 程序来测试定时器的计划和取消。该程序在命令行上接收 ioctl 类型操作及其参数（如果有）。
+
+
+
+运行测试可执行文件时不带参数，以观察它接受的命令行选项。
+
+要在 3 秒后启用定时器，请使用：
+
+```
+./test s 3
+```
+
+要停用定时器，请使用：
+
+```
+./test c
+```
+
+注意，定时器运行所基于的当前进程每次都是 PID 为 0 的 *swapper/0*。这个进程是空闲进程，当没有其他任务可运行时，它会一直运行。由于虚拟机非常轻量级且没有太多操作，大部分时间都会看到这个进程。
+
+:::
+
+---
+
+这个任务比较有意思。让我们先来看 user 部分。
+
+好吧 user 已经写好了，那没意思。
+
+那就跟着它的 kernel 部分来做吧，第一部分几乎和 1 是一样的，在 init 里 init，然后等 ioctl 去 mod 它。
+
+```c
+/*
+ * SO2 - Lab 6 - Deferred Work
+ *
+ * Exercises #3, #4, #5: deferred work
+ *
+ * Code skeleton.
+ */
+
+#include "linux/timer.h"
+#include <linux/kernel.h>
+#include <linux/init.h>
+#include <linux/module.h>
+#include <linux/fs.h>
+#include <linux/cdev.h>
+#include <linux/sched.h>
+#include <linux/slab.h>
+#include <linux/uaccess.h>
+#include <linux/sched/task.h>
+#include "../include/deferred.h"
+
+#define MY_MAJOR		42
+#define MY_MINOR		0
+#define MODULE_NAME		"deferred"
+
+#define TIMER_TYPE_NONE		-1
+#define TIMER_TYPE_SET		0
+#define TIMER_TYPE_ALLOC	1
+#define TIMER_TYPE_MON		2
+
+MODULE_DESCRIPTION("Deferred work character device");
+MODULE_AUTHOR("SO2");
+MODULE_LICENSE("GPL");
+
+struct mon_proc {
+	struct task_struct *task;
+	struct list_head list;
+};
+
+static struct my_device_data {
+	struct cdev cdev;
+	/* TODO 1: add timer */
+	struct timer_list tl;
+	/* TODO 2: add flag */
+	/* TODO 3: add work */
+	/* TODO 4: add list for monitored processes */
+	/* TODO 4: add spinlock to protect list */
+} dev;
+
+static void alloc_io(void)
+{
+	set_current_state(TASK_INTERRUPTIBLE);
+	schedule_timeout(5 * HZ);
+	pr_info("Yawn! I've been sleeping for 5 seconds.\n");
+}
+
+static struct mon_proc *get_proc(pid_t pid)
+{
+	struct task_struct *task;
+	struct mon_proc *p;
+
+	rcu_read_lock();
+	task = pid_task(find_vpid(pid), PIDTYPE_PID);
+	rcu_read_unlock();
+	if (!task)
+		return ERR_PTR(-ESRCH);
+
+	p = kmalloc(sizeof(*p), GFP_ATOMIC);
+	if (!p)
+		return ERR_PTR(-ENOMEM);
+
+	get_task_struct(task);
+	p->task = task;
+
+	return p;
+}
+
+
+/* TODO 3: define work handler */
+
+#define ALLOC_IO_DIRECT
+/* TODO 3: undef ALLOC_IO_DIRECT*/
+
+static void timer_handler(struct timer_list *tl)
+{
+	/* TODO 1: implement timer handler */
+	pr_info("TIMER Executing...\n");
+	/* TODO 2: check flags: TIMER_TYPE_SET or TIMER_TYPE_ALLOC */
+		/* TODO 3: schedule work */
+		/* TODO 4: iterate the list and check the proccess state */
+			/* TODO 4: if task is dead print info ... */
+			/* TODO 4: ... decrement task usage counter ... */
+			/* TODO 4: ... remove it from the list ... */
+			/* TODO 4: ... free the struct mon_proc */
+}
+
+static int deferred_open(struct inode *inode, struct file *file)
+{
+	struct my_device_data *my_data =
+		container_of(inode->i_cdev, struct my_device_data, cdev);
+	file->private_data = my_data;
+	pr_info("[deferred_open] Device opened\n");
+	return 0;
+}
+
+static int deferred_release(struct inode *inode, struct file *file)
+{
+	pr_info("[deferred_release] Device released\n");
+	return 0;
+}
+
+static long deferred_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+{
+	struct my_device_data *my_data = (struct my_device_data*) file->private_data;
+
+	pr_info("[deferred_ioctl] Command: %s\n", ioctl_command_to_string(cmd));
+
+	switch (cmd) {
+		case MY_IOCTL_TIMER_SET:
+			/* TODO 2: set flag */
+			/* TODO 1: schedule timer */
+			mod_timer(&dev.tl, jiffies + HZ * arg);
+			break;
+		case MY_IOCTL_TIMER_CANCEL:
+			/* TODO 1: cancel timer */
+			del_timer(&dev.tl);
+			break;
+		case MY_IOCTL_TIMER_ALLOC:
+			/* TODO 2: set flag and schedule timer */
+			break;
+		case MY_IOCTL_TIMER_MON:
+		{
+			/* TODO 4: use get_proc() and add task to list */
+			/* TODO 4: protect access to list */
+
+			/* TODO 4: set flag and schedule timer */
+			break;
+		}
+		default:
+			return -ENOTTY;
+	}
+	return 0;
+}
+
+struct file_operations my_fops = {
+	.owner = THIS_MODULE,
+	.open = deferred_open,
+	.release = deferred_release,
+	.unlocked_ioctl = deferred_ioctl,
+};
+
+static int deferred_init(void)
+{
+	int err;
+
+	pr_info("[deferred_init] Init module\n");
+	err = register_chrdev_region(MKDEV(MY_MAJOR, MY_MINOR), 1, MODULE_NAME);
+	if (err) {
+		pr_info("[deffered_init] register_chrdev_region: %d\n", err);
+		return err;
+	}
+
+	/* TODO 2: Initialize flag. */
+	/* TODO 3: Initialize work. */
+
+	/* TODO 4: Initialize lock and list. */
+
+	cdev_init(&dev.cdev, &my_fops);
+	cdev_add(&dev.cdev, MKDEV(MY_MAJOR, MY_MINOR), 1);
+
+	/* TODO 1: Initialize timer. */
+	timer_setup(&dev.tl, timer_handler, 0);
+
+	return 0;
+}
+
+static void deferred_exit(void)
+{
+	struct mon_proc *p, *n;
+
+	pr_info("[deferred_exit] Exit module\n" );
+
+	cdev_del(&dev.cdev);
+	unregister_chrdev_region(MKDEV(MY_MAJOR, MY_MINOR), 1);
+
+	/* TODO 1: Cleanup: make sure the timer is not running after exiting. */
+	del_timer_sync(&dev.tl);
+	/* TODO 3: Cleanup: make sure the work handler is not scheduled. */
+
+	/* TODO 4: Cleanup the monitered process list */
+		/* TODO 4: ... decrement task usage counter ... */
+		/* TODO 4: ... remove it from the list ... */
+		/* TODO 4: ... free the struct mon_proc */
+}
+
+module_init(deferred_init);
+module_exit(deferred_exit);
+
+```
+
+我们可以尝试一下：
+
+![image-20241015011408858](https://oss.nova.gal/img/image-20241015011408858.png)
+
+![image-20241015011506593](https://oss.nova.gal/img/image-20241015011506593.png)
+
+没有问题，那么我们就继续来完成 pid 相关的内容。引用 linux/sched.h，我们就可以使用 current 宏拿到当前进程的 struct task_struct*
+
+```c
+static void timer_handler(struct timer_list *tl)
+{
+	/* TODO 1: implement timer handler */
+	pr_info("PID: %d, name: %s\n", current->pid, current->comm);
+```
+
+![image-20241015011935969](https://oss.nova.gal/img/image-20241015011935969.png)
+
+可以看到，其实定时器运行基于的都是 swapper/0 这个进程。
+
+
+
+### 4. 阻塞操作[¶](https://linux-kernel-labs-zh.xyz/labs/deferred_work.html#section-11)
+
+接下来，我们将尝试在定时器例程中执行阻塞操作，以查看会发生什么情况。为此，我们尝试在定时器处理例程中调用一个名为 alloc_io() 的模拟阻塞操作的函数。
+
+修改模块，使得当接收到 *MY_IOCTL_TIMER_ALLOC* 命令时，定时器处理程序将调用 `alloc_io()`。按照骨架中标有 **TODO 2** 的部分进行修改。
+
+使用相同的定时器。为了区分定时器处理程序中的功能，可以在设备结构中使用一个标志。使用代码骨架中定义的 *TIMER_TYPE_ALLOC* 和 *TIMER_TYPE_SET* 宏。对于初始化，请使用 TIMER_TYPE_NONE。
+
+运行测试程序以验证任务 3 的功能。再次运行测试程序以调用 `alloc_io()`。
+
+:::info
+
+该驱动程序会导致错误，因为在原子上下文（定时器处理程序运行在中断上下文中）中调用了阻塞函数。
+
+:::
+
+---
+
+这个显然是不行的，因为我们在 TIMER 运行的时候位于中断上下文中（或者说就是在时钟的软中断处理函数中运行）
+
+我们添加一个 int 类型的 flag，然后在 handler 里面判断 flag
+
+```c
+/*
+ * SO2 - Lab 6 - Deferred Work
+ *
+ * Exercises #3, #4, #5: deferred work
+ *
+ * Code skeleton.
+ */
+
+#include "linux/timer.h"
+#include <linux/kernel.h>
+#include <linux/init.h>
+#include <linux/module.h>
+#include <linux/fs.h>
+#include <linux/cdev.h>
+#include <linux/sched.h>
+#include <linux/slab.h>
+#include <linux/uaccess.h>
+#include <linux/sched/task.h>
+#include "../include/deferred.h"
+
+#define MY_MAJOR		42
+#define MY_MINOR		0
+#define MODULE_NAME		"deferred"
+
+#define TIMER_TYPE_NONE		-1
+#define TIMER_TYPE_SET		0
+#define TIMER_TYPE_ALLOC	1
+#define TIMER_TYPE_MON		2
+
+MODULE_DESCRIPTION("Deferred work character device");
+MODULE_AUTHOR("SO2");
+MODULE_LICENSE("GPL");
+
+struct mon_proc {
+	struct task_struct *task;
+	struct list_head list;
+};
+
+static struct my_device_data {
+	struct cdev cdev;
+	/* TODO 1: add timer */
+	struct timer_list tl;
+	/* TODO 2: add flag */
+	int flag;
+	/* TODO 3: add work */
+	/* TODO 4: add list for monitored processes */
+	/* TODO 4: add spinlock to protect list */
+} dev;
+
+static void alloc_io(void)
+{
+	set_current_state(TASK_INTERRUPTIBLE);
+	schedule_timeout(5 * HZ);
+	pr_info("Yawn! I've been sleeping for 5 seconds.\n");
+}
+
+static struct mon_proc *get_proc(pid_t pid)
+{
+	struct task_struct *task;
+	struct mon_proc *p;
+
+	rcu_read_lock();
+	task = pid_task(find_vpid(pid), PIDTYPE_PID);
+	rcu_read_unlock();
+	if (!task)
+		return ERR_PTR(-ESRCH);
+
+	p = kmalloc(sizeof(*p), GFP_ATOMIC);
+	if (!p)
+		return ERR_PTR(-ENOMEM);
+
+	get_task_struct(task);
+	p->task = task;
+
+	return p;
+}
+
+
+/* TODO 3: define work handler */
+
+#define ALLOC_IO_DIRECT
+/* TODO 3: undef ALLOC_IO_DIRECT*/
+
+static void timer_handler(struct timer_list *tl)
+{
+	/* TODO 1: implement timer handler */
+	/* TODO 2: check flags: TIMER_TYPE_SET or TIMER_TYPE_ALLOC */
+	switch (dev.flag) {
+		case TIMER_TYPE_SET:
+			pr_info("PID: %d, name: %s\n", current->pid, current->comm);
+			break;
+		case TIMER_TYPE_ALLOC:
+			alloc_io();
+			break;
+	}
+		/* TODO 3: schedule work */
+		/* TODO 4: iterate the list and check the proccess state */
+			/* TODO 4: if task is dead print info ... */
+			/* TODO 4: ... decrement task usage counter ... */
+			/* TODO 4: ... remove it from the list ... */
+			/* TODO 4: ... free the struct mon_proc */
+}
+
+static int deferred_open(struct inode *inode, struct file *file)
+{
+	struct my_device_data *my_data =
+		container_of(inode->i_cdev, struct my_device_data, cdev);
+	file->private_data = my_data;
+	pr_info("[deferred_open] Device opened\n");
+	return 0;
+}
+
+static int deferred_release(struct inode *inode, struct file *file)
+{
+	pr_info("[deferred_release] Device released\n");
+	return 0;
+}
+
+static long deferred_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+{
+	struct my_device_data *my_data = (struct my_device_data*) file->private_data;
+
+	pr_info("[deferred_ioctl] Command: %s\n", ioctl_command_to_string(cmd));
+
+	switch (cmd) {
+		case MY_IOCTL_TIMER_SET:
+			/* TODO 2: set flag */
+			dev.flag = TIMER_TYPE_SET;
+			/* TODO 1: schedule timer */
+			mod_timer(&dev.tl, jiffies + HZ * arg);
+			break;
+		case MY_IOCTL_TIMER_CANCEL:
+			/* TODO 1: cancel timer */
+			del_timer(&dev.tl);
+			break;
+		case MY_IOCTL_TIMER_ALLOC:
+			/* TODO 2: set flag and schedule timer */
+			dev.flag = TIMER_TYPE_ALLOC;
+			mod_timer(&dev.tl, jiffies + HZ * arg);
+			break;
+		case MY_IOCTL_TIMER_MON:
+		{
+			/* TODO 4: use get_proc() and add task to list */
+			/* TODO 4: protect access to list */
+
+			/* TODO 4: set flag and schedule timer */
+			break;
+		}
+		default:
+			return -ENOTTY;
+	}
+	return 0;
+}
+
+struct file_operations my_fops = {
+	.owner = THIS_MODULE,
+	.open = deferred_open,
+	.release = deferred_release,
+	.unlocked_ioctl = deferred_ioctl,
+};
+
+static int deferred_init(void)
+{
+	int err;
+
+	pr_info("[deferred_init] Init module\n");
+	err = register_chrdev_region(MKDEV(MY_MAJOR, MY_MINOR), 1, MODULE_NAME);
+	if (err) {
+		pr_info("[deffered_init] register_chrdev_region: %d\n", err);
+		return err;
+	}
+
+	/* TODO 2: Initialize flag. */
+	dev.flag = TIMER_TYPE_NONE;
+	/* TODO 3: Initialize work. */
+
+	/* TODO 4: Initialize lock and list. */
+
+	cdev_init(&dev.cdev, &my_fops);
+	cdev_add(&dev.cdev, MKDEV(MY_MAJOR, MY_MINOR), 1);
+
+	/* TODO 1: Initialize timer. */
+	timer_setup(&dev.tl, timer_handler, 0);
+
+	return 0;
+}
+
+static void deferred_exit(void)
+{
+	struct mon_proc *p, *n;
+
+	pr_info("[deferred_exit] Exit module\n" );
+
+	cdev_del(&dev.cdev);
+	unregister_chrdev_region(MKDEV(MY_MAJOR, MY_MINOR), 1);
+
+	/* TODO 1: Cleanup: make sure the timer is not running after exiting. */
+	del_timer_sync(&dev.tl);
+	/* TODO 3: Cleanup: make sure the work handler is not scheduled. */
+
+	/* TODO 4: Cleanup the monitered process list */
+		/* TODO 4: ... decrement task usage counter ... */
+		/* TODO 4: ... remove it from the list ... */
+		/* TODO 4: ... free the struct mon_proc */
+}
+
+module_init(deferred_init);
+module_exit(deferred_exit);
+
+```
+
+![image-20241015012808968](https://oss.nova.gal/img/image-20241015012808968.png)
+
+### 5. 工作队列[¶](https://linux-kernel-labs-zh.xyz/labs/deferred_work.html#section-12)
+
+我们将修改模块，以解决上一个任务中观察到的错误。
+
+为此，让我们使用工作队列调用 `alloc_io()`。从定时器处理程序中安排一个工作项。在工作项处理程序中（在进程上下文中运行），调用 `alloc_io()`。按照骨架中标有 **TODO 3** 的部分进行修改，并在需要时查阅 [工作队列](https://linux-kernel-labs-zh.xyz/labs/deferred_work.html#section-4) 部分。
+
+:::info
+
+在设备结构中添加一个类型为 `struct work_struct` 的新字段。初始化此字段。使用 `schedule_work()` 从定时器处理程序中调度工作项。从 ioctl 后的 N 秒开始调度定时器处理程序。
+
+:::
+
+---
+
+相比于 4，我们使用一个 work_struct 来处理这些需要阻塞的东西。
+
+```c
+/*
+ * SO2 - Lab 6 - Deferred Work
+ *
+ * Exercises #3, #4, #5: deferred work
+ *
+ * Code skeleton.
+ */
+
+#include "linux/timer.h"
+#include "linux/workqueue.h"
+#include <linux/kernel.h>
+#include <linux/init.h>
+#include <linux/module.h>
+#include <linux/fs.h>
+#include <linux/cdev.h>
+#include <linux/sched.h>
+#include <linux/slab.h>
+#include <linux/uaccess.h>
+#include <linux/sched/task.h>
+#include "../include/deferred.h"
+
+#define MY_MAJOR		42
+#define MY_MINOR		0
+#define MODULE_NAME		"deferred"
+
+#define TIMER_TYPE_NONE		-1
+#define TIMER_TYPE_SET		0
+#define TIMER_TYPE_ALLOC	1
+#define TIMER_TYPE_MON		2
+
+MODULE_DESCRIPTION("Deferred work character device");
+MODULE_AUTHOR("SO2");
+MODULE_LICENSE("GPL");
+
+struct mon_proc {
+	struct task_struct *task;
+	struct list_head list;
+};
+
+static struct my_device_data {
+	struct cdev cdev;
+	/* TODO 1: add timer */
+	struct timer_list tl;
+	/* TODO 2: add flag */
+	int flag;
+	/* TODO 3: add work */
+	struct work_struct wk;
+	/* TODO 4: add list for monitored processes */
+	/* TODO 4: add spinlock to protect list */
+} dev;
+
+static void alloc_io(void)
+{
+	set_current_state(TASK_INTERRUPTIBLE);
+	schedule_timeout(5 * HZ);
+	pr_info("Yawn! I've been sleeping for 5 seconds.\n");
+}
+
+static struct mon_proc *get_proc(pid_t pid)
+{
+	struct task_struct *task;
+	struct mon_proc *p;
+
+	rcu_read_lock();
+	task = pid_task(find_vpid(pid), PIDTYPE_PID);
+	rcu_read_unlock();
+	if (!task)
+		return ERR_PTR(-ESRCH);
+
+	p = kmalloc(sizeof(*p), GFP_ATOMIC);
+	if (!p)
+		return ERR_PTR(-ENOMEM);
+
+	get_task_struct(task);
+	p->task = task;
+
+	return p;
+}
+
+
+/* TODO 3: define work handler */
+
+void work_handler(struct work_struct* work)
+{
+	alloc_io();
+}
+#define ALLOC_IO_DIRECT
+/* TODO 3: undef ALLOC_IO_DIRECT*/
+#undef ALLOC_IO_DIRECT
+
+static void timer_handler(struct timer_list *tl)
+{
+	/* TODO 1: implement timer handler */
+	/* TODO 2: check flags: TIMER_TYPE_SET or TIMER_TYPE_ALLOC */
+	switch (dev.flag) {
+		case TIMER_TYPE_SET:
+			pr_info("PID: %d, name: %s\n", current->pid, current->comm);
+			break;
+		case TIMER_TYPE_ALLOC:
+			/* TODO 3: schedule work */
+			schedule_work(&dev.wk);
+			break;
+	}
+		
+		/* TODO 4: iterate the list and check the proccess state */
+			/* TODO 4: if task is dead print info ... */
+			/* TODO 4: ... decrement task usage counter ... */
+			/* TODO 4: ... remove it from the list ... */
+			/* TODO 4: ... free the struct mon_proc */
+}
+
+static int deferred_open(struct inode *inode, struct file *file)
+{
+	struct my_device_data *my_data =
+		container_of(inode->i_cdev, struct my_device_data, cdev);
+	file->private_data = my_data;
+	pr_info("[deferred_open] Device opened\n");
+	return 0;
+}
+
+static int deferred_release(struct inode *inode, struct file *file)
+{
+	pr_info("[deferred_release] Device released\n");
+	return 0;
+}
+
+static long deferred_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+{
+	struct my_device_data *my_data = (struct my_device_data*) file->private_data;
+
+	pr_info("[deferred_ioctl] Command: %s\n", ioctl_command_to_string(cmd));
+
+	switch (cmd) {
+		case MY_IOCTL_TIMER_SET:
+			/* TODO 2: set flag */
+			dev.flag = TIMER_TYPE_SET;
+			/* TODO 1: schedule timer */
+			mod_timer(&dev.tl, jiffies + HZ * arg);
+			break;
+		case MY_IOCTL_TIMER_CANCEL:
+			/* TODO 1: cancel timer */
+			del_timer(&dev.tl);
+			break;
+		case MY_IOCTL_TIMER_ALLOC:
+			/* TODO 2: set flag and schedule timer */
+			dev.flag = TIMER_TYPE_ALLOC;
+			mod_timer(&dev.tl, jiffies + HZ * arg);
+			break;
+		case MY_IOCTL_TIMER_MON:
+		{
+			/* TODO 4: use get_proc() and add task to list */
+			/* TODO 4: protect access to list */
+
+			/* TODO 4: set flag and schedule timer */
+			break;
+		}
+		default:
+			return -ENOTTY;
+	}
+	return 0;
+}
+
+struct file_operations my_fops = {
+	.owner = THIS_MODULE,
+	.open = deferred_open,
+	.release = deferred_release,
+	.unlocked_ioctl = deferred_ioctl,
+};
+
+static int deferred_init(void)
+{
+	int err;
+
+	pr_info("[deferred_init] Init module\n");
+	err = register_chrdev_region(MKDEV(MY_MAJOR, MY_MINOR), 1, MODULE_NAME);
+	if (err) {
+		pr_info("[deffered_init] register_chrdev_region: %d\n", err);
+		return err;
+	}
+
+	/* TODO 2: Initialize flag. */
+	dev.flag = TIMER_TYPE_NONE;
+	/* TODO 3: Initialize work. */
+	INIT_WORK(&dev.wk, work_handler);
+
+	/* TODO 4: Initialize lock and list. */
+
+	cdev_init(&dev.cdev, &my_fops);
+	cdev_add(&dev.cdev, MKDEV(MY_MAJOR, MY_MINOR), 1);
+
+	/* TODO 1: Initialize timer. */
+	timer_setup(&dev.tl, timer_handler, 0);
+
+	return 0;
+}
+
+static void deferred_exit(void)
+{
+	struct mon_proc *p, *n;
+
+	pr_info("[deferred_exit] Exit module\n" );
+
+	cdev_del(&dev.cdev);
+	unregister_chrdev_region(MKDEV(MY_MAJOR, MY_MINOR), 1);
+
+	/* TODO 1: Cleanup: make sure the timer is not running after exiting. */
+	del_timer_sync(&dev.tl);
+	/* TODO 3: Cleanup: make sure the work handler is not scheduled. */
+	cancel_work_sync(&dev.wk);
+
+	/* TODO 4: Cleanup the monitered process list */
+		/* TODO 4: ... decrement task usage counter ... */
+		/* TODO 4: ... remove it from the list ... */
+		/* TODO 4: ... free the struct mon_proc */
+}
+
+module_init(deferred_init);
+module_exit(deferred_exit);
+
+```
+
+没看懂为啥需要 undef 它，我觉得应该是用来控制是用 work 来跑 alloc_io 还是直接跑的？
+
+```c
+		case TIMER_TYPE_ALLOC:
+			/* TODO 3: schedule work */
+			#ifdef ALLOC_IO_DIRECT
+				alloc_io();
+			#else
+				schedule_work(&dev.wk);
+			#endif
+```
+
+所以写成这样估计会比较好一些
+
+![image-20241015014130271](https://oss.nova.gal/img/image-20241015014130271.png)
