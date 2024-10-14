@@ -1,5 +1,10 @@
 nova:
-  name: Muel - Nova
-  title: Anime Would PWN This WORLD into 2D
+  name: MuelNova
+  title: "Pwner who wants to write codes."
   url: https://github.com/MuelNova
   image_url: https://avatars.githubusercontent.com/u/68760718?v=4
+  email: muel@nova.gal
+  page: true
+  socials:
+    x: novanoir_
+    github: MuelNova
