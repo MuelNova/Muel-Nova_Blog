@@ -1,5 +1,5 @@
 import Follow from "@site/src/static/img/follow.svg";
-import { faQq } from "@fortawesome/free-brands-svg-icons";
+import { faQq, faXTwitter } from "@fortawesome/free-brands-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React from "react";
 
@@ -7,7 +7,7 @@ import React from "react";
 const svgList = [
   {
     title: "QQ(4050909)",
-    Svg: ({ ...props }) => <FontAwesomeIcon icon={faQq} {...props}/>,
+    Svg: () => <FontAwesomeIcon icon={faQq}/>,
     link: "https://qm.qq.com/q/2liGTvjIM",
   },
   {
@@ -19,6 +19,11 @@ const svgList = [
     title: "steam",
     Svg: require("@site/src/static/img/steam.svg").default,
     link: "https://steamcommunity.com/id/muelnova",
+  },
+  {
+    title: "X",
+    Svg: () => <FontAwesomeIcon icon={faXTwitter}/>,
+    link: "https://x.com/NovaNoir_",
   },
   {
     title: "Email",
