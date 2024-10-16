@@ -5,7 +5,7 @@ tags: [kernel]
 date: 2024-07-14
 last_update:
   author: nova
-  date: 2024-07-26
+  date: 2024-10-16
 ---
 
 ## 在此之前
@@ -4775,3 +4775,328 @@ module_exit(deferred_exit);
 所以写成这样估计会比较好一些
 
 ![image-20241015014130271](https://oss.nova.gal/img/image-20241015014130271.png)
+
+### 6. 内核线程[¶](https://linux-kernel-labs-zh.xyz/labs/deferred_work.html#section-13)
+
+实现一个简单的模块，创建一个显示当前进程标识符的内核线程。
+
+生成名为 **6-kthread** 的任务骨架，并按照骨架中标有 **TODO** 的部分进行修改。
+
+注解
+
+创建和运行线程有两种选择：
+
+- 使用 `kthread_run()` 创建并运行线程
+- 使用 `kthread_create()` 创建一个挂起的线程，然后使用 `wake_up_process()` 启动它。
+
+如果需要，请查阅 [内核线程](https://linux-kernel-labs-zh.xyz/labs/deferred_work.html#section-5) 部分。
+
+:::info
+
+将线程终止与模块卸载进行同步：
+
+- 线程应在模块卸载时结束
+- 在卸载之前，请等待内核线程退出
+
+
+
+为了同步，使用两个等待队列和两个标志。
+
+请查阅 waiting-queues 了解如何使用等待队列。
+
+使用原子变量作为标志。请查阅 [原子变量](https://linux-kernel-labs-zh.xyz/so2/lab2-kernel-api.html#atomic-variables)。
+
+:::
+
+---
+
+这个一开始没理解，其实是这样的：我们创建两个等待队列，一个用于等待 module exit，另一个用于等待 thread exit。
+
+所以 init 的时候我们就会运行 kthread，而在 exit 的时候就设置 flag，让 kthread 退出，此时 exit 又等待另一个 flag
+
+我们就可以使用 `wait_event_interruptible` 来做这个等待的操作。它接受一个 wait_queue，以及一个 condition。如果不满足 condition，它就把当前线程休眠。信号来了它就遍历 wait_queue 去看是否满足某个 condition
+
+具体可以看这篇[Linux等待队列（Wait Queue） - huey_x - 博客园 (cnblogs.com)](https://www.cnblogs.com/hueyxu/p/13745029.html)
+
+因此我们从 init 来写。注意，我们可以先设置 flag，这样可以少判断一次。
+
+```c
+
+static int __init kthread_init(void)
+{
+	pr_info("[kthread_init] Init module\n");
+
+	/* TODO: init the waitqueues and flags */
+	init_waitqueue_head(&wq_stop_thread);
+	init_waitqueue_head(&wq_thread_terminated);
+	atomic_set(&flag_stop_thread, 0);
+	atomic_set(&flag_thread_terminated, 0);
+	/* TODO: create and start the kernel thread */
+	kthread_run(my_thread_f, 0, "myHappyLittleThread");
+
+	return 0;
+}
+```
+
+那么接下来就进到 `my_thread_f` 里。进入之后，它打印 pid，然后就要等待 module exit，因此我们等待 stop flag，等到之后，它就需要设置 terminated flag，并且 wakeup terminated queue，告诉 module 已经退了。
+
+```c
+int my_thread_f(void *data)
+{
+	pr_info("[my_thread_f] Current process id is %d (%s)\n",
+		current->pid, current->comm);
+	/* TODO: Wait for command to remove module on wq_stop_thread queue. */
+	wait_event_interruptible(wq_stop_thread, atomic_read(&flag_stop_thread) == 1);
+	/* TODO: set flag to mark kernel thread termination */
+	atomic_set(&flag_thread_terminated, 1);
+	/* TODO: notify the unload process that we have exited */
+	wake_up_interruptible(&wq_thread_terminated);
+	pr_info("[my_thread_f] Exiting\n");
+	do_exit(0);
+}
+```
+
+那么在 `exit`，也就类似，当它被调用的时候，设置 flag，wakeup queue，然后等待自己的 condition
+
+```C
+static void __exit kthread_exit(void)
+{
+	/* TODO: notify the kernel thread that its time to exit */
+	atomic_set(&flag_stop_thread, 1);
+	wake_up_interruptible(&wq_stop_thread);
+	/* TODO: wait for the kernel thread to exit */
+	wait_event_interruptible(wq_thread_terminated, atomic_read(&flag_thread_terminated) == 1);
+	pr_info("[kthread_exit] Exit module\n");
+}
+```
+
+![image-20241016225730830](https://oss.nova.gal/img/image-20241016225730830.png)
+
+### 7. 定时器和进程之间共享的缓冲区[¶](https://linux-kernel-labs-zh.xyz/so2/lab5-deferred-work.html?highlight=waiting queue#section-13)
+
+该任务的目的是在延迟操作（定时器）和进程上下文之间进行同步。设置一个周期性定时器，监视进程列表。如果其中一个进程终止，将打印一条消息。可以动态添加进程到列表中。请使用 *3-4-5-deferred/kernel/* 骨架作为基础，并按照标有 **TODO 4** 的部分完成任务。
+
+当接收到 *MY_IOCTL_TIMER_MON* 命令时，检查给定的进程是否存在，如果存在，则将其添加到监视的进程列表中，并在设置了类型后启用定时器。
+
+:::info
+
+使用 `get_proc()` 检查 pid，找到关联的 `struct task_struct`，并分配一个 `struct mon_proc` 项目，可以将其添加到列表中。请注意，该函数还会增加任务的引用计数，以便在任务终止时不会释放其内存。
+
+
+
+使用自旋锁保护对列表的访问。请注意，由于我们与定时器处理程序共享数据，因此除了获取锁之外，还需要禁用底半部处理程序。请查阅 [`锁定`_](https://linux-kernel-labs-zh.xyz/so2/lab5-deferred-work.html?highlight=waiting queue#system-message-1) 部分。
+
+
+
+每秒钟从定时器中收集信息。使用现有的定时器，并通过 TIMER_TYPE_ACCT 添加新的行为。要设置标志，请使用测试程序的 *t* 参数。
+
+:::
+
+在定时器处理程序中，遍历监视的进程列表，并检查它们是否已终止。如果是，则打印进程名称和 PID，然后从列表中删除该进程，递减任务使用计数器，以便可以释放其内存，最后释放 `struct mon_proc` 结构。
+
+:::info
+
+使用 `struct task_struct()` 的 *state* 字段。如果任务的状态为 *TASK_DEAD*，则表示任务已终止。
+
+
+
+使用 `put_task_struct()` 递减任务使用计数器。
+
+
+
+确保使用自旋锁保护列表访问。简单的变体就足够了。
+
+
+
+确保使用安全迭代器遍历列表，因为我们可能需要从列表中删除项目。
+
+在检查完列表后，重新启用定时器。
+
+---
+
+复杂，需要用到锁，还需要用到引用计数。
+
+
+
+我们也是首先来看 ioctl 的部分，首先在 TIMER_MON 分支里，我们获取 struct mon_proc，注意这里要判断这个 pid 是否存在，可以利用 `ISERR` 和 `PTR_ERR` 宏来做。
+
+接着，由于我们要把 mon_proc 添加到列表里，所以得拿个 spinlock，由于此时 timer 也有可能运行，所以还得禁用 bh。最后，设置 flag
+
+```c
+static struct my_device_data {
+	struct cdev cdev;
+	/* TODO 1: add timer */
+	struct timer_list tl;
+	/* TODO 2: add flag */
+	int flag;
+	/* TODO 3: add work */
+	struct work_struct wk;
+	/* TODO 4: add list for monitored processes */
+	struct list_head mon_list;
+	/* TODO 4: add spinlock to protect list */
+	spinlock_t mon_list_lock;
+} dev;
+static long deferred_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+{
+	struct my_device_data *my_data = (struct my_device_data*) file->private_data;
+	unsigned long flags;
+
+	pr_info("[deferred_ioctl] Command: %s\n", ioctl_command_to_string(cmd));
+
+	switch (cmd) {
+		case MY_IOCTL_TIMER_SET:
+			/* TODO 2: set flag */
+			dev.flag = TIMER_TYPE_SET;
+			/* TODO 1: schedule timer */
+			mod_timer(&dev.tl, jiffies + HZ * arg);
+			break;
+		case MY_IOCTL_TIMER_CANCEL:
+			/* TODO 1: cancel timer */
+			del_timer(&dev.tl);
+			break;
+		case MY_IOCTL_TIMER_ALLOC:
+			/* TODO 2: set flag and schedule timer */
+			dev.flag = TIMER_TYPE_ALLOC;
+			mod_timer(&dev.tl, jiffies + HZ * arg);
+			break;
+		case MY_IOCTL_TIMER_MON:
+		{
+			/* TODO 4: use get_proc() and add task to list */
+			struct mon_proc *p = get_proc(arg);
+			if (IS_ERR(p))
+				return PTR_ERR(p);
+			/* TODO 4: protect access to list */
+			spin_lock_irqsave(&dev.mon_list_lock, flags);
+			list_add_tail(&p->list, &dev.mon_list);
+			spin_unlock_irqrestore(&dev.mon_list_lock, flags);
+			/* TODO 4: set flag and schedule timer */
+			dev.flag = TIMER_TYPE_ACCT;
+			mod_timer(&dev.tl, jiffies + HZ * 1);
+			break;
+		}
+		default:
+			return -ENOTTY;
+	}
+	return 0;
+}
+```
+
+> 使用现有的定时器，并通过 TIMER_TYPE_ACCT 添加新的行为。要设置标志，请使用测试程序的 *t* 参数。
+>
+>
+> 这个我没看太懂，有必要用这个 TYPE 吗?
+
+然后我们继续来看 timer。在分支里，我们遍历所有的 list。由于这里可能涉及到删除的操作，所以我们需要安全的遍历，记得拿锁。
+
+```c
+static void timer_handler(struct timer_list *tl)
+{
+	/* TODO 1: implement timer handler */
+	/* TODO 2: check flags: TIMER_TYPE_SET or TIMER_TYPE_ALLOC */
+	switch (dev.flag) {
+		case TIMER_TYPE_SET:
+			pr_info("PID: %d, name: %s\n", current->pid, current->comm);
+			break;
+		case TIMER_TYPE_ALLOC:
+			/* TODO 3: schedule work */
+			#ifdef ALLOC_IO_DIRECT
+				alloc_io();
+			#else
+				schedule_work(&dev.wk);
+			#endif
+			break;
+		case TIMER_TYPE_MON:
+		{
+		/* TODO 4: iterate the list and check the proccess state */
+			struct mon_proc *p, *n;
+			spin_lock(&dev.mon_list_lock);
+			list_for_each_entry_safe(p, n, &dev.mon_list, list) {
+				/* TODO 4: if task is dead print info ... */
+				if (p->task->state == TASK_DEAD) {
+					pr_info("Process %d (%s) is dead\n", p->task->pid, p->task->comm);
+					/* TODO 4: ... decrement task usage counter ... */
+					/* TODO 4: ... remove it from the list ... */
+					/* TODO 4: ... free the struct mon_proc */
+					put_task_struct(p->task);
+					list_del(&p->list);
+					kfree(p);
+				}
+			}
+			spin_unlock(&dev.mon_list_lock);
+			if (list_empty(&dev.mon_list)) {
+				dev.flag = TIMER_TYPE_NONE;
+				del_timer(&dev.tl);
+			}
+			else {
+				mod_timer(&dev.tl, jiffies + HZ * 1);
+			}
+			break;
+		}
+	}
+}
+```
+
+再简单写一下 init
+
+```c
+
+static int deferred_init(void)
+{
+	int err;
+
+	pr_info("[deferred_init] Init module\n");
+	err = register_chrdev_region(MKDEV(MY_MAJOR, MY_MINOR), 1, MODULE_NAME);
+	if (err) {
+		pr_info("[deffered_init] register_chrdev_region: %d\n", err);
+		return err;
+	}
+
+	/* TODO 2: Initialize flag. */
+	dev.flag = TIMER_TYPE_NONE;
+	/* TODO 3: Initialize work. */
+	INIT_WORK(&dev.wk, work_handler);
+
+	/* TODO 4: Initialize lock and list. */
+	spin_lock_init(&dev.mon_list_lock);
+	INIT_LIST_HEAD(&dev.mon_list);
+
+
+	cdev_init(&dev.cdev, &my_fops);
+	cdev_add(&dev.cdev, MKDEV(MY_MAJOR, MY_MINOR), 1);
+
+	/* TODO 1: Initialize timer. */
+	timer_setup(&dev.tl, timer_handler, 0);
+
+	return 0;
+}
+
+static void deferred_exit(void)
+{
+	struct mon_proc *p, *n;
+	unsigned long flags;
+
+	pr_info("[deferred_exit] Exit module\n" );
+
+	cdev_del(&dev.cdev);
+	unregister_chrdev_region(MKDEV(MY_MAJOR, MY_MINOR), 1);
+
+	/* TODO 1: Cleanup: make sure the timer is not running after exiting. */
+	del_timer_sync(&dev.tl);
+	/* TODO 3: Cleanup: make sure the work handler is not scheduled. */
+	cancel_work_sync(&dev.wk);
+
+	/* TODO 4: Cleanup the monitered process list */
+	spin_lock_irqsave(&dev.mon_list_lock, flags);
+    list_for_each_entry_safe(p, n, &dev.mon_list, list) {
+		/* TODO 4: ... decrement task usage counter ... */
+		/* TODO 4: ... remove it from the list ... */
+		/* TODO 4: ... free the struct mon_proc */
+        put_task_struct(p->task);
+        list_del(&p->list);
+        kfree(p);
+    }
+    spin_unlock_irqrestore(&dev.mon_list_lock, flags);
+}
+```
+
+![image-20241016234211312](https://oss.nova.gal/img/image-20241016234211312.png)目测感觉没啥问题，但是不知道有没有锁之类乱七八糟的问题。
