@@ -5,7 +5,7 @@ tags: [kernel]
 date: 2024-07-14
 last_update:
   author: nova
-  date: 2024-10-16
+  date: 2024-10-18
 ---
 
 ## 在此之前
@@ -5102,3 +5102,827 @@ static void deferred_exit(void)
 ```
 
 ![image-20241016234211312](https://oss.nova.gal/img/image-20241016234211312.png)目测感觉没啥问题，但是不知道有没有锁之类乱七八糟的问题。
+
+## 块设备驱动程序
+
+### 0. 简介[¶](https://linux-kernel-labs-zh.xyz/labs/block_device_drivers.html#section-16)
+
+使用 [LXR](http://elixir.free-electrons.com/linux/latest/source) 在 Linux 内核中查找以下符号的定义：
+
+> - `struct bio`
+> - `struct bio_vec`
+> - `bio_for_each_segment`
+> - `struct gendisk`
+> - `struct block_device_operations`
+> - `struct request`
+
+---
+
+#### struct bio
+
+```c
+/*
+ * main unit of I/O for the block layer and lower layers (ie drivers and
+ * stacking drivers)
+ */
+struct bio {
+	struct bio		*bi_next;	/* request queue link */
+	struct block_device	*bi_bdev;
+	blk_opf_t		bi_opf;		/* bottom bits REQ_OP, top bits
+						 * req_flags.
+						 */
+	unsigned short		bi_flags;	/* BIO_* below */
+	unsigned short		bi_ioprio;
+	enum rw_hint		bi_write_hint;
+	blk_status_t		bi_status;
+	atomic_t		__bi_remaining;
+
+	struct bvec_iter	bi_iter;
+
+	union {
+		/* for polled bios: */
+		blk_qc_t		bi_cookie;
+		/* for plugged zoned writes only: */
+		unsigned int		__bi_nr_segments;
+	};
+	bio_end_io_t		*bi_end_io;
+	void			*bi_private;
+#ifdef CONFIG_BLK_CGROUP
+	/*
+	 * Represents the association of the css and request_queue for the bio.
+	 * If a bio goes direct to device, it will not have a blkg as it will
+	 * not have a request_queue associated with it.  The reference is put
+	 * on release of the bio.
+	 */
+	struct blkcg_gq		*bi_blkg;
+	struct bio_issue	bi_issue;
+#ifdef CONFIG_BLK_CGROUP_IOCOST
+	u64			bi_iocost_cost;
+#endif
+#endif
+
+#ifdef CONFIG_BLK_INLINE_ENCRYPTION
+	struct bio_crypt_ctx	*bi_crypt_context;
+#endif
+
+	union {
+#if defined(CONFIG_BLK_DEV_INTEGRITY)
+		struct bio_integrity_payload *bi_integrity; /* data integrity */
+#endif
+	};
+
+	unsigned short		bi_vcnt;	/* how many bio_vec's */
+
+	/*
+	 * Everything starting with bi_max_vecs will be preserved by bio_reset()
+	 */
+
+	unsigned short		bi_max_vecs;	/* max bvl_vecs we can hold */
+
+	atomic_t		__bi_cnt;	/* pin count */
+
+	struct bio_vec		*bi_io_vec;	/* the actual vec list */
+
+	struct bio_set		*bi_pool;
+
+	/*
+	 * We can inline a number of vecs at the end of the bio, to avoid
+	 * double allocations for a small number of bio_vecs. This member
+	 * MUST obviously be kept at the very end of the bio.
+	 */
+	struct bio_vec		bi_inline_vecs[];
+};
+```
+
+#### struct bio_vec
+
+```c
+/**
+ * struct bio_vec - a contiguous range of physical memory addresses
+ * @bv_page:   First page associated with the address range.
+ * @bv_len:    Number of bytes in the address range.
+ * @bv_offset: Start of the address range relative to the start of @bv_page.
+ *
+ * The following holds for a bvec if n * PAGE_SIZE < bv_offset + bv_len:
+ *
+ *   nth_page(@bv_page, n) == @bv_page + n
+ *
+ * This holds because page_is_mergeable() checks the above property.
+ */
+struct bio_vec {
+	struct page	*bv_page;
+	unsigned int	bv_len;
+	unsigned int	bv_offset;
+};
+```
+
+#### bio_for_each_segment
+
+```c
+#define __bio_for_each_segment(bvl, bio, iter, start)			\
+	for (iter = (start);						\
+	     (iter).bi_size &&						\
+		((bvl = bio_iter_iovec((bio), (iter))), 1);		\
+	     bio_advance_iter_single((bio), &(iter), (bvl).bv_len))
+
+#define bio_for_each_segment(bvl, bio, iter)				\
+	__bio_for_each_segment(bvl, bio, iter, (bio)->bi_iter)
+```
+
+#### struct gendisk
+
+```c
+struct gendisk {
+	/*
+	 * major/first_minor/minors should not be set by any new driver, the
+	 * block core will take care of allocating them automatically.
+	 */
+	int major;
+	int first_minor;
+	int minors;
+
+	char disk_name[DISK_NAME_LEN];	/* name of major driver */
+
+	unsigned short events;		/* supported events */
+	unsigned short event_flags;	/* flags related to event processing */
+
+	struct xarray part_tbl;
+	struct block_device *part0;
+
+	const struct block_device_operations *fops;
+	struct request_queue *queue;
+	void *private_data;
+
+	struct bio_set bio_split;
+
+	int flags;
+	unsigned long state;
+#define GD_NEED_PART_SCAN		0
+#define GD_READ_ONLY			1
+#define GD_DEAD				2
+#define GD_NATIVE_CAPACITY		3
+#define GD_ADDED			4
+#define GD_SUPPRESS_PART_SCAN		5
+#define GD_OWNS_QUEUE			6
+
+	struct mutex open_mutex;	/* open/close mutex */
+	unsigned open_partitions;	/* number of open partitions */
+
+	struct backing_dev_info	*bdi;
+	struct kobject queue_kobj;	/* the queue/ directory */
+	struct kobject *slave_dir;
+#ifdef CONFIG_BLOCK_HOLDER_DEPRECATED
+	struct list_head slave_bdevs;
+#endif
+	struct timer_rand_state *random;
+	atomic_t sync_io;		/* RAID */
+	struct disk_events *ev;
+
+#ifdef CONFIG_BLK_DEV_ZONED
+	/*
+	 * Zoned block device information. Reads of this information must be
+	 * protected with blk_queue_enter() / blk_queue_exit(). Modifying this
+	 * information is only allowed while no requests are being processed.
+	 * See also blk_mq_freeze_queue() and blk_mq_unfreeze_queue().
+	 */
+	unsigned int		nr_zones;
+	unsigned int		zone_capacity;
+	unsigned int		last_zone_capacity;
+	unsigned long		*conv_zones_bitmap;
+	unsigned int            zone_wplugs_hash_bits;
+	spinlock_t              zone_wplugs_lock;
+	struct mempool_s	*zone_wplugs_pool;
+	struct hlist_head       *zone_wplugs_hash;
+	struct list_head        zone_wplugs_err_list;
+	struct work_struct	zone_wplugs_work;
+	struct workqueue_struct *zone_wplugs_wq;
+#endif /* CONFIG_BLK_DEV_ZONED */
+
+#if IS_ENABLED(CONFIG_CDROM)
+	struct cdrom_device_info *cdi;
+#endif
+	int node_id;
+	struct badblocks *bb;
+	struct lockdep_map lockdep_map;
+	u64 diskseq;
+	blk_mode_t open_mode;
+
+	/*
+	 * Independent sector access ranges. This is always NULL for
+	 * devices that do not have multiple independent access ranges.
+	 */
+	struct blk_independent_access_ranges *ia_ranges;
+};
+```
+
+#### struct block_device_operations
+
+```c
+struct block_device_operations {
+	void (*submit_bio)(struct bio *bio);
+	int (*poll_bio)(struct bio *bio, struct io_comp_batch *iob,
+			unsigned int flags);
+	int (*open)(struct gendisk *disk, blk_mode_t mode);
+	void (*release)(struct gendisk *disk);
+	int (*ioctl)(struct block_device *bdev, blk_mode_t mode,
+			unsigned cmd, unsigned long arg);
+	int (*compat_ioctl)(struct block_device *bdev, blk_mode_t mode,
+			unsigned cmd, unsigned long arg);
+	unsigned int (*check_events) (struct gendisk *disk,
+				      unsigned int clearing);
+	void (*unlock_native_capacity) (struct gendisk *);
+	int (*getgeo)(struct block_device *, struct hd_geometry *);
+	int (*set_read_only)(struct block_device *bdev, bool ro);
+	void (*free_disk)(struct gendisk *disk);
+	/* this callback is with swap_lock and sometimes page table lock held */
+	void (*swap_slot_free_notify) (struct block_device *, unsigned long);
+	int (*report_zones)(struct gendisk *, sector_t sector,
+			unsigned int nr_zones, report_zones_cb cb, void *data);
+	char *(*devnode)(struct gendisk *disk, umode_t *mode);
+	/* returns the length of the identifier or a negative errno: */
+	int (*get_unique_id)(struct gendisk *disk, u8 id[16],
+			enum blk_unique_id id_type);
+	struct module *owner;
+	const struct pr_ops *pr_ops;
+
+	/*
+	 * Special callback for probing GPT entry at a given sector.
+	 * Needed by Android devices, used by GPT scanner and MMC blk
+	 * driver.
+	 */
+	int (*alternative_gpt_sector)(struct gendisk *disk, sector_t *sector);
+};
+```
+
+#### struct request
+
+```c
+/*
+ * Try to put the fields that are referenced together in the same cacheline.
+ *
+ * If you modify this structure, make sure to update blk_rq_init() and
+ * especially blk_mq_rq_ctx_init() to take care of the added fields.
+ */
+struct request {
+	struct request_queue *q;
+	struct blk_mq_ctx *mq_ctx;
+	struct blk_mq_hw_ctx *mq_hctx;
+
+	blk_opf_t cmd_flags;		/* op and common flags */
+	req_flags_t rq_flags;
+
+	int tag;
+	int internal_tag;
+
+	unsigned int timeout;
+
+	/* the following two fields are internal, NEVER access directly */
+	unsigned int __data_len;	/* total data len */
+	sector_t __sector;		/* sector cursor */
+
+	struct bio *bio;
+	struct bio *biotail;
+
+	union {
+		struct list_head queuelist;
+		struct request *rq_next;
+	};
+
+	struct block_device *part;
+#ifdef CONFIG_BLK_RQ_ALLOC_TIME
+	/* Time that the first bio started allocating this request. */
+	u64 alloc_time_ns;
+#endif
+	/* Time that this request was allocated for this IO. */
+	u64 start_time_ns;
+	/* Time that I/O was submitted to the device. */
+	u64 io_start_time_ns;
+
+#ifdef CONFIG_BLK_WBT
+	unsigned short wbt_flags;
+#endif
+	/*
+	 * rq sectors used for blk stats. It has the same value
+	 * with blk_rq_sectors(rq), except that it never be zeroed
+	 * by completion.
+	 */
+	unsigned short stats_sectors;
+
+	/*
+	 * Number of scatter-gather DMA addr+len pairs after
+	 * physical address coalescing is performed.
+	 */
+	unsigned short nr_phys_segments;
+
+#ifdef CONFIG_BLK_DEV_INTEGRITY
+	unsigned short nr_integrity_segments;
+#endif
+
+#ifdef CONFIG_BLK_INLINE_ENCRYPTION
+	struct bio_crypt_ctx *crypt_ctx;
+	struct blk_crypto_keyslot *crypt_keyslot;
+#endif
+
+	enum rw_hint write_hint;
+	unsigned short ioprio;
+
+	enum mq_rq_state state;
+	atomic_t ref;
+
+	unsigned long deadline;
+
+	/*
+	 * The hash is used inside the scheduler, and killed once the
+	 * request reaches the dispatch list. The ipi_list is only used
+	 * to queue the request for softirq completion, which is long
+	 * after the request has been unhashed (and even removed from
+	 * the dispatch list).
+	 */
+	union {
+		struct hlist_node hash;	/* merge hash */
+		struct llist_node ipi_list;
+	};
+
+	/*
+	 * The rb_node is only used inside the io scheduler, requests
+	 * are pruned when moved to the dispatch queue. special_vec must
+	 * only be used if RQF_SPECIAL_PAYLOAD is set, and those cannot be
+	 * insert into an IO scheduler.
+	 */
+	union {
+		struct rb_node rb_node;	/* sort/lookup */
+		struct bio_vec special_vec;
+	};
+
+	/*
+	 * Three pointers are available for the IO schedulers, if they need
+	 * more they have to dynamically allocate it.
+	 */
+	struct {
+		struct io_cq		*icq;
+		void			*priv[2];
+	} elv;
+
+	struct {
+		unsigned int		seq;
+		rq_end_io_fn		*saved_end_io;
+	} flush;
+
+	u64 fifo_time;
+
+	/*
+	 * completion callback.
+	 */
+	rq_end_io_fn *end_io;
+	void *end_io_data;
+};
+```
+
+### 1. 块设备[¶](https://linux-kernel-labs-zh.xyz/labs/block_device_drivers.html#section-17)
+
+创建一个内核模块，允许你注册或取消注册块设备。从实验骨架的 `1-2-3-6-ram-disk/kernel` 目录中的文件开始。
+
+按照实验骨架中标记为 **TODO 1** 的注释进行操作。使用现有的宏定义 (`MY_BLOCK_MAJOR`, `MY_BLKDEV_NAME`)。检查注册函数返回的值，在出现错误的情况下返回错误代码。
+
+编译模块，将其复制到虚拟机并插入内核。验证你的设备是否成功创建在 `/proc/devices` 内。你将看到一个主设备号为 240 的设备。
+
+卸载内核模块，并检查设备是否已注销。
+
+:::info
+
+查看 [注册块 I/O 设备](https://linux-kernel-labs-zh.xyz/labs/block_device_drivers.html#i-o) 部分。
+
+:::
+
+将 `MY_BLOCK_MAJOR` 的值更改为 7。编译模块，将其复制到虚拟机并插入内核。注意到插入失败，因为已经有另一个驱动程序/设备在内核中注册了主设备号 7。
+
+将 `MY_BLOCK_MAJOR` 宏的值恢复为 240。
+
+---
+
+没啥好说的
+
+```c
+static int __init my_block_init(void)
+{
+	int err = 0;
+
+	/* TODO 1: register block device */
+	err = register_blkdev(MY_BLOCK_MAJOR, MY_BLKDEV_NAME);
+	if (err < 0) {
+		printk(KERN_ERR "Unable to register the blk device");
+		goto out;
+	}
+
+
+	/* TODO 2: create block device using create_block_device */
+
+	return 0;
+
+out:
+	/* TODO 2: unregister block device in case of an error */
+	return err;
+}
+
+static void __exit my_block_exit(void)
+{
+	/* TODO 2: cleanup block device using delete_block_device */
+
+	/* TODO 1: unregister block device */
+	unregister_blkdev(MY_BLOCK_MAJOR, MY_BLKDEV_NAME);
+}
+```
+
+![image-20241017234629149](https://oss.nova.gal/img/image-20241017234629149.png)
+
+### 2. 磁盘注册[¶](https://linux-kernel-labs-zh.xyz/labs/block_device_drivers.html#section-18)
+
+修改前面的模块以添加与驱动程序关联的磁盘。分析宏定义、`my_block_dev` 结构以及 `ram-disk.c` 文件中的现有函数。
+
+按照标记为 **TODO 2** 的注释进行操作。使用 `create_block_device()` 和 `delete_block_device()` 函数。
+
+:::info
+
+查看 [注册磁盘](https://linux-kernel-labs-zh.xyz/labs/block_device_drivers.html#section-4) 和 [处理请求](https://linux-kernel-labs-zh.xyz/labs/block_device_drivers.html#section-13) 部分。
+
+:::
+
+填充 `my_block_request()` 函数以处理请求，但实际上不处理你的请求：显示“request received”消息以及以下信息：来自当前 `struct bio` 结构的起始扇区、总大小、数据大小和方向。要验证请求类型，请使用 :c:func:[`](https://linux-kernel-labs-zh.xyz/labs/block_device_drivers.html#system-message-1)blk_rq_is_passthrough`（该函数在请求由文件系统生成的情况下返回 0）。
+
+:::info
+
+要找到所需的信息，查看 [块设备的请求](https://linux-kernel-labs-zh.xyz/labs/block_device_drivers.html#section-11) 部分。
+
+:::
+
+使用 `blk_mq_end_request()` 函数来完成请求的处理。
+
+将模块插入内核，并检查模块打印的消息。当添加设备时，会向设备发送一个请求。检查 `/dev/myblock` 是否存在，如果不存在，使用以下命令创建设备：
+
+```
+mknod /dev/myblock b 240 0
+```
+
+要生成写入请求，请使用以下命令：
+
+```
+echo "abc"> /dev/myblock
+```
+
+注意，写入请求之前会有一个读取请求。该请求用于从磁盘中读取块并使用用户提供的数据“更新”其内容，而不会覆盖其他部分。在读取和更新之后，写入操作发生。
+
+:::
+
+---
+
+注册磁盘是一个比较复杂的事情，但是这个已经给你包裹好了。我们还是简单来看一下他干了什么
+
+```c
+static int create_block_device(struct my_block_dev *dev)
+{
+	int err;
+
+	dev->size = NR_SECTORS * KERNEL_SECTOR_SIZE;
+	dev->data = vmalloc(dev->size);
+	if (dev->data == NULL) {
+		printk(KERN_ERR "vmalloc: out of memory\n");
+		err = -ENOMEM;
+		goto out_vmalloc;
+	}
+
+	/* Initialize tag set. */
+	dev->tag_set.ops = &my_queue_ops;
+	dev->tag_set.nr_hw_queues = 1;
+	dev->tag_set.queue_depth = 128;
+	dev->tag_set.numa_node = NUMA_NO_NODE;
+	dev->tag_set.cmd_size = 0;
+	dev->tag_set.flags = BLK_MQ_F_SHOULD_MERGE;
+	err = blk_mq_alloc_tag_set(&dev->tag_set);
+	if (err) {
+	    printk(KERN_ERR "blk_mq_alloc_tag_set: can't allocate tag set\n");
+	    goto out_alloc_tag_set;
+	}
+
+	/* Allocate queue. */
+	dev->queue = blk_mq_init_queue(&dev->tag_set);
+	if (IS_ERR(dev->queue)) {
+		printk(KERN_ERR "blk_mq_init_queue: out of memory\n");
+		err = -ENOMEM;
+		goto out_blk_init;
+	}
+	blk_queue_logical_block_size(dev->queue, KERNEL_SECTOR_SIZE);
+	dev->queue->queuedata = dev;
+
+	/* initialize the gendisk structure */
+	dev->gd = alloc_disk(MY_BLOCK_MINORS);
+	if (!dev->gd) {
+		printk(KERN_ERR "alloc_disk: failure\n");
+		err = -ENOMEM;
+		goto out_alloc_disk;
+	}
+
+	dev->gd->major = MY_BLOCK_MAJOR;
+	dev->gd->first_minor = 0;
+	dev->gd->fops = &my_block_ops;
+	dev->gd->queue = dev->queue;
+	dev->gd->private_data = dev;
+	snprintf(dev->gd->disk_name, DISK_NAME_LEN, "myblock");
+	set_capacity(dev->gd, NR_SECTORS);
+
+	add_disk(dev->gd);
+
+	return 0;
+
+out_alloc_disk:
+	blk_cleanup_queue(dev->queue);
+out_blk_init:
+	blk_mq_free_tag_set(&dev->tag_set);
+out_alloc_tag_set:
+	vfree(dev->data);
+out_vmalloc:
+	return err;
+}
+```
+
+首先给磁盘分配了空间，然后设置了 tag_set，接着去分配一个队列，最后形成 gendisk 结构体。
+
+
+
+主要来看一下 request 怎么写，基本上对着他前面讲的一些东西，主要是一些宏不知道咋用，也不知道哪些宏可以做到。
+
+```c
+static blk_status_t my_block_request(struct blk_mq_hw_ctx *hctx,
+				     const struct blk_mq_queue_data *bd)
+{
+	struct request *rq;
+	struct my_block_dev *dev = hctx->queue->queuedata;
+
+	/* TODO 2: get pointer to request */
+	rq = bd->rq;
+
+	/* TODO 2: start request processing. */
+	blk_mq_start_request(rq);
+
+
+	/* TODO 2: check fs request. Return if passthrough. */
+	if (blk_rq_is_passthrough(rq)) {
+		printk(KERN_NOTICE "Passthrough request, ignoring...\n");
+		blk_mq_end_request(rq, BLK_STS_IOERR);
+		goto out;
+	}
+
+
+	/* TODO 2: print request information */
+	printk(KERN_NOTICE "Request received\n");
+	// 来自当前 struct bio 结构的起始扇区、总大小、数据大小和方向。
+	printk(KERN_NOTICE "Start sector: %llu\n", blk_rq_pos(rq));
+	printk(KERN_NOTICE "Total size: %llu\n", blk_rq_bytes(rq));
+	printk(KERN_NOTICE "Data size: %llu\n", blk_rq_cur_bytes(rq));
+	printk(KERN_NOTICE "Direction: %s\n", rq_data_dir(rq) == READ ? "READ" : "WRITE");
+	
+	
+	
+
+#if USE_BIO_TRANSFER == 1
+	/* TODO 6: process the request by calling my_xfer_request */
+#else
+	/* TODO 3: process the request by calling my_block_transfer */
+#endif
+
+	/* TODO 2: end request successfully */
+	blk_mq_end_request(rq, BLK_STS_OK);
+
+out:
+	return BLK_STS_OK;
+}
+```
+
+```c
+static int __init my_block_init(void)
+{
+	int err = 0;
+
+	/* TODO 1: register block device */
+	err = register_blkdev(MY_BLOCK_MAJOR, MY_BLKDEV_NAME);
+	if (err < 0) {
+		printk(KERN_ERR "Unable to register the blk device\n");
+		goto out;
+	}
+
+
+	/* TODO 2: create block device using create_block_device */
+	err = create_block_device(&g_dev);
+	if (err < 0) {
+		printk(KERN_ERR "Unable to create block device\n");
+		goto blk_out;
+	}
+
+	return 0;
+/* TODO 2: unregister block device in case of an error */
+blk_out:
+	unregister_blkdev(MY_BLOCK_MAJOR, MY_BLKDEV_NAME);
+out:
+	return err;
+}
+
+static void __exit my_block_exit(void)
+{
+	/* TODO 2: cleanup block device using delete_block_device */
+	delete_block_device(&g_dev);
+
+	/* TODO 1: unregister block device */
+	unregister_blkdev(MY_BLOCK_MAJOR, MY_BLKDEV_NAME);
+}
+```
+
+### 3. RAM 磁盘[¶](https://linux-kernel-labs-zh.xyz/labs/block_device_drivers.html#ram)
+
+修改前面的模块以创建一个 RAM 磁盘：对设备的请求将导致在一个内存区域中进行读写操作。
+
+内存区域 `dev->data` 已经在模块的源代码中使用 `vmalloc()` 进行了分配，并使用 `vfree()` 进行了释放。
+
+:::info
+
+查看 [处理请求](https://linux-kernel-labs-zh.xyz/labs/block_device_drivers.html#section-13) 部分。
+
+:::
+
+按照标记为 **TODO 3** 的注释完成 `my_block_transfer()` 函数，将请求信息写入内存区域/从内存区域中读取。该函数将在队列处理函数 `my_block_request()` 中为每个请求调用。要写入/读取内存区域，请使用 `memcpy()`。要确定写入/读取的信息，请使用 `struct request` 结构的字段。
+
+:::info
+
+要了解请求数据的大小，请使用 `blk_rq_cur_bytes` 宏。不要使用 `blk_rq_bytes` 宏。
+
+
+
+要找到与请求相关联的缓冲区，请使用 `bio_data`(:c:data:`rq->bio`)。
+
+
+
+有关有用的宏的描述，请参阅 [块设备的请求](https://linux-kernel-labs-zh.xyz/labs/block_device_drivers.html#section-11) 部分。
+
+
+
+你可以在 [Linux 设备驱动程序](http://lwn.net/Kernel/LDD3/) 的 [块设备驱动程序示例](https://github.com/martinezjavier/ldd3/blob/master/sbull/sbull.c) 中找到有用的信息。
+
+:::
+
+为了进行测试，使用测试文件 `user/ram-disk-test.c`。测试程序在 `make build` 编译时会自动编译，之后使用 `make copy` 复制到虚拟机，可以在 QEMU 虚拟机上使用以下命令运行：
+
+```
+./ram-disk-test
+```
+
+无需将模块插入内核，它将由 `ram-disk-test` 命令插入。
+
+由于传输数据缺乏同步（刷新），一些测试可能会失败。
+
+---
+
+现在跟我说可以用这些宏？碗辣！
+
+我们 request 就是一个宏的利用，不过根据 ldd3 来看，我们这个很有可能只能处理第一个 bio
+
+```c
+static void my_block_transfer(struct my_block_dev *dev, sector_t sector,
+		unsigned long len, char *buffer, int dir)
+{
+	unsigned long offset = sector * KERNEL_SECTOR_SIZE;
+
+	/* check for read/write beyond end of block device */
+	if ((offset + len) > dev->size)
+		return;
+
+	/* TODO 3: read/write to dev buffer depending on dir */
+	switch (dir) {
+		case READ:
+			memcpy(dev->data + offset, buffer, len);
+			break;
+		case WRITE:
+			memcpy(buffer, dev->data + offset, len);
+			break;
+	}
+}
+
+static blk_status_t my_block_request(struct blk_mq_hw_ctx *hctx,
+				     const struct blk_mq_queue_data *bd)
+{
+	struct request *rq;
+	struct my_block_dev *dev = hctx->queue->queuedata;
+	blk_status_t ret;
+
+	/* TODO 2: get pointer to request */
+	rq = bd->rq;
+
+	/* TODO 2: start request processing. */
+	blk_mq_start_request(rq);
+
+
+	/* TODO 2: check fs request. Return if passthrough. */
+	if (blk_rq_is_passthrough(rq)) {
+		printk(KERN_NOTICE "Passthrough request, ignoring...\n");
+		ret = BLK_STS_IOERR;
+		goto out;
+	}
+
+
+	/* TODO 2: print request information */
+	printk(KERN_NOTICE "Request received\n");
+	// 来自当前 struct bio 结构的起始扇区、总大小、数据大小和方向。
+	printk(KERN_NOTICE "Start sector: %llu\n", blk_rq_pos(rq));
+	printk(KERN_NOTICE "Total size: %llu\n", blk_rq_bytes(rq));
+	printk(KERN_NOTICE "Data size: %llu\n", blk_rq_cur_bytes(rq));
+	printk(KERN_NOTICE "Direction: %s\n", rq_data_dir(rq) == READ ? "READ" : "WRITE");
+	
+	
+	
+
+#if USE_BIO_TRANSFER == 1
+	/* TODO 6: process the request by calling my_xfer_request */
+#else
+	/* TODO 3: process the request by calling my_block_transfer */
+	my_block_transfer(dev, blk_rq_pos(rq), blk_rq_cur_bytes(rq), bio_data(rq->bio), rq_data_dir(rq));
+#endif
+
+	/* TODO 2: end request successfully */
+out:
+	blk_mq_end_request(rq, ret);
+	return ret;
+}
+```
+
+![image-20241018004336664](https://oss.nova.gal/img/image-20241018004336664.png)
+
+bro 一个样例没过，甚至还把 kernel 干 panic 了，也是顶尖了。
+
+~~我们从每个 segment 来走看看~~
+
+检查了一下，是因为 ret 没有设置，以及 transfer 里 READ 和 WRITE 写反了导致的。
+
+```c
+static void my_block_transfer(struct my_block_dev *dev, sector_t sector,
+		unsigned long len, char *buffer, int dir)
+{
+	unsigned long offset = sector * KERNEL_SECTOR_SIZE;
+
+	/* check for read/write beyond end of block device */
+	if ((offset + len) > dev->size)
+		return;
+
+	/* TODO 3: read/write to dev buffer depending on dir */
+	switch (dir) {
+		case READ:
+			memcpy(buffer, dev->data + offset, len);
+			break;
+		case WRITE:
+			memcpy(dev->data + offset, buffer, len);
+			break;
+	}
+}
+
+static blk_status_t my_block_request(struct blk_mq_hw_ctx *hctx,
+				     const struct blk_mq_queue_data *bd)
+{
+	struct request *rq;
+	struct my_block_dev *dev = hctx->queue->queuedata;
+	blk_status_t ret;
+
+	/* TODO 2: get pointer to request */
+	rq = bd->rq;
+
+	/* TODO 2: start request processing. */
+	blk_mq_start_request(rq);
+	pos_sector = blk_rq_pos(rq);
+
+
+	/* TODO 2: check fs request. Return if passthrough. */
+	if (blk_rq_is_passthrough(rq)) {
+		printk(KERN_NOTICE "Passthrough request, ignoring...\n");
+		ret = BLK_STS_IOERR;
+		goto out;
+	}
+
+
+	/* TODO 2: print request information */
+	printk(KERN_NOTICE "Request received\n");
+	// 来自当前 struct bio 结构的起始扇区、总大小、数据大小和方向。
+	printk(KERN_NOTICE "Start sector: %llu\n", blk_rq_pos(rq));
+	printk(KERN_NOTICE "Total size: %llu\n", blk_rq_bytes(rq));
+	printk(KERN_NOTICE "Data size: %llu\n", blk_rq_cur_bytes(rq));
+	printk(KERN_NOTICE "Direction: %s\n", rq_data_dir(rq) == READ ? "READ" : "WRITE");
+
+#if USE_BIO_TRANSFER == 1
+	/* TODO 6: process the request by calling my_xfer_request */
+#else
+	/* TODO 3: process the request by calling my_block_transfer */
+	my_block_transfer(dev, blk_rq_pos(rq), blk_rq_cur_bytes(rq), bio_data(rq->bio), rq_data_dir(rq));
+#endif
+
+	/* TODO 2: end request successfully */
+	ret = BLK_STS_OK;
+out:
+	blk_mq_end_request(rq, ret);
+	return ret;
+}
+```
+
