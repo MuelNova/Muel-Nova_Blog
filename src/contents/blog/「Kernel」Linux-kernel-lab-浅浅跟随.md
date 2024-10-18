@@ -5926,3 +5926,327 @@ out:
 }
 ```
 
+### 4. 从磁盘读取数据[¶](https://linux-kernel-labs-zh.xyz/labs/block_device_drivers.html#section-19)
+
+本练习的目的是从内核直接读取 `PHYSICAL_DISK_NAME` 磁盘（`/dev/vdb`）的数据。
+
+:::info
+
+在解决此练习之前，我们需要确保将磁盘添加到虚拟机中。
+
+检查 `qemu/Makefile` 中的变量 `QEMU_OPTS`。应该已经使用 `-drive ...` 添加了两个额外的磁盘。
+
+如果没有，请使用以下命令生成我们将用作磁盘镜像的文件：**dd if=/dev/zero of=qemu/mydisk.img bs=1024 count=1** 并将以下选项添加到 `qemu/Makefile`（在 :c:data:`QEMU_OPTS` 变量之中，root 盘之后）： **-drive file=qemu/mydisk.img,if=virtio,format=raw**
+
+:::
+
+按照目录 `4-5-relay/` 中标记为 **TODO 4** 的注释，实现 `open_disk()` 和 `close_disk()` 函数。使用 `blkdev_get_by_path()` 和 `blkdev_put()` 函数。设备必须以独占的读写模式打开 (`FMODE_READ` | `FMODE_WRITE` | `FMODE_EXCL`)，并且当前模块必须作为 holder（`THIS_MODULE`）。
+
+实现 `send_test_bio()` 函数。你将需要创建新的 `struct bio` 结构并填充它，然后提交它并等待它。读取磁盘的第一个扇区。要等待，请调用 `submit_bio_wait()` 函数。
+
+:::info
+
+磁盘的第一个扇区是索引为 0 的扇区。这个值必须用于初始化 `struct bio` 的 `bi_iter.bi_sector` 字段。
+
+对于读操作，使用 `REQ_OP_READ` 宏来初始化 `struct bio` 的 `bi_opf` 字段。
+
+:::
+
+操作完成后，显示 `struct bio` 结构读取的前 3 个字节数据。使用 `"% 02x"` 格式作为 `printk()` 的参数来显示数据以及 `kmap_atomic` 和 `kunmap_atomic` 宏。
+
+:::info
+
+对于 `kmap_atomic()` 函数的实参，只需使用代码中分配的页面，即 `page` 变量。
+
+
+
+请查看 [如何使用 struct bio 结构的内容](https://linux-kernel-labs-zh.xyz/so2/lab7-block-device-drivers.html#bio-content) 和 [等待 struct bio 结构的完成](https://linux-kernel-labs-zh.xyz/so2/lab7-block-device-drivers.html#bio-completion) 部分。
+
+:::
+
+为了进行测试，使用 `test-relay-disk` 脚本，在运行 **make copy** 时会将其复制到虚拟机中。如果未复制，请确保该脚本可执行：
+
+```
+chmod +x test-relay-disk
+```
+
+无需将模块加载到内核中，它将由 **test-relay-disk** 加载。
+
+使用以下命令运行脚本：
+
+```
+./test-relay-disk
+```
+
+脚本会将“abc”写入到 `PHYSICAL_DISK_NAME` 指定的磁盘的开头。运行后，模块将显示 61 62 63（字母“a”、“b”和“c”的十六进制值）。
+
+---
+
+我用的是 make console，直接有 vdb 这个磁盘。
+
+对于 get 和 put，直接写即可
+
+```c
+static struct block_device *open_disk(char *name)
+{
+	struct block_device *bdev;
+
+	/* TODO 4: get block device in exclusive mode */
+	bdev = blkdev_get_by_path(name, FMODE_READ | FMODE_WRITE | FMODE_EXCL, THIS_MODULE);
+    if (bdev == NULL) {
+		printk(KERN_ERR "[relay_init] No such device\n");
+		return NULL;
+	}
+
+	return bdev;
+}
+
+static void close_disk(struct block_device *bdev)
+{
+	/* TODO 4: put block device */
+	blkdev_put(bdev, FMODE_READ | FMODE_WRITE | FMODE_EXCL);
+}
+```
+
+对于 sent 函数，稍微复杂一点，可以看它教程里样例的设置方法，也可以搜到一些宏。
+
+```c
+
+static void send_test_bio(struct block_device *bdev, int dir)
+{
+	struct bio *bio = bio_alloc(GFP_NOIO, 1);
+	struct page *page;
+	char *buf;
+
+	/* TODO 4: fill bio (bdev, sector, direction) */
+	bio_set_dev(bio, bdev);
+	bio->bi_iter.bi_sector = 0;
+	bio_set_op_attrs(bio, dir, 0);
+
+	page = alloc_page(GFP_NOIO);
+	bio_add_page(bio, page, KERNEL_SECTOR_SIZE, 0);
+
+	/* TODO 5: write message to bio buffer if direction is write */
+
+	/* TODO 4: submit bio and wait for completion */
+	submit_bio_wait(bio);
+
+	/* TODO 4: read data (first 3 bytes) from bio buffer and print it */
+    page = bio_first_page_all(bio);
+	buf = kmap_atomic(page);
+	printk(KERN_INFO "Read data: % 02x % 02x % 02x\n", buf[0], buf[1], buf[2]);
+	kunmap_atomic(buf);
+
+	bio_put(bio);
+	__free_page(page);
+}
+```
+
+### 5. 将数据写入磁盘[¶](https://linux-kernel-labs-zh.xyz/so2/lab7-block-device-drivers.html#section-19)
+
+按照标有 **TODO 5** 的注释，在磁盘上写入消息（`BIO_WRITE_MESSAGE`）。
+
+函数 `send_test_bio()` 接收操作类型（读取或写入）作为实参。在函数 `relay_init()` 中调用读取函数，在函数 `relay_exit()` 中调用写入函数。建议使用 `REQ_OP_READ` 和 `REQ_OP_WRITE` 宏。
+
+在 `send_test_bio()` 函数中，如果操作是写入，使用消息 `BIO_WRITE_MESSAGE` 填充与 `struct bio` 结构相关联的缓冲区。使用 `kmap_atomic` 和 `kunmap_atomic` 宏来处理与 `struct bio` 结构相关联的缓冲区。
+
+:::info
+
+需要通过相应地设置 `bi_opf` 字段来更新与 `struct bio` 结构相关联的操作类型。
+
+:::
+
+为了测试，请使用以下命令运行 `test-relay-disk` 脚本：
+
+```
+./test-relay-disk
+```
+
+该脚本将在标准输出中显示 `"read from /dev/sdb: 64 65 66"` 消息。
+
+---
+
+有点搞，写完之后发现 read from /dev/sdb 一直是 61 62 63。调了半天，看什么 sync 之类的都不行。重启了一下 qemu 可以了。乱七八糟改，不知道写哪里了，直接全部丢上去
+
+```c
+/*
+ * SO2 Lab - Block device drivers (#7)
+ * Linux - Exercise #4, #5 (Relay disk - bio)
+ */
+
+#include "linux/blk_types.h"
+#include <linux/kernel.h>
+#include <linux/module.h>
+#include <linux/fs.h>
+#include <linux/wait.h>
+#include <linux/sched.h>
+#include <linux/genhd.h>
+#include <linux/blkdev.h>
+
+MODULE_AUTHOR("SO2");
+MODULE_DESCRIPTION("Relay disk");
+MODULE_LICENSE("GPL");
+
+#define KERN_LOG_LEVEL		KERN_ALERT
+
+#define PHYSICAL_DISK_NAME	"/dev/vdb"
+#define KERNEL_SECTOR_SIZE	512
+
+#define BIO_WRITE_MESSAGE	"def"
+
+
+/* pointer to physical device structure */
+static struct block_device *phys_bdev;
+
+static void send_test_bio(struct block_device *bdev, int dir)
+{
+	struct bio *bio = bio_alloc(GFP_NOIO, 1);
+	struct page *page;
+	char *buf;
+	int err;
+
+	bio_set_dev(bio, bdev);
+	bio->bi_iter.bi_sector = 0;
+	bio_set_op_attrs(bio, dir, 0);
+	printk(KERN_INFO "%d\n", bio->bi_opf);
+
+	page = alloc_page(GFP_NOIO);
+	bio_add_page(bio, page, KERNEL_SECTOR_SIZE, 0);
+
+	if (dir == REQ_OP_WRITE) {
+		buf = kmap_atomic(page);
+		printk(KERN_DEBUG "buf: %p\n", buf);
+		memcpy(buf, BIO_WRITE_MESSAGE, strlen(BIO_WRITE_MESSAGE));
+		kunmap_atomic(buf);
+	}
+
+	/* TODO 4: submit bio and wait for completion */
+	err = submit_bio_wait(bio);
+	if (err) {
+		printk(KERN_ERR "[relay_init] submit_bio_wait failed\n");
+		return;
+	}
+
+	/* TODO 4: read data (first 3 bytes) from bio buffer and print it */
+	page = bio_first_page_all(bio);
+	buf = kmap_atomic(page);
+	printk(KERN_DEBUG "buf: %p\n", buf);
+	printk(KERN_INFO "Read data: % 02x % 02x % 02x\n", buf[0], buf[1], buf[2]);
+	kunmap_atomic(buf);
+
+	bio_put(bio);
+	__free_page(page);
+}
+
+static struct block_device *open_disk(char *name)
+{
+	struct block_device *bdev;
+
+	/* TODO 4: get block device in exclusive mode */
+	bdev = blkdev_get_by_path(name, FMODE_READ | FMODE_WRITE | FMODE_EXCL, THIS_MODULE);
+	if (bdev == NULL) {
+		printk(KERN_ERR "[relay_init] No such device\n");
+		return NULL;
+	}
+	return bdev;
+}
+
+static int __init relay_init(void)
+{
+	phys_bdev = open_disk(PHYSICAL_DISK_NAME);
+	if (phys_bdev == NULL) {
+		printk(KERN_ERR "[relay_init] No such device\n");
+		return -EINVAL;
+	}
+
+	send_test_bio(phys_bdev, REQ_OP_READ);
+
+	return 0;
+}
+
+static void close_disk(struct block_device *bdev)
+{
+	/* TODO 4: put block device */
+	blkdev_put(bdev, FMODE_READ | FMODE_WRITE | FMODE_EXCL);
+}
+
+static void __exit relay_exit(void)
+{
+	/* TODO 5: send test write bio */
+	send_test_bio(phys_bdev, REQ_OP_WRITE);
+	close_disk(phys_bdev);
+}
+
+module_init(relay_init);
+module_exit(relay_exit);
+
+```
+
+### 6. 在 `struct bio` 级别处理请求队列中的请求[¶](https://linux-kernel-labs-zh.xyz/so2/lab7-block-device-drivers.html#struct-bio-8)
+
+在练习 3 的实现中，我们只处理了请求的当前 `struct bio` 的 `struct bio_vec`。我们希望处理来自请求队列中所有 `struct bio` 结构的所有 `struct bio_vec` 结构（也称为段）。
+
+在 ramdisk 的实现（`1-2-3-6-ram-disk/` 目录）中，添加一些支持，使得其可以在 `struct bio` 级别处理请求队列中的请求。按照标有 **TODO 6** 的注释进行操作。
+
+将 `USE_BIO_TRANSFER` 宏设置为 1。
+
+实现 `my_xfer_request()` 函数。使用 `rq_for_each_segment` 宏遍历请求中每个 `struct bio` 的 `bio_vec` 结构。
+
+:::info
+
+请查阅 [如何使用 struct bio 结构的内容](https://linux-kernel-labs-zh.xyz/so2/lab7-block-device-drivers.html#bio-content) 部分中的指示和代码片段。
+
+
+
+使用 `struct bio` 的段迭代器获取当前扇区（`iter.iter.bi_sector`）。
+
+
+
+使用请求迭代器获取对当前 `struct bio` 的引用（`iter.bio`）。
+
+
+
+使用 `bio_data_dir` 宏查找读取或写入的方向。
+
+使用 `kmap_atomic` 或 `kunmap_atomic` 宏映射每个 `struct bio` 结构的页面并访问其关联的缓冲区。为了进行实际的传输，调用前面练习中实现的 `my_block_transfer()` 函数。
+
+:::
+
+为了进行测试，请使用 `ram-disk-test.c` 测试文件：
+
+```
+./ram-disk-test
+```
+
+无需将模块插入到内核中，它将由 **ram-disk-test** 可执行文件插入。
+
+某些测试可能会由于传输数据的缺乏同步（刷新）而崩溃。
+
+---
+
+这个其实之前已经写了。就是 for each，不过没贴上来。
+
+```c
+/* to transfer data using bio structures enable USE_BIO_TRANFER */
+#if USE_BIO_TRANSFER == 1
+static void my_xfer_request(struct my_block_dev *dev, struct request *req)
+{
+	struct bio_vec bvec;
+	struct req_iterator iter;
+	/* TODO 6: iterate segments */
+	rq_for_each_segment(bvec, req, iter) {
+		/* TODO 6: copy bio data to device buffer */
+		    sector_t sector = iter.iter.bi_sector;
+		char *buffer = kmap_atomic(bvec.bv_page);
+		unsigned long offset = bvec.bv_offset;
+		size_t len = bvec.bv_len;
+		int dir = bio_data_dir(iter.bio);
+
+		my_block_transfer(dev, sector, len, buffer + offset, dir);
+
+		kunmap_atomic(buffer);
+	}
+		
+}
+```
+
