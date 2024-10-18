@@ -6250,3 +6250,355 @@ static void my_xfer_request(struct my_block_dev *dev, struct request *req)
 }
 ```
 
+## 文件系统驱动程序（第一部分）
+
+#### 1. 注册和注销 myfs 文件系统[¶](https://linux-kernel-labs-zh.xyz/labs/filesystems_part1.html#myfs-1)
+
+处理文件系统的第一步是注册和注销它。我们要为 `myfs.c` 中描述的文件系统执行此操作。查看文件内容并按照标记为 `TODO 1` 的指示进行操作。
+
+在 RegisterUnregisterSection 部分描述了需要执行的步骤。使用字符串 `"myfs"` 作为文件系统名称。
+
+:::info
+
+在文件系统结构中，使用代码框架中的 `myfs_mount` 函数填充超级块（在挂载时完成）。在 `myfs_mount` 中调用专用于没有磁盘支持的文件系统的函数。作为特定挂载函数的参数，使用代码框架中定义的 `fill_super` 类型的函数。你可以查看 [mount 和 kill_sb 函数](https://linux-kernel-labs-zh.xyz/so2/lab8-filesystems-part1.html#functionsmountkillsbsection) 部分。
+
+要销毁超级块（在卸载时完成），请使用 `kill_litter_super`，这也是特定于没有磁盘支持的文件系统的函数。该函数已经实现，你需要在 `struct file_system_type` 结构中填充它。
+
+:::
+
+完成标记为 `TODO 1` 的部分后，编译模块，将其复制到 QEMU 虚拟机中，并启动虚拟机。加载内核模块，然后检查 `/proc/filesystems` 文件中是否存在 `myfs` 文件系统。
+
+目前，文件系统只是注册了，它没有暴露可以使用的操作。如果我们尝试挂载它，操作将失败。为了尝试挂载，我们创建挂载点 `/mnt/myfs/`。
+
+```
+# mkdir -p /mnt/myfs
+```
+
+然后我们使用 `mount` 命令：
+
+```
+# mount -t myfs none /mnt/myfs
+```
+
+我们得到的错误消息显示我们还没有实现在超级块上的操作。我们将需要实现超级块上的操作并初始化根索引节点。我们将在后续步骤中完成这些操作。
+
+:::info
+
+发送给 `mount` 命令的 `none` 实参表示我们没有要挂载的设备，因为文件系统是虚拟的。类似地，这也是 Linux 系统上挂载 `procfs` 或 `sysfs` 文件系统的方式。
+
+:::
+
+---
+
+终于到文件系统辣。ToDo1 要做的比较简单。
+
+```c
+static struct dentry *myfs_mount(struct file_system_type *fs_type,
+		int flags, const char *dev_name, void *data)
+{
+	/* TODO 1: call superblock mount function */
+    // 注意这里，是 mount_nodev，某人将被这个地方折磨半天，哈哈。
+    // hightlight-next-line
+	return mount_bdev(fs_type, flags, dev_name, data, myfs_fill_super);
+}
+
+/* TODO 1: define file_system_type structure */
+
+static struct file_system_type myfs_fs_type = {
+	.name = "myfs",
+    .mount = myfs_mount,
+	.kill_sb = kill_litter_super
+};
+
+static int __init myfs_init(void)
+{
+	int err;
+
+	/* TODO 1: register */
+	err = register_filesystem(&myfs_fs_type);
+	if (err) {
+		printk(LOG_LEVEL "register_filesystem failed\n");
+		return err;
+	}
+
+	return 0;
+}
+
+static void __exit myfs_exit(void)
+{
+	/* TODO 1: unregister */
+	unregister_filesystem(&myfs_fs_type);
+}
+```
+
+![image-20241018225118645](https://oss.nova.gal/img/image-20241018225118645.png)
+
+因为我们还没有实现 fill_super 的操作，所以现在其实只能在 /proc/filesystems 里看到它，而不能挂载。
+
+:::warning
+
+不能挂载是因为你用了 mount_bdev，哪来的 none 这个磁盘给你挂载啊（）
+
+修改为 mount_nodev 后才可以。
+
+正确的应该是这样的？（大概）
+
+![image-20241018232158071](https://oss.nova.gal/img/image-20241018232158071.png)
+
+:::
+
+#### 2. 完成 myfs 的超级块[¶](https://linux-kernel-labs-zh.xyz/labs/filesystems_part1.html#myfs-2)
+
+为了能够挂载文件系统，我们需要填充其超级块的字段，即类型为 `struct super_block` 的通用 VFS 结构。我们将在 `myfs_fill_super()` 函数内填充该结构；超级块由作为函数实参传递的变量 `sb` 表示。请按照标记为 `TODO 2` 的提示进行操作。
+
+:::info
+
+要填充 `myfs_fill_super` 函数，你可以从 [fill_super() 函数](https://linux-kernel-labs-zh.xyz/so2/lab8-filesystems-part1.html#fillsupersection) 部分中的示例开始。
+
+对于超级块结构字段，请尽可能使用代码框架中定义的宏。
+
+超级块结构中的 `s_op` 字段必须初始化为超级块操作结构（类型为 `struct super_operations`）。你需要定义这样的结构。
+
+有关定义 `struct super_operations` 结构和填充超级块的信息，请参阅 [超级块操作](https://linux-kernel-labs-zh.xyz/so2/lab8-filesystems-part1.html#superblocksection) 部分。
+
+
+
+初始化 `struct super_operations` 结构的 `drop_inode` 和 `statfs` 字段。
+
+:::
+
+尽管此时超级块将被正确初始化，但挂载操作仍将失败。为了成功完成挂载操作，还需要初始化根索引节点，这将在下一个练习中进行操作。
+
+---
+
+我们需要做的就是搞一个 super_operations 结构体，以及简单把 superblock 这个结构体填充一下。
+
+```c
+/* TODO 2: define super_operations structure */
+static struct super_operations myfs_super_operations = {
+	.drop_inode = generic_delete_inode,
+};
+
+static int myfs_fill_super(struct super_block *sb, void *data, int silent)
+{
+	struct inode *root_inode;
+	struct dentry *root_dentry;
+
+	/* TODO 2: fill super_block
+	 *   - blocksize, blocksize_bits
+	 *   - magic
+	 *   - super operations
+	 *   - maxbytes
+	 */
+	sb->s_blocksize = MYFS_BLOCKSIZE;
+	sb->s_blocksize_bits = MYFS_BLOCKSIZE_BITS;
+	sb->s_magic = MYFS_MAGIC;
+	sb->s_op = &myfs_super_operations;
+	sb->s_maxbytes = MAX_LFS_FILESIZE;
+
+	/* mode = directory & access rights (755) */
+	root_inode = myfs_get_inode(sb, NULL,
+			S_IFDIR | S_IRWXU | S_IRGRP |
+			S_IXGRP | S_IROTH | S_IXOTH);
+
+	printk(LOG_LEVEL "root inode has %d link(s)\n", root_inode->i_nlink);
+
+	if (!root_inode)
+		return -ENOMEM;
+
+	root_dentry = d_make_root(root_inode);
+	if (!root_dentry)
+		goto out_no_root;
+	sb->s_root = root_dentry;
+
+	return 0;
+
+out_no_root:
+	iput(root_inode);
+	return -ENOMEM;
+}
+```
+
+#### 3. 初始化 myfs 根索引节点[¶](https://linux-kernel-labs-zh.xyz/labs/filesystems_part1.html#myfs-3)
+
+根索引节点是文件系统根目录（即 `/`）的索引节点。初始化是在文件系统挂载时完成的。在挂载时调用的 `myfs_fill_super` 函数会调用 `myfs_get_inode` 函数来创建并初始化索引节点。通常，所有索引节点都是由此函数创建和初始化；但是，在本练习中，我们只创建根索引节点。
+
+`inode` 在 `myfs_get_inode` 函数内进行分配（调用 `new_inode()` 函数，将返回的结果分配给局部变量 `inode`）。
+
+为了成功完成文件系统的挂载，你需要填充 `myfs_get_inode` 函数。按照标记为 `TODO 3` 的指示进行操作。可以参考 [ramfs_get_inode](https://elixir.bootlin.com/linux/latest/source/fs/ramfs/inode.c#L63) 函数。
+
+:::info
+
+要初始化 `uid`, `gid` 和 `mode`，可以使用 `inode_init_owner()` 函数，就像在 `ramfs_get_inode()` 中那样。调用 `inode_init_owner()` 时，应将 `NULL` 作为第二个参数，因为创建的索引节点没有父目录。
+
+将 VFS 索引节点的 `i_atime`, `i_ctime` 和 `i_mtime` 初始化为 `current_time()` 函数返回的值。
+
+你需要为目录类型的索引节点初始化操作。执行以下步骤：
+
+> 1. 使用 `S_ISDIR` 宏检查这是否是目录类型的索引节点。
+>
+> 2. 对于
+>
+>     
+>
+>    ```
+>    i_op
+>    ```
+>
+>     
+>
+>    和
+>
+>     
+>
+>    ```
+>    i_fop
+>    ```
+>
+>     
+>
+>    字段，请使用已经实现的内核函数：
+>
+>    - 对于 `i_op`：使用 `simple_dir_inode_operations`。
+>    - 对于 `i_fop`：使用 `simple_dir_operations`。
+>
+> 3. 使用 `inc_nlink()` 函数增加目录的链接数。
+
+:::
+
+---
+
+fs 就是各种填结构体。但简单来说，我们就是按照这样一个结构：FS->SB->inode
+
+注意，注解里说
+
+> 要初始化 `uid`, `gid` 和 `mode`，可以使用 `inode_init_owner()` 函数，就像在 `ramfs_get_inode()` 中那样。调用 `inode_init_owner()` 时，应将 `NULL` 作为第二个参数，因为创建的索引节点没有父目录。
+
+我看了一下 `5.10.14` 的 [ramfs 代码](https://elixir.bootlin.com/linux/v5.10.14/source/fs/ramfs/inode.c#L70)，它其实也是用的 dir
+
+```c
+struct inode *myfs_get_inode(struct super_block *sb, const struct inode *dir,
+		int mode)
+{
+	struct inode *inode = new_inode(sb);
+
+	if (!inode)
+		return NULL;
+
+	/* TODO 3: fill inode structure
+	 *     - mode
+	 *     - uid
+	 *     - gid
+	 *     - atime,ctime,mtime
+	 *     - ino
+	 */
+	 inode_init_owner(inode, dir, mode);
+	 inode->i_atime = inode->i_mtime = inode->i_ctime = current_time(inode);
+	 inode->i_ino = get_next_ino();
+	/* TODO 5: Init i_ino using get_next_ino */
+
+	/* TODO 6: Initialize address space operations. */
+
+	if (S_ISDIR(mode)) {
+		/* TODO 3: set inode operations for dir inodes. */
+		inode->i_op = &simple_dir_inode_operations;
+		inode->i_fop = &simple_dir_operations;
+
+		/* TODO 5: use myfs_dir_inode_operations for inode
+		 * operations (i_op).
+		 */
+
+		/* TODO 3: directory inodes start off with i_nlink == 2 (for "." entry).
+		 * Directory link count should be incremented (use inc_nlink).
+		 */
+		inc_nlink(inode);
+	}
+
+	/* TODO 6: Set file inode and file operations for regular files
+	 * (use the S_ISREG macro).
+	 */
+
+	return inode;
+}
+```
+
+![image-20241018232340078](https://oss.nova.gal/img/image-20241018232340078.png)
+
+#### 4. 测试 myfs 的挂载和卸载[¶](https://linux-kernel-labs-zh.xyz/labs/filesystems_part1.html#myfs-4)
+
+现在我们可以挂载文件系统了。按照上述步骤编译内核模块，将其复制到虚拟机中，启动虚拟机，然后插入内核模块，创建挂载点 `/mnt/myfs/`，并挂载文件系统。我们可以通过检查 `/proc/mounts` 文件来验证文件系统是否已挂载。
+
+[``](https://linux-kernel-labs-zh.xyz/labs/filesystems_part1.html#system-message-1)/mnt/myfs``目录的索引节点号是多少？为什么？
+
+:::info
+
+要显示目录的索引节点号，请使用以下命令：
+
+```
+ls -di /path/to/directory
+```
+
+其中 `/path/to/directory/` 是要显示其索引节点号的目录的路径。
+
+:::
+
+我们使用以下命令检查 myfs 文件系统的统计信息：
+
+```
+stat -f /mnt/myfs
+```
+
+我们想查看挂载点 `/mnt/myfs` 的内容以及是否可以创建文件。为此，我们运行以下命令：
+
+```
+# ls -la /mnt/myfs
+# touch /mnt/myfs/a.txt
+```
+
+我们可以看到我们无法在文件系统上创建 `a.txt` 文件。这是因为我们尚未在 `struct super_operations` 结构中实现与索引节点相关的操作。我们将在下一个实验中实现这些操作。
+
+使用以下命令卸载文件系统：
+
+```
+umount /mnt/myfs
+```
+
+同时卸载对应的内核模块。
+
+:::info
+
+要测试整个功能，你可以使用 `test-myfs.sh` 脚本：
+
+```
+./test-myfs.sh
+```
+
+该脚本将使用 `make copy` 将其复制到虚拟机，但前提是它具有可执行权限：
+
+```
+student@workstation:~/linux/tools/labs$ chmod +x skels/filesystems/myfs/test-myfs.sh
+```
+
+
+
+显示的文件系统统计信息很简单，因为这些信息是由 simple_statfs 函数提供的。
+
+:::
+
+---
+
+4711。这个数我问 gpt 和 claude 都说 "在许多 Linux 系统中，get_next_ino() 的起始值被设置为 4711。这个数字没有特殊的技术意义，它只是一个任意选择的起始值。
+
+在计算机科学中，有时会使用这样的"魔术数字"作为起始值或标识符，部分是出于幽默，部分是因为它们容易记忆。"
+
+但是我查源码都没看到这个，也没用搜索引擎收到相关内容。
+
+```bash
+root@MuelNova-Laptop:/linux/tools/labs# grep -r "4711" /linux/fs/
+Binary file /linux/fs/cifs/dir.o matches
+```
+
+
+
+![image-20241018232800944](https://oss.nova.gal/img/image-20241018232800944.png)
+
