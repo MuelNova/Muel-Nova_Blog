@@ -1,0 +1,38 @@
+{
+  "title": {
+    "message": "Muel-Nova",
+    "description": "The title in the navbar"
+  },
+  "logo.alt": {
+    "message": "SiteLogo",
+    "description": "The alt text of navbar logo"
+  },
+  "item.label.🤡文章": {
+    "message": "🤡文章",
+    "description": "Navbar item with label 🤡文章"
+  },
+  "item.label.♻️复现": {
+    "message": "♻️复现",
+    "description": "Navbar item with label ♻️复现"
+  },
+  "item.label.📝博客": {
+    "message": "📝博客",
+    "description": "Navbar item with label 📝博客"
+  },
+  "item.label.♿️知识库": {
+    "message": "♿️知识库",
+    "description": "Navbar item with label ♿️知识库"
+  },
+  "item.label.GitHub": {
+    "message": "GitHub",
+    "description": "Navbar item with label GitHub"
+  },
+  "item.label.关于": {
+    "message": "关于",
+    "description": "Navbar item with label 关于"
+  },
+  "item.label.友情链接": {
+    "message": "友情链接",
+    "description": "Navbar item with label 友情链接"
+  }
+}

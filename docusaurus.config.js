@@ -132,26 +132,7 @@ const config = {
         remarkPlugins: [remarkMath],
         rehypePlugins: [rehypeKatex],
         showLastUpdateTime: true,
-      },
-    ],
-
-    [
-      "@docusaurus/plugin-content-blog",
-      {
-        id: "posts",
-        path: "src/contents/posts",
-        routeBasePath: "posts",
-        blogSidebarCount: "ALL",
-        // Please change this to your repo.
-        // Remove this to remove the "edit this page" links.
-        authorsMapPath: "../blog/authors.yml",
-        editUrl: "https://github.com/MuelNova/NovaNo1r-Blog/tree/main/",
-
-        feedOptions: {
-          type: "rss",
-          copyright: `Copyright © ${new Date().getFullYear()} NovaNo1r with ❤`,
-        },
-        showLastUpdateTime: true,
+        onInlineTags: "ignore",
       },
     ],
     "docusaurus-plugin-sass",

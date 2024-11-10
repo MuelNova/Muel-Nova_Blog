@@ -1,7 +1,8 @@
 ---
 title: 小评 すずめの戸締まり（铃芽之旅）
 authors: nova
-tags: [随笔，影评]
+tags: [oho, 随笔，影评]
+date: 2023-5-24
 ---
 
 :::danger 读前必看

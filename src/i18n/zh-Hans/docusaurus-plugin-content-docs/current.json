@@ -1,0 +1,30 @@
+{
+  "version.label": {
+    "message": "Next",
+    "description": "The label for version current"
+  },
+  "sidebar.defaultSidebar.category.blockchain": {
+    "message": "blockchain",
+    "description": "The label for category blockchain in sidebar defaultSidebar"
+  },
+  "sidebar.defaultSidebar.category.Pwn": {
+    "message": "Pwn",
+    "description": "The label for category Pwn in sidebar defaultSidebar"
+  },
+  "sidebar.defaultSidebar.category.堆": {
+    "message": "堆",
+    "description": "The label for category 堆 in sidebar defaultSidebar"
+  },
+  "sidebar.defaultSidebar.category.ptmalloc2": {
+    "message": "ptmalloc2",
+    "description": "The label for category ptmalloc2 in sidebar defaultSidebar"
+  },
+  "sidebar.defaultSidebar.category.fastbin": {
+    "message": "fastbin",
+    "description": "The label for category fastbin in sidebar defaultSidebar"
+  },
+  "sidebar.defaultSidebar.category.Linux 内核": {
+    "message": "Linux 内核",
+    "description": "The label for category Linux 内核 in sidebar defaultSidebar"
+  }
+}
