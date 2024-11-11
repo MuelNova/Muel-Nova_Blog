@@ -25,7 +25,7 @@ const config = {
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
   organizationName: "MuelNova", // Usually your GitHub org/user name.
-  projectName: "Muel-Nova_Blog", // Usually your repo name.
+  projectName: "Blog", // Usually your repo name.
   deploymentBranch: "gh-pages", // The branch your GitHub pages site is deployed from.
   trailingSlash: false,
 
@@ -89,7 +89,7 @@ const config = {
         id: "default",
         path: "src/contents/library",
         routeBasePath: "library",
-        editUrl: "https://github.com/MuelNova/Muel-Nova-Blog/tree/main/",
+        editUrl: "https://github.com/MuelNova/Blog/tree/main/",
       },
     ],
     [
@@ -122,7 +122,7 @@ const config = {
         showReadingTime: true,
         // Please change this to your repo.
         // Remove this to remove the "edit this page" links.
-        editUrl: "https://github.com/MuelNova/NovaNo1r-Blog/tree/main/",
+        editUrl: "https://github.com/MuelNova/Blog/tree/main/",
         feedOptions: {
           type: "rss",
           description:
@@ -194,7 +194,7 @@ const config = {
         darkCss: process.env.GISCUS_DARK_CSS,
       },
       navbar: {
-        title: "Muel-Nova",
+        title: "MuElnova",
         logo: {
           alt: "SiteLogo",
           src: "img/nova-logo-par.png",
