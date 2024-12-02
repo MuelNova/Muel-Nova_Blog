@@ -229,6 +229,11 @@ const config = {
             label: "友情链接",
             position: "right",
           },
+          {
+            href: "https://memo.nova.gal/u/muelnova",
+            label: "Memo",
+            position: "right",
+          },
         ],
       },
       footer: {
@@ -246,6 +251,7 @@ const config = {
             items: [
               { to: "/reproducing", label: "♻️复现" },
               { to: "/posts", label: "🤡文章" },
+              { href: "https://memo.nova.gal/u/muelnova", label: "Memo" },
             ],
           },
           {
