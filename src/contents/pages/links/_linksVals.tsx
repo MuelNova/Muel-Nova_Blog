@@ -25,9 +25,8 @@ const List: LinkCardProps[] = [
   {
     link: "https://rocketma.dev/",
     linkText: "RocketMaDev",
-    description: 
-      "RocketMa，Pwner, Hack for Fun.",
-    icon: "https://rocketma.dev/images/icon.svg"
+    description: "RocketMa，Pwner, Hack for Fun.",
+    icon: "https://rocketma.dev/images/avatar.png",
   },
 ];
 
