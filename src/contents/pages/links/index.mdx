@@ -8,9 +8,11 @@ import LinksVals from "./_linksVals.tsx";
 import GiscusComment from "@site/src/theme/components/GiscusComment/GiscusComment";
 
 export default function Links() {
+  const shuffledLinks = [...LinksVals].sort(() => Math.random() - 0.5);
+
   return (
     <main>
-      {LinksVals.map((link, index) => (
+      {shuffledLinks.map((link, index) => (
         <LinkCard key={index} {...link} />
       ))}
       <br />
