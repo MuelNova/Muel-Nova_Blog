@@ -22,6 +22,13 @@ const List: LinkCardProps[] = [
       "Junyu 是川大的密码学大师，曾经和我一起在 NUS 进行交流学习，PWN 水平也很高，实在是厉害。",
     icon: "https://junyu33.me/img/avatar.jpg",
   },
+  {
+    link: "https://rocketma.dev/",
+    linkText: "RocketMaDev",
+    description: 
+      "RocketMa，Pwner, Hack for Fun.",
+    icon: "https://rocketma.dev/images/icon.svg"
+  },
 ];
 
 export default List;
