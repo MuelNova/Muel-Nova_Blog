@@ -28,6 +28,12 @@ const List: LinkCardProps[] = [
     description: "RocketMa，Pwner, Hack for Fun.",
     icon: "https://rocketma.dev/images/avatar.png",
   },
+  {
+    link: "https://haoqiguai.fun/",
+    linkText: "奇怪的轩轩",
+    description: "同组的学弟，大二开始学 Pwn，进度非常快，喜欢奶龙（笑）",
+    icon: "https://www.haoqiguai.fun/DCC93F41ECF0DAC9572C5575D06D9151.ico",
+  },
 ];
 
 export default List;
