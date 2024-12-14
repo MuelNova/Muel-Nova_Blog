@@ -234,6 +234,11 @@ const config = {
             label: "Memo",
             position: "right",
           },
+          {
+            href: "https://journal.nova.gal",
+            label: "Journal",
+            position: "right",
+          },
         ],
       },
       footer: {
@@ -252,6 +257,7 @@ const config = {
               { to: "/reproducing", label: "♻️复现" },
               { to: "/posts", label: "🤡文章" },
               { href: "https://memo.nova.gal/u/muelnova", label: "Memo" },
+              { href: "https://journal.nova.gal", label: "Journal"},
             ],
           },
           {
